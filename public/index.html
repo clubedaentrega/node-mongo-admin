@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Node Mongo Admin</title>
+	<link type="text/css" rel="stylesheet" href="css.css">
+	<script type="text/javascript" src="Panel.js"></script>
+	<script type="text/javascript" src="Query.js"></script>
+	<script type="text/javascript" src="Fields.js"></script>
+</head>
+
+<body>
+	<header>
+		<h1>Node Mongo Admin</h1>
+	</header>
+
+	<h2>Query the database</h2>
+
+	<form id="query-form">
+		<p>db.
+			<select id="query-collections"></select>
+			.find(
+			<input size="50" id="query-selector" value="{}">).sort(
+			<input size="50" id="query-sort">).limit(
+			<select id="query-limit">
+				<option value="1">1</option>
+				<option value="10" selected>10</option>
+				<option value="100">100</option>
+			</select>
+			)
+		</p>
+
+		<p>
+			<input type="submit" value="Execute" id="query-execute">
+			<span id="query-loading" style="display: none">loading</span>
+		</p>
+	</form>
+	<p id="query-count"></p>
+	<table id="query-result"></table>
+	<div id="query-window" class="window" style="display: none">
+		<div class="window-content">
+			<h1>Explore object</h1>
+
+			<div class="json" id="query-json"></div>
+		</div>
+	</div>
+
+</body>
+
+</html>

@@ -1,0 +1,153 @@
+/* Main CSS */
+
+* {
+	box-sizing: border-box;
+}
+body {
+	padding-top: 70px;
+	font: Verdana, sans-serif;
+	color: #333333;
+	background: #FAFAFA;
+}
+a {
+	text-decoration: none;
+	outline: none;
+}
+header {
+	width: 100%;
+	height: 70px;
+	background-color: #6720a3;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1500;
+	-webkit-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+header > h1 {
+	margin: 20px 30px;
+	text-align: left;
+	color: #FAFAFA;
+	font-size: 20px;
+}
+.details {
+	font-size: smaller;
+}
+.error {
+	background-color: #FCC;
+}
+h2 {
+	border-bottom: thin gray solid;
+	cursor: pointer;
+}
+h2.closed {
+	color: #999999;
+}
+h2.loading:after {
+	content: "Loading...";
+	font-size: smaller;
+	padding-left: 10px;
+	color: #933;
+}
+input {
+	font-family: monospace;
+}
+canvas {
+	float: right;
+}
+/* Table */
+
+table.loading * {
+	color: #666 !important;
+}
+td,
+th {
+	border-bottom: thin gray solid;
+	border-right: thin gray solid;
+	padding: 5px;
+	text-align: center;
+}
+tr:not(:first-child):hover {
+	background-color: #EEE;
+}
+/* JSON fields */
+
+.json {
+	font-family: monospace;
+	padding: 10px;
+	border: thin gray solid;
+	display: inline-block;
+	white-space: pre;
+	text-align: left;
+}
+.json-field {
+	font-weight: bold;
+	color: #660E7A;
+}
+.json-keyword {
+	color: #000080;
+}
+.json-number {
+	color: #0000FF;
+}
+.json-string {
+	text-align: left;
+	color: #008000;
+	white-space: pre;
+	font-family: monospace;
+}
+.json .focus {
+	background-color: #FCC;
+	border: thin #F99 solid;
+}
+/* Window */
+
+.window {
+	position: fixed;
+	height: 100%;
+	width: 100%;
+	left: 0;
+	top: 0;
+	background-color: rgba(128, 128, 128, .25);
+}
+.window-content {
+	position: fixed;
+	height: 50%;
+	width: 50%;
+	left: 25%;
+	top: 25%;
+	color: #666666;
+	background-color: #FAFAFA;
+	border: 2px #CCCCCC solid;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	-webkit-box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
+	-moz-box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
+	box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
+	padding: 15px;
+	overflow: auto;
+}
+.window-content >:last-child {
+	margin-bottom: 15px;
+}
+/* Panels */
+
+.panel {
+	width: 33%;
+	display: inline-block;
+	float: left;
+	overflow: auto;
+	text-align: center;
+}
+/* Clear float */
+
+.clear:after {
+	clear: both;
+	content: ".";
+	width: 0;
+	height: 0;
+	display: block;
+	overflow: hidden;
+}
