@@ -11,6 +11,7 @@ require('./api')(function (err, api) {
 
 	// Setup express
 	var app = express()
+	app.use(require('./auth'))
 	app.use('/api', api)
 	app.use(express.static('./public'))
 
