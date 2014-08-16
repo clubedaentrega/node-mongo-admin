@@ -3,9 +3,17 @@
  */
 'use strict'
 
-module.exports.fields = {}
+module.exports.fields = {
+	connection: String
+}
 
-module.exports.handler = function (db, body, success, error) {
+module.exports.handler = function (dbs, body, success, error) {
+	var db = dbs[body.connection]
+
+	if (!db) {
+		return error(200, 'Invalid connection name')
+	}
+
 	db.collectionNames({
 		namesOnly: true
 	}, function (err, names) {

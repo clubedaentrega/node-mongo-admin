@@ -77,10 +77,19 @@ Panel.request = function (action, body, callback) {
 	ajax.setRequestHeader('Content-Type', 'application/json; charset=utf-8')
 	ajax.send(JSON.stringify(body))
 	ajax.onload = function () {
+		var result = null
 		if (ajax.status !== 200) {
 			return callback(null)
 		}
-		callback(JSON.parse(ajax.responseText))
+		try {
+			result = JSON.parse(ajax.responseText)
+			if (result.error) {
+				alert('Error ' + result.error.code + ': ' + result.error.message)
+			}
+		} catch (e) {
+			alert('Invalid JSON: ' + e)
+		}
+		callback(result)
 	}
 	ajax.onerror = function () {
 		callback(null)
@@ -90,15 +99,15 @@ Panel.request = function (action, body, callback) {
 // Populate a <select> element with the given array of strings
 // array can be an array of strings or objects
 // if it's an array of strings, valueKey and textKey are ignored
-// if it's an array of objects, valueKey and textKey must be strings
+// if it's an array of objects, valueKey and textKey must be strings (default: 'value' and 'text')
 Panel.populateSelectWithArray = function (selectEl, array, valueKey, textKey) {
 	selectEl = Panel.get(selectEl)
 	selectEl.innerHTML = ''
 	array.forEach(function (each) {
 		var optionEl = document.createElement('option')
 		if (typeof each === 'object') {
-			optionEl.value = each[valueKey]
-			optionEl.textContent = each[textKey]
+			optionEl.value = each[valueKey || 'value']
+			optionEl.textContent = each[textKey || 'text']
 		} else {
 			optionEl.value = optionEl.textContent = each
 		}

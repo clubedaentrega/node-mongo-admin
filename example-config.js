@@ -5,7 +5,25 @@ var fs = require('fs')
 module.exports = {
 	// The port the http will listen to
 	port: 8000,
-	mongoUri: 'mongodb://localhost:27017/backuper',
+	connections: {
+		local: {
+			uri: 'mongodb://localhost:27017/my-db'
+		},
+		dev: {
+			uri: 'mongodb://user:password@dev.example.com:27017/my-db'
+		},
+		production: {
+			uri: 'mongodb://user:password@mongo1.example.com:27017,mongo2.example.com:27017,mongo3.example.com:27017/my-db',
+			options: {
+				replset: 'RS-17',
+				db: {
+					w: 2,
+					wtimeout: 10000,
+					readPreference: 'primaryPreferred'
+				}
+			}
+		}
+	},
 	// HTTP basic auth, leave null to turn off
 	// NOTE: basic HTTP auth is almost useless with https!
 	basicAuth: {

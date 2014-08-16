@@ -3,23 +3,40 @@
 
 var Query = {}
 
+Query.connection = ''
 Query.collections = []
 
-Panel.request('collections', {}, function (result) {
-	Query.collections = result.collections
-	Query.init()
+Panel.request('connections', {}, function (result) {
+	Query.init(result.connections)
 })
 
-Query.init = function () {
-	Panel.populateSelectWithArray('query-collections', Query.collections)
+Query.init = function (connections) {
+	Panel.populateSelectWithArray('query-connections', connections.map(function (each) {
+		return {
+			value: each,
+			text: Panel.formatDocPath(each)
+		}
+	}))
+	Panel.get('query-connections').onchange = Query.onChangeConnection
+	Query.onChangeConnection()
 
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
+
 	var windowEl = Panel.get('query-window')
 	windowEl.onclick = function (event) {
 		if (event.target === windowEl) {
 			windowEl.style.display = 'none'
 		}
 	}
+}
+
+Query.onChangeConnection = function () {
+	Query.connection = Panel.get('query-connections').value
+	Panel.request('collections', {
+		connection: Query.connection
+	}, function (result) {
+		Panel.populateSelectWithArray('query-collections', result.collections)
+	})
 }
 
 Query.onFormSubmit = function (event) {
@@ -32,6 +49,7 @@ Query.onFormSubmit = function (event) {
 	var sort = Panel.processJSInEl('query-sort')
 
 	Panel.request('find', {
+		connection: Query.connection,
 		collection: Panel.get('query-collections').value,
 		selector: JSON.stringify(selector),
 		limit: Number(Panel.get('query-limit').value),
@@ -39,9 +57,7 @@ Query.onFormSubmit = function (event) {
 	}, function (result) {
 		loadingEl.style.display = 'none'
 		Panel.get('query-result').classList.remove('loading')
-		if (result.error) {
-			alert('Error: ' + result.error.message)
-		} else {
+		if (!result.error) {
 			Query.showResult(result.docs)
 		}
 	})
@@ -115,6 +131,7 @@ Query.showResult = function (docs) {
 // Run a simple findById query and show the result in the pop-over window
 Query.findById = function (collection, id) {
 	Panel.request('find', {
+		connection: Query.connection,
 		collection: collection,
 		selector: JSON.stringify({
 			_id: id
@@ -122,7 +139,7 @@ Query.findById = function (collection, id) {
 		limit: 1
 	}, function (result) {
 		if (result.error) {
-			alert('Error: ' + result.error.message)
+			return
 		} else if (result.docs.length === 0) {
 			Query.exploreValue(null)
 		} else if (result.docs.length === 1) {

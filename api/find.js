@@ -1,14 +1,20 @@
 'use strict'
 
 module.exports.fields = {
+	connection: String,
 	collection: String,
 	selector: String,
 	limit: 'uint',
 	'sort?': String
 }
 
-module.exports.handler = function (db, body, success, error) {
-	var selector, options = {}
+module.exports.handler = function (dbs, body, success, error) {
+	var db = dbs[body.connection],
+		selector, options = {}
+
+	if (!db) {
+		return error(200, 'Invalid connection name')
+	}
 
 	try {
 		selector = JSON.parse(body.selector, reviveJSON)

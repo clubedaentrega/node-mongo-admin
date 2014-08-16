@@ -5,7 +5,7 @@
  * @property {Object} fields The request data format. See validate-fields for details
  *
  * @callback handler
- * @param {Object} db The mongodb connection
+ * @param {Object} dbs A map of mongodb connections (indexed by connection name)
  * @param {Object} body The request body
  * @param {successCallback} success A callback to answer the request with success
  * @param {errorCallback} error A callback to answer the request with error
@@ -26,8 +26,7 @@
 var express = require('express'),
 	fs = require('fs'),
 	validate = require('validate-fields'),
-	MongoClient = require('mongodb').MongoClient,
-	config = require('./config')
+	dbs = require('./dbs')
 
 /**
  * Setup API routes and call done(err, api) when done
@@ -35,7 +34,7 @@ var express = require('express'),
  */
 module.exports = function (done) {
 	// Connect to mongo
-	MongoClient.connect(config.mongoUri, function (err, db) {
+	dbs(function (err, dbs) {
 		if (err) {
 			return done(err)
 		}
@@ -55,7 +54,7 @@ module.exports = function (done) {
 		// End points
 		fs.readdirSync('./api').forEach(function (item) {
 			if (item.substr(-3).toLowerCase() === '.js') {
-				processFile('./api/' + item, '/' + item.substr(0, item.length - 3), api, db)
+				processFile('./api/' + item, '/' + item.substr(0, item.length - 3), api, dbs)
 			}
 		})
 
@@ -100,10 +99,10 @@ function APIError(code, message) {
  * @param {string} fileName
  * @param {string} url
  * @param {Express} api
- * @param {Db} db
+ * @param {Object.<String, Db>} dbs
  * @throws
  */
-function processFile(fileName, url, api, db) {
+function processFile(fileName, url, api, dbs) {
 	var file = require(fileName),
 		fields = validate.parse(file.fields)
 	api.post(url, function (req, res, next) {
@@ -113,18 +112,18 @@ function processFile(fileName, url, api, db) {
 		} else {
 			next(new APIError(101, fields.lastError))
 		}
-	}, wrapHandler(file.handler, db))
+	}, wrapHandler(file.handler, dbs))
 }
 
 /**
  * Return an express middleware for the given API endpoint handler
  * @param {handler} handler
- * @param {Db} db
+ * @param {Object.<String, Db>} dbs
  * @returns {function}
  */
-function wrapHandler(handler, db) {
+function wrapHandler(handler, dbs) {
 	return function (req, res, next) {
-		handler(db, req.body, function (response) {
+		handler(dbs, req.body, function (response) {
 			response = response || {}
 			if (typeof response !== 'object') {
 				throw new Error('The response must be an object')
