@@ -2,7 +2,8 @@
 
 var express = require('express'),
 	config = require('./config'),
-	http = require('http')
+	http = require('http'),
+	https = require('https')
 
 require('./api')(function (err, api) {
 	if (err) {
@@ -16,7 +17,8 @@ require('./api')(function (err, api) {
 	app.use(express.static('./public'))
 
 	// Start server
-	http.createServer(app).listen(config.port, function () {
-		console.log('MongoAdmin listening on port ' + config.port)
+	var server = config.https ? https.createServer(config.https, app) : http.createServer(app)
+	server.listen(config.port, function () {
+		console.log('MongoAdmin listening on http' + (config.https ? 's' : '') + '://localhost:' + config.port)
 	})
 })
