@@ -70,7 +70,6 @@ module.exports = function (done) {
 			} else {
 				code = 100
 				message = err.message || 'Unknown error'
-				res.status(500)
 			}
 
 			res.json({

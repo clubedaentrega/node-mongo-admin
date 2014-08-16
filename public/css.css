@@ -97,6 +97,12 @@ tr:not(:first-child):hover {
 	white-space: pre;
 	font-family: monospace;
 }
+.json-id {
+	text-align: left;
+	color: #660E7A;
+	white-space: pre;
+	font-family: monospace;
+}
 .json .focus {
 	background-color: #FCC;
 	border: thin #F99 solid;

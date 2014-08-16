@@ -12,6 +12,11 @@ Panel.get = function (id) {
 	}
 }
 
+// HTML escaping
+Panel.escape = function (str) {
+	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '\\"')
+}
+
 // Return the date representation for a given string
 // Possible formats:
 // now, yesterday (same as 1 day ago), tomorrow (same as 1 day from now)

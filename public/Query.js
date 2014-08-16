@@ -119,8 +119,7 @@ Query.findById = function (collection, id) {
 		selector: JSON.stringify({
 			_id: id
 		}),
-		limit: 1,
-		sort: ''
+		limit: 1
 	}, function (result) {
 		if (result.error) {
 			alert('Error: ' + result.error.message)
@@ -136,7 +135,7 @@ Query.findById = function (collection, id) {
 
 // Aux function for Query.showResult
 Query._fillResultValue = function (cell, value, path) {
-	var str, originalValue, i, num
+	var str, originalValue
 	if (value === true) {
 		cell.innerHTML = '<span class="json-keyword">true</span>'
 	} else if (value === false) {
@@ -178,17 +177,28 @@ Query._fillResultValue = function (cell, value, path) {
 			}
 			cell.style.cursor = 'pointer'
 			cell.title = 'Click to see original value'
-		} else if (value.match(/^[0-9a-f]{24}$/) && Query.models.indexOf(path) !== -1) {
-			cell.innerHTML = '<span class="json-field">' + value + '</span>'
-			cell.onclick = function () {
-				Query.exploreValue('Loading...')
-				Query.findById(path, value)
+		} else if (value.match(/^[0-9a-f]{24}$/)) {
+			cell.innerHTML = '<span class="json-id">' + value + '</span>'
+			if (Query.collections.indexOf(path) !== -1) {
+				cell.onclick = function () {
+					Query.exploreValue('Loading...')
+					Query.findById(path, value)
+				}
+				cell.style.cursor = 'pointer'
+				cell.title = 'Click to see related value'
 			}
-			cell.style.cursor = 'pointer'
-			cell.title = 'Click to see related value'
 		} else {
-			value = '"' + value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '\\"') + '"'
-			cell.innerHTML = '<div class="json-string">' + value + '</div>'
+			originalValue = value
+			if (originalValue.length < 20) {
+				cell.innerHTML = '<div class="json-string">' + Panel.escape(value) + '</div>'
+			} else {
+				cell.innerHTML = '<div class="json-string">' + Panel.escape(value.substr(0, 17)) + '&#133;</div>'
+				cell.onclick = function () {
+					this.innerHTML = '<div class="json-string">' + Panel.escape(originalValue) + '</div>'
+				}
+				cell.style.cursor = 'pointer'
+				cell.title = 'Click to expand'
+			}
 		}
 	} else if (typeof value === 'number') {
 		cell.innerHTML = '<span class="json-number">' + value + '</span>'
