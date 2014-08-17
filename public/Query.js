@@ -1,10 +1,11 @@
-/*globals Panel, Fields, ObjectId*/
+/*globals Panel, ObjectId, Binary, DBRef, MinKey, MaxKey, Long, json*/
 'use strict'
 
 var Query = {}
 
 Query.connection = ''
 Query.collections = []
+Query.specialTypes = [ObjectId, Binary, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
 Panel.request('connections', {}, function (result) {
 	Query.init(result.connections)
@@ -35,7 +36,7 @@ Query.onChangeConnection = function () {
 	Panel.request('collections', {
 		connection: Query.connection
 	}, function (result) {
-		Panel.populateSelectWithArray('query-collections', result.collections)
+		Panel.populateSelectWithArray('query-collections', Query.collections = result.collections)
 	})
 }
 
@@ -72,7 +73,10 @@ Query.showResult = function (docs) {
 			subpath = path ? path + '.' + key : key
 			value = subdoc[key]
 
-			if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof ObjectId)) {
+			if (value &&
+				typeof value === 'object' &&
+				!Array.isArray(value) &&
+				Query.specialTypes.indexOf(value.constructor) === -1) {
 				addSubDoc(value, subpath, i)
 			} else {
 				// Primitive value
@@ -125,13 +129,12 @@ Query.showResult = function (docs) {
 
 // Run a simple findById query and show the result in the pop-over window
 Query.findById = function (collection, id) {
-	// TODO: fix it
 	Panel.request('find', {
 		connection: Query.connection,
 		collection: collection,
-		selector: JSON.stringify({
+		selector: {
 			_id: id
-		}),
+		},
 		limit: 1
 	}, function (result) {
 		if (result.error) {
@@ -148,65 +151,16 @@ Query.findById = function (collection, id) {
 
 // Aux function for Query.showResult
 Query._fillResultValue = function (cell, value, path) {
-	var str, originalValue
-	if (value === true) {
-		cell.innerHTML = '<span class="json-keyword">true</span>'
-	} else if (value === false) {
-		cell.innerHTML = '<span class="json-keyword">false</span>'
-	} else if (value === null) {
-		cell.innerHTML = '<span class="json-keyword">null</span>'
-	} else if (value === undefined) {
-		cell.textContent = '-'
-	} else if (typeof value === 'string') {
-		if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
-			// Date
-			originalValue = value
-			value = Date.now() - new Date(value).getTime()
-			str = value > 0 ? ' ago' : ' from now'
-			value = Math.abs(value)
-			if (value < 1e3) {
-				cell.textContent = 'Right now'
-			} else if (value < 60e3) {
-				value = Math.floor(value / 1e3)
-				cell.textContent = value + ' second' + (value > 1 ? 's' : '') + str
-			} else if (value < 60 * 60e3) {
-				value = Math.floor(value / 60e3)
-				cell.textContent = value + ' minute' + (value > 1 ? 's' : '') + str
-			} else if (value < 24 * 60 * 60e3) {
-				value = Math.floor(value / 3600e3)
-				cell.textContent = value + ' hour' + (value > 1 ? 's' : '') + str
-			} else if (value < 30.4375 * 24 * 60 * 60e3) {
-				value = Math.floor(value / 86400e3)
-				cell.textContent = value + ' day' + (value > 1 ? 's' : '') + str
-			} else if (value < 12 * 30.4375 * 24 * 60 * 60e3) {
-				value = Math.floor(value / 2629800e3)
-				cell.textContent = value + ' month' + (value > 1 ? 's' : '') + str
-			} else {
-				value = Math.floor(value / 31557600e3)
-				cell.textContent = value + ' year' + (value > 1 ? 's' : '') + str
-			}
-			cell.onclick = function () {
-				alert(originalValue)
-			}
-			cell.style.cursor = 'pointer'
-			cell.title = 'Click to see original value'
-		} else {
-			originalValue = value
-			if (originalValue.length < 20) {
-				cell.innerHTML = '<div class="json-string">' + Panel.escape(value) + '</div>'
-			} else {
-				cell.innerHTML = '<div class="json-string">' + Panel.escape(value.substr(0, 17)) + '&#133;</div>'
-				cell.onclick = function () {
-					this.innerHTML = '<div class="json-string">' + Panel.escape(originalValue) + '</div>'
-				}
-				cell.style.cursor = 'pointer'
-				cell.title = 'Click to expand'
-			}
-		}
-	} else if (typeof value === 'number') {
-		cell.innerHTML = '<span class="json-number">' + value + '</span>'
+	var create = Panel.create
+
+	if (value === undefined) {
+		cell.innerHTML = '-'
 	} else if (Array.isArray(value)) {
-		cell.innerHTML = '<span class="json-field">Array[' + value.length + ']</span>'
+		cell.appendChild(create('span.json-keyword', [
+			'Array[',
+			create('span.json-number', value.length),
+			']'
+		]))
 		if (value.length) {
 			cell.onclick = function () {
 				Query.exploreValue(value)
@@ -214,23 +168,29 @@ Query._fillResultValue = function (cell, value, path) {
 			cell.style.cursor = 'pointer'
 			cell.title = 'Click to explore'
 		}
-	} else if (value instanceof ObjectId) {
-		cell.innerHTML = '<span class="json-id">' + value.$oid + '</span>'
-		if (Query.collections.indexOf(path) !== -1) {
-			cell.onclick = function () {
-				Query.exploreValue('Loading...')
-				Query.findById(path, value)
-			}
-			cell.style.cursor = 'pointer'
-			cell.title = 'Click to see related value'
+	} else if (typeof value === 'string' && value.length > 20) {
+		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
+		cell.onclick = function () {
+			this.innerHTML = json.stringify(value, true, false)
 		}
+		cell.style.cursor = 'pointer'
+		cell.title = 'Click to expand'
 	} else {
-		cell.textContent = '???'
+		cell.innerHTML = json.stringify(value, true, false)
+	}
+
+	if (value instanceof ObjectId && Query.collections.indexOf(path) !== -1) {
+		cell.onclick = function () {
+			Query.exploreValue('Loading...')
+			Query.findById(path, value)
+		}
+		cell.style.cursor = 'pointer'
+		cell.title = 'Click to see related value'
 	}
 }
 
 // Open a window to show the given value
 Query.exploreValue = function (value) {
 	Panel.get('query-window').style.display = ''
-	Fields.fillWithJSON(Panel.get('query-json'), value)
+	Panel.get('query-json').innerHTML = json.stringify(value, true, true)
 }

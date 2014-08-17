@@ -86,7 +86,7 @@ tr:not(:first-child):hover {
 	color: #660E7A;
 }
 .json-keyword {
-	color: #000080;
+	color: #505000;
 }
 .json-number {
 	color: #0000FF;
@@ -95,7 +95,16 @@ tr:not(:first-child):hover {
 	text-align: left;
 	color: #008000;
 	white-space: pre;
+}
+.json-date,
+.json-regexp {
+	text-align: left;
+	color: #006000;
+	white-space: pre;
 	font-family: monospace;
+}
+.json-binary {
+	color: #006060;
 }
 .json-id {
 	text-align: left;

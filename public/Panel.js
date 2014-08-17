@@ -12,6 +12,48 @@ Panel.get = function (id) {
 	}
 }
 
+/**
+ * Create and return an HTML tag
+ * @param {string} tag Tag name + class names + attributes, like: 'input.big[type=email][required]'
+ * @param {(Array|string)} [content] The text content or an array of child elements
+ */
+Panel.create = function (tag, content) {
+	var parts = tag.split(/(\[.*?\])|\.(.*?)/).filter(Boolean),
+		el = document.createElement(parts[0]),
+		i, att, pos
+
+	// Attributes and classes
+	for (i = 1; i < parts.length; i++) {
+		if (parts[i][0] === '[') {
+			// Attribute
+			att = parts[i].substr(1, parts[i].length - 2)
+			if ((pos = att.indexOf('=')) === -1) {
+				el.setAttribute(att, '')
+			} else {
+				el.setAttribute(att.substr(0, pos), att.substr(pos + 1))
+			}
+		} else {
+			// Class
+			el.classList.add(parts[i])
+		}
+	}
+
+	// Add content
+	if (Array.isArray(content)) {
+		content.forEach(function (each) {
+			if (typeof each === 'object') {
+				el.appendChild(each)
+			} else {
+				el.appendChild(document.createTextNode(each))
+			}
+		})
+	} else if (content !== undefined) {
+		el.textContent = String(content)
+	}
+
+	return el
+}
+
 // HTML escaping
 Panel.escape = function (str) {
 	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '\\"')
