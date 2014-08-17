@@ -26,7 +26,8 @@
 var express = require('express'),
 	fs = require('fs'),
 	validate = require('validate-fields'),
-	dbs = require('./dbs')
+	dbs = require('./dbs'),
+	json = require('./json')
 
 /**
  * Setup API routes and call done(err, api) when done
@@ -49,7 +50,9 @@ module.exports = function (done) {
 		})
 
 		// JSON parser
-		api.use(require('body-parser').json())
+		api.use(require('body-parser').json({
+			reviver: json.reviver
+		}))
 
 		// End points
 		fs.readdirSync('./api').forEach(function (item) {
@@ -129,7 +132,8 @@ function wrapHandler(handler, dbs) {
 				throw new Error('The response must be an object')
 			}
 			response.error = null
-			res.json(response)
+			response = json.stringify(response)
+			res.set('Content-Type', 'application/json').send(response)
 		}, function (error, msg) {
 			next(typeof error === 'number' ? new APIError(error, msg || '') : error)
 		})

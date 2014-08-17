@@ -82,7 +82,7 @@ Panel.request = function (action, body, callback) {
 			return callback(null)
 		}
 		try {
-			result = JSON.parse(ajax.responseText)
+			result = JSON.parse(ajax.responseText, json.reviver)
 			if (result.error) {
 				alert('Error ' + result.error.code + ': ' + result.error.message)
 			}

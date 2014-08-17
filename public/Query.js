@@ -1,4 +1,4 @@
-/*globals Panel, Fields*/
+/*globals Panel, Fields, ObjectId*/
 'use strict'
 
 var Query = {}
@@ -45,15 +45,12 @@ Query.onFormSubmit = function (event) {
 	loadingEl.style.display = ''
 	Panel.get('query-result').classList.add('loading')
 
-	var selector = Panel.processJSInEl('query-selector')
-	var sort = Panel.processJSInEl('query-sort')
-
 	Panel.request('find', {
 		connection: Query.connection,
 		collection: Panel.get('query-collections').value,
-		selector: JSON.stringify(selector),
+		selector: Panel.processJSInEl('query-selector') || {},
 		limit: Number(Panel.get('query-limit').value),
-		sort: JSON.stringify(sort)
+		sort: Panel.processJSInEl('query-sort') || {}
 	}, function (result) {
 		loadingEl.style.display = 'none'
 		Panel.get('query-result').classList.remove('loading')
@@ -72,20 +69,18 @@ Query.showResult = function (docs) {
 	var addSubDoc = function (subdoc, path, i) {
 		var key, subpath, value
 		for (key in subdoc) {
-			if (subdoc.hasOwnProperty(key)) {
-				subpath = path ? path + '.' + key : key
-				value = subdoc[key]
+			subpath = path ? path + '.' + key : key
+			value = subdoc[key]
 
-				if (typeof value === 'object' && !Array.isArray(value)) {
-					addSubDoc(value, subpath, i)
-				} else {
-					// Primitive value
-					if (!(subpath in paths)) {
-						// New result path
-						paths[subpath] = []
-					}
-					paths[subpath][i] = value
+			if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof ObjectId)) {
+				addSubDoc(value, subpath, i)
+			} else {
+				// Primitive value
+				if (!(subpath in paths)) {
+					// New result path
+					paths[subpath] = []
 				}
+				paths[subpath][i] = value
 			}
 		}
 	}
@@ -130,6 +125,7 @@ Query.showResult = function (docs) {
 
 // Run a simple findById query and show the result in the pop-over window
 Query.findById = function (collection, id) {
+	// TODO: fix it
 	Panel.request('find', {
 		connection: Query.connection,
 		collection: collection,
@@ -194,16 +190,6 @@ Query._fillResultValue = function (cell, value, path) {
 			}
 			cell.style.cursor = 'pointer'
 			cell.title = 'Click to see original value'
-		} else if (value.match(/^[0-9a-f]{24}$/)) {
-			cell.innerHTML = '<span class="json-id">' + value + '</span>'
-			if (Query.collections.indexOf(path) !== -1) {
-				cell.onclick = function () {
-					Query.exploreValue('Loading...')
-					Query.findById(path, value)
-				}
-				cell.style.cursor = 'pointer'
-				cell.title = 'Click to see related value'
-			}
 		} else {
 			originalValue = value
 			if (originalValue.length < 20) {
@@ -227,6 +213,16 @@ Query._fillResultValue = function (cell, value, path) {
 			}
 			cell.style.cursor = 'pointer'
 			cell.title = 'Click to explore'
+		}
+	} else if (value instanceof ObjectId) {
+		cell.innerHTML = '<span class="json-id">' + value.$oid + '</span>'
+		if (Query.collections.indexOf(path) !== -1) {
+			cell.onclick = function () {
+				Query.exploreValue('Loading...')
+				Query.findById(path, value)
+			}
+			cell.style.cursor = 'pointer'
+			cell.title = 'Click to see related value'
 		}
 	} else {
 		cell.textContent = '???'

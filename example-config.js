@@ -13,6 +13,7 @@ module.exports = {
 			uri: 'mongodb://user:password@dev.example.com:27017/my-db'
 		},
 		production: {
+			// For more info see http://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect
 			uri: 'mongodb://user:password@mongo1.example.com:27017,mongo2.example.com:27017,mongo3.example.com:27017/my-db',
 			options: {
 				replset: 'RS-17',
@@ -25,14 +26,14 @@ module.exports = {
 		}
 	},
 	// HTTP basic auth, leave null to turn off
-	// NOTE: basic HTTP auth is almost useless with https!
+	// NOTE: basic HTTP auth is almost useless without https!
 	basicAuth: {
 		user: 'admin',
 		password: 'pass' // CHANGE IT!
 	},
 	// https options, for more details see:
 	// http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
-	// Leave null to use http, not https
+	// Leave null to use http instead of https
 	// Is strongly recommended to use https+basic-auth
 	https: {
 		// NOTE: do not use the default private key, since is was made public!
