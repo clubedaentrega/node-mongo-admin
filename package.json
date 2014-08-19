@@ -1,6 +1,6 @@
 {
 	"name": "node-mongo-admin",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"author": "Sitegui <sitegui@sitegui.com.br>",
 	"description": "A simple web application to visualize mongo data inspired by PHPMyAdmin",
 	"main": "./index.js",
@@ -16,6 +16,7 @@
 	"dependencies": {
 		"async": "^0.9.0",
 		"body-parser": "^1.6.4",
+		"constant-equals": "^1.1.0",
 		"express": "^4.8.4",
 		"mongodb": "^1.4.8",
 		"validate-fields": "^1.1.0"

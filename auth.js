@@ -4,6 +4,7 @@
 'use strict'
 
 var config = require('./config').basicAuth,
+	eq = require('constant-equals'),
 	expected
 
 if (!config) {
@@ -13,7 +14,7 @@ if (!config) {
 } else {
 	expected = 'Basic ' + new Buffer(config.user + ':' + config.password).toString('base64')
 	module.exports = function (req, res, next) {
-		if (req.get('Authorization') !== expected) {
+		if (!eq(req.get('Authorization'), expected)) {
 			// Ask for authentication
 			res.set('WWW-Authenticate', 'Basic realm="mongo-admin"')
 			res.status(401).end()
