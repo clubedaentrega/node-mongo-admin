@@ -21,6 +21,10 @@ Query.init = function (connections) {
 	Panel.get('query-connections').onchange = Query.onChangeConnection
 	Query.onChangeConnection()
 
+	Panel.get('query-selector').oninput = function () {
+		Panel.get('query-find').textContent = Query.readId(this.value) ? 'findById' : 'find'
+	}
+
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 
 	var windowEl = Panel.get('query-window')
@@ -41,15 +45,20 @@ Query.onChangeConnection = function () {
 }
 
 Query.onFormSubmit = function (event) {
+	var loadingEl, oid, selector
 	event.preventDefault()
-	var loadingEl = Panel.get('query-loading')
+
+	loadingEl = Panel.get('query-loading')
 	loadingEl.style.display = ''
 	Panel.get('query-result').classList.add('loading')
+
+	oid = Query.readId(Panel.get('query-selector').value)
+	selector = oid ? oid : Panel.processJSInEl('query-selector')
 
 	Panel.request('find', {
 		connection: Query.connection,
 		collection: Panel.get('query-collections').value,
-		selector: Panel.processJSInEl('query-selector') || {},
+		selector: selector || {},
 		limit: Number(Panel.get('query-limit').value),
 		sort: Panel.processJSInEl('query-sort') || {}
 	}, function (result) {
@@ -193,4 +202,15 @@ Query._fillResultValue = function (cell, value, path) {
 Query.exploreValue = function (value) {
 	Panel.get('query-window').style.display = ''
 	Panel.get('query-json').innerHTML = json.stringify(value, true, true)
+}
+
+/**
+ * Try to read an object id from the string
+ * Valid examples: 53f0175172b3dd4af22d1972, "53f0175172b3dd4af22d1972", '53f0175172b3dd4af22d1972'
+ * @param {string} str
+ * @returns {?ObjectId} null if not valid syntax
+ */
+Query.readId = function (str) {
+	var match = str.match(/^(["']?)([0-9a-f]{24})\1$/)
+	return match ? new ObjectId(match[2]) : null
 }
