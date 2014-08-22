@@ -56,6 +56,32 @@ input {
 canvas {
 	float: right;
 }
+/* Prev and next buttons */
+
+.prev-on,
+.prev-off,
+.next-on,
+.next-off {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+}
+.prev-on,
+.next-on {
+	cursor: pointer
+}
+.prev-on {
+	background-image: url(img/prev_on.png);
+}
+.prev-off {
+	background-image: url(img/prev_off.png);
+}
+.next-on {
+	background-image: url(img/next_on.png);
+}
+.next-off {
+	background-image: url(img/next_off.png);
+}
 /* Table */
 
 table.loading * {
@@ -95,7 +121,7 @@ th:hover {
 .json-string {
 	text-align: left;
 	color: #008000;
-	white-space: pre;
+	white-space: pre-wrap;
 }
 .json-date,
 .json-regexp {

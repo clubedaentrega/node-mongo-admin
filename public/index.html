@@ -23,13 +23,7 @@
 			<select id="query-collections"></select>
 			.<span id="query-find">find</span>(
 			<input size="50" id="query-selector" value="{}">).sort(
-			<input size="50" id="query-sort">).limit(
-			<select id="query-limit">
-				<option value="1">1</option>
-				<option value="10" selected>10</option>
-				<option value="100">100</option>
-			</select>
-			)
+			<input size="50" id="query-sort" value="{_id: -1}">)
 		</p>
 
 		<p>
@@ -37,7 +31,11 @@
 			<span id="query-loading" style="display: none">loading</span>
 		</p>
 	</form>
-	<p id="query-count"></p>
+	<p>
+		<span id="query-prev" class="prev-off"></span>
+		<span id="query-page"></span>
+		<span id="query-next" class="next-off"></span>
+	</p>
 	<table id="query-result"></table>
 	<div id="query-window" class="window" style="display: none">
 		<div class="window-content">

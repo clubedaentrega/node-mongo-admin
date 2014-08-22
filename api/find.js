@@ -5,6 +5,7 @@ module.exports.fields = {
 	collection: String,
 	selector: Object,
 	limit: 'uint',
+	skip: 'uint',
 	'sort?': Object
 }
 
@@ -17,6 +18,7 @@ module.exports.handler = function (dbs, body, success, error) {
 
 	db.collection(body.collection).find(body.selector, {
 		limit: body.limit,
+		skip: body.skip,
 		sort: body.sort
 	}, function (err, cursor) {
 		if (err) {

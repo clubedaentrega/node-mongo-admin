@@ -25,6 +25,8 @@ Query.init = function (connections) {
 		Panel.get('query-find').textContent = Query.readId(this.value) ? 'findById' : 'find'
 	}
 
+	Panel.get('query-collections').onchange = Query.onChangeCollection
+
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 
 	var windowEl = Panel.get('query-window')
@@ -36,49 +38,93 @@ Query.init = function (connections) {
 }
 
 Query.onChangeConnection = function () {
+	var collection = Panel.get('query-collections').value
 	Query.connection = Panel.get('query-connections').value
 	Panel.request('collections', {
 		connection: Query.connection
 	}, function (result) {
 		Panel.populateSelectWithArray('query-collections', Query.collections = result.collections)
-	})
-}
 
-Query.onFormSubmit = function (event) {
-	var loadingEl, oid, selector
-	event.preventDefault()
-
-	loadingEl = Panel.get('query-loading')
-	loadingEl.style.display = ''
-	Panel.get('query-result').classList.add('loading')
-
-	oid = Query.readId(Panel.get('query-selector').value)
-	selector = oid ? oid : Panel.processJSInEl('query-selector')
-
-	Panel.request('find', {
-		connection: Query.connection,
-		collection: Panel.get('query-collections').value,
-		selector: selector || {},
-		limit: Number(Panel.get('query-limit').value),
-		sort: Panel.processJSInEl('query-sort') || {}
-	}, function (result) {
-		loadingEl.style.display = 'none'
-		Panel.get('query-result').classList.remove('loading')
-		if (!result.error) {
-			Query.showResult(result.docs)
+		// Try to recover selected collection
+		if (Query.collections.indexOf(collection) !== -1) {
+			Panel.get('query-collections').value = collection
 		}
 	})
 }
 
-Query.showResult = function (docs) {
-	var paths = {},
+Query.onChangeCollection = function () {
+	Panel.get('query-sort').value = '{_id: -1}'
+}
+
+Query.onFormSubmit = function (event) {
+	event.preventDefault()
+
+	var oid = Query.readId(Panel.get('query-selector').value),
+		selector = oid ? oid : Panel.processJSInEl('query-selector'),
+		sort = Panel.processJSInEl('query-sort') || {}
+
+	Query.find(Query.connection, Panel.get('query-collections').value, selector || {}, sort, 0)
+}
+
+/**
+ * @param {string} connection
+ * @param {string} collection
+ * @param {Object} selector
+ * @param {Object} sort
+ * @param {number} page
+ */
+Query.find = function (connection, collection, selector, sort, page) {
+	var loadingEl = Panel.get('query-loading')
+	loadingEl.style.display = ''
+	Panel.get('query-result').classList.add('loading')
+
+	Panel.request('find', {
+		connection: connection,
+		collection: collection,
+		selector: selector,
+		limit: 10,
+		skip: 10 * page,
+		sort: sort
+	}, function (result) {
+		loadingEl.style.display = 'none'
+		Panel.get('query-result').classList.remove('loading')
+		if (!result.error) {
+			Query.showResult(result.docs, page, function (page) {
+				Query.find(connection, collection, selector, sort, page)
+			})
+		}
+	})
+}
+
+/**
+ * @param {Object[]} docs
+ * @param {number} page
+ * @param {Function} findPage
+ */
+Query.showResult = function (docs, page, findPage) {
+	var prevEl = Panel.get('query-prev'),
+		nextEl = Panel.get('query-next'),
+		pageEl = Panel.get('query-page'),
+		paths = {},
 		tree = [],
 		treeDepth = 0,
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
 		pathNames, i
 
-	Panel.get('query-count').textContent = docs.length === 1 ? '1 result' : docs.length + ' results'
+	prevEl.className = !page ? 'prev-off' : 'prev-on'
+	prevEl.onmousedown = !page ? null : function (event) {
+		event.preventDefault()
+		findPage(page - 1)
+	}
+
+	nextEl.className = docs.length !== 10 ? 'next-off' : 'next-on'
+	nextEl.onmousedown = docs.length !== 10 ? null : function (event) {
+		event.preventDefault()
+		findPage(page + 1)
+	}
+
+	pageEl.textContent = 'Page ' + (page + 1)
 
 	/**
 	 * @param {Array} tree
@@ -210,7 +256,8 @@ Query.findById = function (collection, id) {
 		selector: {
 			_id: id
 		},
-		limit: 1
+		limit: 1,
+		skip: 0
 	}, function (result) {
 		if (result.error) {
 			return
