@@ -121,7 +121,8 @@ Query.showResult = function (docs) {
 			if (value &&
 				typeof value === 'object' &&
 				!Array.isArray(value) &&
-				Query.specialTypes.indexOf(value.constructor) === -1) {
+				Query.specialTypes.indexOf(value.constructor) === -1 &&
+				Object.keys(value).length) {
 				addSubDoc(value, subpath, i)
 			} else {
 				// Primitive value
