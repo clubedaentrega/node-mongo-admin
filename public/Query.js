@@ -71,11 +71,47 @@ Query.onFormSubmit = function (event) {
 }
 
 Query.showResult = function (docs) {
-	var paths = {}
+	var paths = {},
+		tree = [],
+		treeDepth = 0,
+		tableEl = Panel.get('query-result'),
+		rowEls = [],
+		pathNames, i
 
 	Panel.get('query-count').textContent = docs.length === 1 ? '1 result' : docs.length + ' results'
 
-	// Group by path
+	/**
+	 * @param {Array} tree
+	 * @param {string[]} path
+	 * @param {number} depth
+	 */
+	var addToTree = function (tree, path, depth) {
+		var pathPart = path[depth],
+			i
+
+		treeDepth = Math.max(treeDepth, depth + 1)
+		if (depth === path.length - 1) {
+			tree.push(pathPart)
+		} else {
+			for (i = 0; i < tree.length; i++) {
+				if (tree[i].name === pathPart) {
+					return addToTree(tree[i].subpaths, path, depth + 1)
+				}
+			}
+			tree.push({
+				name: pathPart,
+				subpaths: []
+			})
+			addToTree(tree[i].subpaths, path, depth + 1)
+		}
+	}
+
+	/**
+	 * Group by path
+	 * @param {Object} subdoc
+	 * @param {string} path
+	 * @param {number} i
+	 */
 	var addSubDoc = function (subdoc, path, i) {
 		var key, subpath, value
 		for (key in subdoc) {
@@ -99,37 +135,66 @@ Query.showResult = function (docs) {
 	}
 
 	docs.forEach(function (doc, i) {
-		addSubDoc(doc, '', i)
+		addSubDoc(doc, '', i, tree)
 	})
 
-	// Build the table header
-	var pathNames = Object.keys(paths).sort()
-	var tableEl = Panel.get('query-result'),
-		rowEl
-	tableEl.innerHTML = ''
-	rowEl = tableEl.insertRow(-1)
+	pathNames = Object.keys(paths).sort()
 	pathNames.forEach(function (path) {
-		var cellEl = document.createElement('th')
-		rowEl.appendChild(cellEl)
-		cellEl.title = path + ' (click to sort)'
-		cellEl.onclick = function () {
+		addToTree(tree, path.split('.'), 0)
+	})
+	tableEl.innerHTML = ''
+	for (i = 0; i < treeDepth; i++) {
+		rowEls[i] = tableEl.insertRow(-1)
+	}
+
+	/**
+	 * @param {(string|Object)} treeEl
+	 * @param {number} depth
+	 * @param {string} prefix
+	 * @returns {number} number of child fields
+	 */
+	var createHeader = function (treeEl, depth, prefix) {
+		var cell = Panel.create('th'),
+			cols = 0,
+			path, newPath
+		if (typeof treeEl === 'string') {
+			path = treeEl
+			cell.rowSpan = treeDepth - depth
+			cols = 1
+		} else {
+			path = treeEl.name
+			treeEl.subpaths.forEach(function (each) {
+				cols += createHeader(each, depth + 1, prefix + path + '.')
+			})
+			cell.colSpan = cols
+		}
+		rowEls[depth].appendChild(cell)
+
+		newPath = prefix + path
+		cell.textContent = Panel.formatDocPath(path)
+		cell.title = newPath + ' (click to sort)'
+		cell.onclick = function () {
 			var sort, sortEl
-			if (path.match(/^[a-z_][a-z0-9_]*$/i)) {
-				sort = '{' + path + ': -1}'
+			if (newPath.match(/^[a-z_][a-z0-9_]*$/i)) {
+				sort = '{' + newPath + ': -1}'
 			} else {
-				sort = '{"' + path.replace(/"/g, '\\"') + '": -1}'
+				sort = '{\'' + newPath.replace(/'/g, '\\\'') + '\': -1}'
 			}
 			sortEl = Panel.get('query-sort')
 			sortEl.value = sortEl.value === sort ? sort.substr(0, sort.length - 3) + '1}' : sort
 			Panel.get('query-execute').click()
 		}
-		cellEl.style.cursor = 'pointer'
-		cellEl.textContent = Panel.formatDocPath(path)
+		cell.style.cursor = 'pointer'
+
+		return cols
+	}
+	tree.forEach(function (each) {
+		createHeader(each, 0, '')
 	})
 
 	// Build the table
 	docs.forEach(function (_, i) {
-		rowEl = tableEl.insertRow(-1)
+		var rowEl = tableEl.insertRow(-1)
 		pathNames.forEach(function (path) {
 			Query._fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})

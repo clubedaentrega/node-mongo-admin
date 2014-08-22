@@ -68,7 +68,8 @@ th {
 	padding: 5px;
 	text-align: center;
 }
-tr:not(:first-child):hover {
+tr:hover > td,
+th:hover {
 	background-color: #EEE;
 }
 /* JSON fields */
