@@ -56,7 +56,12 @@ Panel.create = function (tag, content) {
 
 // HTML escaping
 Panel.escape = function (str) {
-	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '\\"')
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/'/g, '&#39;')
+		.replace(/"/g, '&quot;')
 }
 
 // Return the date representation for a given string
