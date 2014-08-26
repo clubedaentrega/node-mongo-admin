@@ -3,6 +3,8 @@
 
 var Query = {}
 
+Query.docsByPage = 50
+
 Query.connection = ''
 Query.collections = []
 Query.specialTypes = [ObjectId, Binary, DBRef, MinKey, MaxKey, Long, Date, RegExp]
@@ -82,8 +84,8 @@ Query.find = function (connection, collection, selector, sort, page) {
 		connection: connection,
 		collection: collection,
 		selector: selector,
-		limit: 10,
-		skip: 10 * page,
+		limit: Query.docsByPage,
+		skip: Query.docsByPage * page,
 		sort: sort
 	}, function (result) {
 		loadingEl.style.display = 'none'
@@ -118,8 +120,8 @@ Query.showResult = function (docs, page, findPage) {
 		findPage(page - 1)
 	}
 
-	nextEl.className = docs.length !== 10 ? 'next-off' : 'next-on'
-	nextEl.onmousedown = docs.length !== 10 ? null : function (event) {
+	nextEl.className = docs.length !== Query.docsByPage ? 'next-off' : 'next-on'
+	nextEl.onmousedown = docs.length !== Query.docsByPage ? null : function (event) {
 		event.preventDefault()
 		findPage(page + 1)
 	}
