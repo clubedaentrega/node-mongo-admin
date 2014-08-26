@@ -90,6 +90,7 @@ Query.find = function (connection, collection, selector, sort, page) {
 	}, function (result) {
 		loadingEl.style.display = 'none'
 		Panel.get('query-result').classList.remove('loading')
+		Panel.get('query-form').scrollIntoView()
 		if (!result.error) {
 			Query.showResult(result.docs, page, function (page) {
 				Query.find(connection, collection, selector, sort, page)
@@ -107,6 +108,9 @@ Query.showResult = function (docs, page, findPage) {
 	var prevEl = Panel.get('query-prev'),
 		nextEl = Panel.get('query-next'),
 		pageEl = Panel.get('query-page'),
+		prevEl2 = Panel.get('query-prev2'),
+		nextEl2 = Panel.get('query-next2'),
+		pageEl2 = Panel.get('query-page2'),
 		paths = {},
 		tree = [],
 		treeDepth = 0,
@@ -114,19 +118,21 @@ Query.showResult = function (docs, page, findPage) {
 		rowEls = [],
 		pathNames, i
 
-	prevEl.className = !page ? 'prev-off' : 'prev-on'
-	prevEl.onmousedown = !page ? null : function (event) {
+	prevEl.className = prevEl2.className = !page ? 'prev-off' : 'prev-on'
+	prevEl.onmousedown = prevEl2.onmousedown = !page ? null : function (event) {
 		event.preventDefault()
 		findPage(page - 1)
 	}
 
-	nextEl.className = docs.length !== Query.docsByPage ? 'next-off' : 'next-on'
-	nextEl.onmousedown = docs.length !== Query.docsByPage ? null : function (event) {
+	nextEl.className = nextEl2.className = docs.length !== Query.docsByPage ? 'next-off' : 'next-on'
+	nextEl.onmousedown = nextEl2.onmousedown = docs.length !== Query.docsByPage ? null : function (event) {
 		event.preventDefault()
 		findPage(page + 1)
 	}
 
-	pageEl.textContent = 'Page ' + (page + 1)
+	pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
+
+	Panel.get('query-controls2').style.display = docs.length > Query.docsByPage / 2 ? '' : 'none'
 
 	/**
 	 * @param {Array} tree

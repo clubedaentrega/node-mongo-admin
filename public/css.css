@@ -39,16 +39,6 @@ header > h1 {
 }
 h2 {
 	border-bottom: thin gray solid;
-	cursor: pointer;
-}
-h2.closed {
-	color: #999999;
-}
-h2.loading:after {
-	content: "Loading...";
-	font-size: smaller;
-	padding-left: 10px;
-	color: #933;
 }
 input {
 	font-family: monospace;
