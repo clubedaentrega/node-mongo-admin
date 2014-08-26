@@ -6,6 +6,19 @@
 
 var json = {}
 
+Date.prototype.toJSON = function () {
+	return {
+		$date: this.getTime()
+	}
+}
+
+RegExp.prototype.toJSON = function () {
+	return {
+		$regex: this.source,
+		$options: (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '') + (this.multiline ? 'm' : '')
+	}
+}
+
 /**
  * @param {string} isoStr
  */
@@ -31,12 +44,12 @@ function ObjectId(id) {
 
 /**
  * @class
- * @param {string} binary
  * @param {number} type
+ * @param {string} binary
  */
-function Binary(binary, type) {
-	if (!(this instanceof Binary)) {
-		return new Binary(binary, type)
+function BinData(type, binary) {
+	if (!(this instanceof BinData)) {
+		return new BinData(type, binary)
 	}
 	this.$binary = binary
 	this.$type = type
@@ -97,7 +110,7 @@ json.reviver = function (key, value) {
 		if (typeof value.$oid === 'string') {
 			return new ObjectId(value.$oid)
 		} else if (typeof value.$binary === 'string') {
-			return new Binary(value.$binary, value.$type)
+			return new BinData(value.$type, value.$binary)
 		} else if (typeof value.$date === 'number') {
 			return new Date(value.$date)
 		} else if (typeof value.$regex === 'string') {
@@ -174,7 +187,7 @@ json.stringify = function (value, html, pretty) {
 		} else if (typeof value === 'number') {
 			pushStr(String(value), false, false, 'number')
 		} else if (typeof value === 'string') {
-			pushStr(html ? Panel.escape(value) : value, false, false, 'string')
+			pushStr(html ? Panel.escape(value) : '\'' + value.replace(/'/g, '\\\'') + '\'', false, false, 'string')
 		} else if (Array.isArray(value) && !value.length) {
 			pushStr('[]')
 		} else if (Array.isArray(value)) {
@@ -190,7 +203,7 @@ json.stringify = function (value, html, pretty) {
 			pushStr(']', true)
 		} else if (value instanceof ObjectId) {
 			pushStr(html ? value.$oid : 'ObjectId("' + value.$oid + '")', false, false, 'id')
-		} else if (value instanceof Binary) {
+		} else if (value instanceof BinData) {
 			if (html) {
 				pushStr('Bin(<span class="json-binary">' + value.$binary + '</span>)', false, false, 'keyword')
 			} else {
@@ -203,9 +216,9 @@ json.stringify = function (value, html, pretty) {
 				pushStr('DBRef("' + value.$ref + '", ' + json.stringify(value.$id, false, false) + ')')
 			}
 		} else if (value instanceof MinKey) {
-			pushStr('MinKey', false, false, 'keyword')
+			pushStr('MinKey()', false, false, 'keyword')
 		} else if (value instanceof MaxKey) {
-			pushStr('MaxKey', false, false, 'keyword')
+			pushStr('MaxKey()', false, false, 'keyword')
 		} else if (value instanceof Long) {
 			if (html) {
 				pushStr('Long(<span class="json-number">' + value.$numberLong + '</span>)', false, false, 'keyword')

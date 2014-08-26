@@ -12,6 +12,7 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 * Table-like display
 * HTTPs and BasicAuth
 * Relaxed query language (accepts not only JSON, but also plain JS)
+* Double click to quick search
 
 ## Example
 ![screen shot](https://raw.githubusercontent.com/clubedaentrega/node-mongo-admin/master/ss.png)

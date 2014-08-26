@@ -1,4 +1,4 @@
-/*globals Panel, ObjectId, Binary, DBRef, MinKey, MaxKey, Long, json*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json*/
 'use strict'
 
 var Query = {}
@@ -7,7 +7,7 @@ Query.docsByPage = 50
 
 Query.connection = ''
 Query.collections = []
-Query.specialTypes = [ObjectId, Binary, DBRef, MinKey, MaxKey, Long, Date, RegExp]
+Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
 Panel.request('connections', {}, function (result) {
 	Query.init(result.connections)
@@ -58,8 +58,11 @@ Query.onChangeCollection = function () {
 	Panel.get('query-sort').value = '{_id: -1}'
 }
 
+/**
+ * @param {Event} [event]
+ */
 Query.onFormSubmit = function (event) {
-	event.preventDefault()
+	event && event.preventDefault()
 
 	var oid = Query.readId(Panel.get('query-selector').value),
 		selector = oid ? oid : Panel.processJSInEl('query-selector'),
@@ -279,6 +282,19 @@ Query.findById = function (collection, id) {
 	})
 }
 
+/**
+ * Find all docs that have the given value for the given path
+ * @param {string} path
+ * @param {*} value
+ */
+Query.findByPath = function (path, value) {
+	if (!/^[a-z_][a-z0-9_$]*$/.test(path)) {
+		path = '\'' + path.replace(/'/g, '\\\'') + '\''
+	}
+	Panel.get('query-selector').value = '{' + path + ': ' + json.stringify(value, false, false) + '}'
+	Query.onFormSubmit()
+}
+
 // Aux function for Query.showResult
 Query._fillResultValue = function (cell, value, path) {
 	var create = Panel.create
@@ -316,6 +332,13 @@ Query._fillResultValue = function (cell, value, path) {
 		}
 		cell.style.cursor = 'pointer'
 		cell.title = 'Click to see related value'
+	}
+
+	if (value !== undefined) {
+		cell.ondblclick = function (event) {
+			event.preventDefault()
+			Query.findByPath(path, value)
+		}
 	}
 }
 
