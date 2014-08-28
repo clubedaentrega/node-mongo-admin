@@ -51,13 +51,15 @@ canvas {
 .prev-on,
 .prev-off,
 .next-on,
-.next-off {
+.next-off,
+.eye {
 	display: inline-block;
 	width: 16px;
 	height: 16px;
 }
 .prev-on,
-.next-on {
+.next-on,
+.eye {
 	cursor: pointer
 }
 .prev-on {
@@ -71,6 +73,9 @@ canvas {
 }
 .next-off {
 	background-image: url(img/next_off.png);
+}
+.eye {
+	background-image: url(img/eye.png);
 }
 /* Table */
 
@@ -150,7 +155,6 @@ th:hover {
 	width: 80%;
 	left: 10%;
 	top: 10%;
-	color: #666666;
 	background-color: #FAFAFA;
 	border: 2px #CCCCCC solid;
 	-webkit-border-radius: 4px;

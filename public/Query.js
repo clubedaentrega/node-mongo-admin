@@ -119,7 +119,7 @@ Query.showResult = function (docs, page, findPage) {
 		treeDepth = 0,
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
-		pathNames, i
+		pathNames, i, th
 
 	prevEl.className = prevEl2.className = !page ? 'prev-off' : 'prev-on'
 	prevEl.onmousedown = prevEl2.onmousedown = !page ? null : function (event) {
@@ -204,6 +204,9 @@ Query.showResult = function (docs, page, findPage) {
 	for (i = 0; i < treeDepth; i++) {
 		rowEls[i] = tableEl.insertRow(-1)
 	}
+	th = Panel.create('th', ' ')
+	th.rowSpan = treeDepth
+	rowEls[0].appendChild(th)
 
 	/**
 	 * @param {(string|Object)} treeEl
@@ -251,8 +254,13 @@ Query.showResult = function (docs, page, findPage) {
 	})
 
 	// Build the table
-	docs.forEach(function (_, i) {
-		var rowEl = tableEl.insertRow(-1)
+	docs.forEach(function (doc, i) {
+		var rowEl = tableEl.insertRow(-1),
+			eye = Panel.create('span.eye')
+		rowEl.insertCell(-1).appendChild(eye)
+		eye.onclick = function () {
+			Query.exploreValue(doc, true)
+		}
 		pathNames.forEach(function (path) {
 			Query._fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})
@@ -342,10 +350,14 @@ Query._fillResultValue = function (cell, value, path) {
 	}
 }
 
-// Open a window to show the given value
-Query.exploreValue = function (value) {
+/**
+ * Open a window to show the given value
+ * @param {*} value
+ * @param {boolean} [plainText=false]
+ */
+Query.exploreValue = function (value, plainText) {
 	Panel.get('query-window').style.display = ''
-	Panel.get('query-json').innerHTML = json.stringify(value, true, true)
+	Panel.get('query-json').innerHTML = json.stringify(value, !plainText, true)
 }
 
 /**
