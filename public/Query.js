@@ -261,6 +261,7 @@ Query.showResult = function (docs, page, findPage) {
 		eye.onclick = function () {
 			Query.exploreValue(doc, true)
 		}
+		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
 			Query._fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})
