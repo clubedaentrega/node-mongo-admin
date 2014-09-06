@@ -1,4 +1,4 @@
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore*/
 'use strict'
 
 var Query = {}
@@ -30,13 +30,6 @@ Query.init = function (connections) {
 	Panel.get('query-collections').onchange = Query.onChangeCollection
 
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
-
-	var windowEl = Panel.get('query-window')
-	windowEl.onclick = function (event) {
-		if (event.target === windowEl) {
-			windowEl.style.display = 'none'
-		}
-	}
 }
 
 Query.onChangeConnection = function () {
@@ -259,7 +252,7 @@ Query.showResult = function (docs, page, findPage) {
 			eye = Panel.create('span.eye')
 		rowEl.insertCell(-1).appendChild(eye)
 		eye.onclick = function () {
-			Query.exploreValue(doc, true)
+			explore(doc)
 		}
 		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
@@ -282,11 +275,11 @@ Query.findById = function (collection, id) {
 		if (result.error) {
 			return
 		} else if (result.docs.length === 0) {
-			Query.exploreValue(null)
+			explore(null)
 		} else if (result.docs.length === 1) {
-			Query.exploreValue(result.docs[0])
+			explore(result.docs[0])
 		} else {
-			Query.exploreValue(result.docs)
+			explore(result.docs)
 		}
 	})
 }
@@ -318,7 +311,7 @@ Query._fillResultValue = function (cell, value, path) {
 		]))
 		if (value.length) {
 			cell.onclick = function () {
-				Query.exploreValue(value)
+				explore(value)
 			}
 			cell.style.cursor = 'pointer'
 			cell.title = 'Click to explore'
@@ -336,7 +329,7 @@ Query._fillResultValue = function (cell, value, path) {
 
 	if (value instanceof ObjectId && Query.collections.indexOf(path) !== -1) {
 		cell.onclick = function () {
-			Query.exploreValue('Loading...')
+			explore('Loading...')
 			Query.findById(path, value)
 		}
 		cell.style.cursor = 'pointer'
@@ -349,16 +342,6 @@ Query._fillResultValue = function (cell, value, path) {
 			Query.findByPath(path, value)
 		}
 	}
-}
-
-/**
- * Open a window to show the given value
- * @param {*} value
- * @param {boolean} [plainText=false]
- */
-Query.exploreValue = function (value, plainText) {
-	Panel.get('query-window').style.display = ''
-	Panel.get('query-json').innerHTML = json.stringify(value, !plainText, true)
 }
 
 /**
