@@ -320,6 +320,7 @@ Query._fillResultValue = function (cell, value, path) {
 		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
 		cell.onclick = function () {
 			this.innerHTML = json.stringify(value, true, false)
+			cell.onclick = null
 		}
 		cell.style.cursor = 'pointer'
 		cell.title = 'Click to expand'

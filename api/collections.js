@@ -25,7 +25,7 @@ module.exports.handler = function (dbs, body, success, error) {
 				return name.substr(db.databaseName.length + 1)
 			}
 			return name
-		})
+		}).sort()
 		success({
 			collections: names
 		})
