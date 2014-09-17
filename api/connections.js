@@ -7,6 +7,6 @@ module.exports.fields = {}
 
 module.exports.handler = function (dbs, body, success) {
 	success({
-		connections: Object.keys(dbs)
+		connections: Object.keys(dbs).sort()
 	})
 }
