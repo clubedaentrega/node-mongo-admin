@@ -42,6 +42,10 @@ function ObjectId(id) {
 	this.$oid = id
 }
 
+ObjectId.prototype.toString = function () {
+	return this.$oid
+}
+
 /**
  * @class
  * @param {number} type

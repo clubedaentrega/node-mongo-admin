@@ -5,7 +5,7 @@
 }
 body {
 	padding-top: 70px;
-	font: Verdana, sans-serif;
+	font: Verdana sans-serif;
 	color: #333333;
 	background: #FAFAFA;
 }
@@ -21,8 +21,6 @@ header {
 	top: 0;
 	left: 0;
 	z-index: 1;
-	-webkit-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
-	-moz-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
 	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 header > h1 {
@@ -157,11 +155,7 @@ th:hover {
 	top: 10%;
 	background-color: #FAFAFA;
 	border: 2px #CCCCCC solid;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
 	border-radius: 4px;
-	-webkit-box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
-	-moz-box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
 	box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
 	padding: 15px;
 	overflow: auto;
@@ -188,4 +182,40 @@ th:hover {
 	height: 0;
 	display: block;
 	overflow: hidden;
+}
+/* Menu */
+
+.menu {
+	position: fixed;
+	border: thin #6720a3 solid;
+	box-shadow: 3px 3px 3px 0 rgba(0, 0, 0, .5);
+	background-color: white;
+	z-index: 1000;
+}
+.menu-item,
+.menu-submenu {
+	border-bottom: thin gray solid;
+	padding: 3px;
+	cursor: pointer;
+}
+.menu-item-disabled {
+	cursor: auto;
+	background-color: #CCC !important;
+	color: #666;
+}
+.menu-item:hover,
+.menu-submenu:hover {
+	background-color: #DBF;
+}
+.menu-submenu-active {
+	background-color: #DCF;
+}
+.menu-submenu {
+	padding-right: 1.5em;
+}
+.menu-submenu::after {
+	content: '\25b6';
+	font-size: smaller;
+	position: absolute;
+	right: 5px;
 }

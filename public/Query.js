@@ -1,25 +1,39 @@
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu*/
 'use strict'
 
 var Query = {}
 
 Query.docsByPage = 50
 
-Query.connection = ''
-Query.collections = []
+/**
+ * Query.collections[connectionName] is a array of collection names
+ * @property {Object<Array<string>>}
+ */
+Query.collections = {}
+
 Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
-Panel.request('connections', {}, function (result) {
+Panel.request('collections', {}, function (result) {
 	Query.init(result.connections)
 })
 
+/**
+ * @param {Array<Object>} connections
+ * @param {string} connections.$.name
+ * @param {Array<string>} connections.$.collections
+ */
 Query.init = function (connections) {
-	Panel.populateSelectWithArray('query-connections', connections.map(function (each) {
-		return {
-			value: each,
-			text: Panel.formatDocPath(each)
-		}
-	}))
+	var connectionNames = []
+
+	connections.forEach(function (connection) {
+		Query.collections[connection.name] = connection.collections
+		connectionNames.push({
+			value: connection.name,
+			text: Panel.formatDocPath(connection.name)
+		})
+	})
+
+	Panel.populateSelectWithArray('query-connections', connectionNames)
 	Panel.get('query-connections').onchange = Query.onChangeConnection
 	Query.onChangeConnection()
 
@@ -33,22 +47,51 @@ Query.init = function (connections) {
 }
 
 Query.onChangeConnection = function () {
-	var collection = Panel.get('query-collections').value
-	Query.connection = Panel.get('query-connections').value
-	Panel.request('collections', {
-		connection: Query.connection
-	}, function (result) {
-		Panel.populateSelectWithArray('query-collections', Query.collections = result.collections)
+	var collection = Panel.get('query-collections').value,
+		collectionNames = [],
+		connection = Panel.get('query-connections').value,
+		collections = Query.collections[connection]
 
-		// Try to recover selected collection
-		if (Query.collections.indexOf(collection) !== -1) {
-			Panel.get('query-collections').value = collection
+	Query.connection = connection
+
+	collectionNames = collections.map(function (each) {
+		return {
+			value: each,
+			text: Panel.formatDocPath(each)
 		}
 	})
+
+	Panel.populateSelectWithArray('query-collections', collectionNames)
+
+	// Try to recover selected collection
+	if (collections.indexOf(collection) !== -1) {
+		Panel.get('query-collections').value = collection
+	}
 }
 
 Query.onChangeCollection = function () {
 	Panel.get('query-sort').value = '{_id: -1}'
+	Panel.get('query-selector').value = '{}'
+}
+
+/**
+ * Change the connection and collection select fields value
+ * @param {string} connection
+ * @param {string} collection
+ */
+Query.setCollection = function (connection, collection) {
+	var connEl = Panel.get('query-connections'),
+		collEl = Panel.get('query-collections')
+
+	if (connEl.value !== connection) {
+		connEl.value = connection
+		Query.onChangeConnection()
+	}
+
+	if (collEl.value !== collection) {
+		collEl.value = collection
+		Query.onChangeCollection()
+	}
 }
 
 /**
@@ -61,6 +104,7 @@ Query.onFormSubmit = function (event) {
 		selector = oid ? oid : Panel.processJSInEl('query-selector'),
 		sort = Panel.processJSInEl('query-sort') || {}
 
+	Panel.get('query-find').textContent = oid ? 'findById' : 'find'
 	Query.find(Query.connection, Panel.get('query-collections').value, selector || {}, sort, 0)
 }
 
@@ -109,7 +153,7 @@ Query.showResult = function (docs, page, findPage) {
 		pageEl2 = Panel.get('query-page2'),
 		paths = {},
 		tree = [],
-		treeDepth = 0,
+		treeDepth = 1,
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
 		pathNames, i, th
@@ -261,27 +305,17 @@ Query.showResult = function (docs, page, findPage) {
 	})
 }
 
-// Run a simple findById query and show the result in the pop-over window
-Query.findById = function (collection, id) {
-	Panel.request('find', {
-		connection: Query.connection,
-		collection: collection,
-		selector: {
-			_id: id
-		},
-		limit: 1,
-		skip: 0
-	}, function (result) {
-		if (result.error) {
-			return
-		} else if (result.docs.length === 0) {
-			explore(null)
-		} else if (result.docs.length === 1) {
-			explore(result.docs[0])
-		} else {
-			explore(result.docs)
-		}
-	})
+/**
+ * Run a find by id query in the main form
+ * @param {string} connection
+ * @param {string} collection
+ * @param {ObjectId} id
+ */
+Query.findById = function (connection, collection, id) {
+	Query.setCollection(connection, collection)
+	Panel.get('query-selector').value = id
+	Panel.get('query-sort').value = '{_id: -1}'
+	Query.onFormSubmit()
 }
 
 /**
@@ -328,21 +362,79 @@ Query._fillResultValue = function (cell, value, path) {
 		cell.innerHTML = json.stringify(value, true, false)
 	}
 
-	if (value instanceof ObjectId && Query.collections.indexOf(path) !== -1) {
-		cell.onclick = function () {
-			explore('Loading...')
-			Query.findById(path, value)
-		}
-		cell.style.cursor = 'pointer'
-		cell.title = 'Click to see related value'
-	}
-
 	if (value !== undefined) {
 		cell.ondblclick = function (event) {
 			event.preventDefault()
 			Query.findByPath(path, value)
 		}
 	}
+
+	// Add context menu
+	cell.oncontextmenu = Query.openMenu.bind(Query, value, path)
+}
+
+/**
+ * Construct options for the context menu
+ * @param {*} value
+ * @param {string} path
+ * @param {MouseEvent} event
+ */
+Query.openMenu = function (value, path, event) {
+	var options = {},
+		show = false
+
+	if (value instanceof ObjectId && path !== '_id') {
+		// Let user search for this id in another collection with a related name
+		options['Find by id in'] = Query.getMenuForId(value, path)
+		show = true
+	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
+		// Pseudo-id (stored as string)
+		options['Find by id in'] = Query.getMenuForId(new ObjectId(value), path)
+		show = true
+	}
+
+	event.preventDefault()
+	Menu.show(event, options)
+}
+
+/**
+ * Construct the find-by-id context menu
+ * @param {ObjectId} value
+ * @param {string} path
+ * @returns {Object<Function>}
+ */
+Query.getMenuForId = function (value, path) {
+	var options = {},
+		pathParts = path.split('.')
+
+	Object.keys(Query.collections).forEach(function (conn) {
+		Query.collections[conn].forEach(function (coll) {
+			// For each collection, test if match with the path
+			var fn, conn2, match = pathParts.some(function (part) {
+				if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
+					part = part.substr(0, part.length - 2)
+				}
+				return coll.toLowerCase().indexOf(part.toLowerCase()) !== -1
+			})
+
+			if (match) {
+				fn = function () {
+					Query.findById(conn, coll, value)
+				}
+
+				if (conn === Query.connection) {
+					options[Panel.formatDocPath(coll)] = fn
+				} else {
+					// Submenu for other connection
+					conn2 = 'In ' + Panel.formatDocPath(conn)
+					options[conn2] = options[conn2] || {}
+					options[conn2][Panel.formatDocPath(coll)] = fn
+				}
+			}
+		})
+	})
+
+	return options
 }
 
 /**
