@@ -347,6 +347,7 @@ Query.findByPath = function (path, value) {
 Query._fillResultValue = function (cell, value, path) {
 	var create = Panel.create
 
+	cell.dataset.path = path
 	if (value === undefined) {
 		cell.innerHTML = '-'
 	} else if (Array.isArray(value)) {
@@ -355,56 +356,65 @@ Query._fillResultValue = function (cell, value, path) {
 			create('span.json-number', value.length),
 			']'
 		]))
-		if (value.length) {
-			cell.onclick = function () {
-				explore(value)
-			}
-			cell.style.cursor = 'pointer'
-			cell.title = 'Click to explore'
-		}
 	} else if (typeof value === 'string' && value.length > 20) {
 		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
-		cell.onclick = function () {
-			this.innerHTML = json.stringify(value, true, false)
-			cell.onclick = null
-		}
-		cell.style.cursor = 'pointer'
-		cell.title = 'Click to expand'
+		cell.dataset.collapsed = true
 	} else {
 		cell.innerHTML = json.stringify(value, true, false)
 	}
 
-	if (value !== undefined) {
-		cell.ondblclick = function (event) {
-			event.preventDefault()
-			Query.findByPath(path, value)
-		}
-	}
-
 	// Add context menu
-	cell.oncontextmenu = Query.openMenu.bind(Query, value, path)
+	cell.oncontextmenu = Query.openMenu.bind(Query, value, path, cell)
 }
 
 /**
  * Construct options for the context menu
  * @param {*} value
  * @param {string} path
+ * @param {HTMLElement} cell
  * @param {MouseEvent} event
  */
-Query.openMenu = function (value, path, event) {
-	var options = {},
-		show = false
+Query.openMenu = function (value, path, cell, event) {
+	var options = {}
 
+	// Explore array
+	if (Array.isArray(value)) {
+		options['Show content'] = function () {
+			explore(value)
+		}
+	}
+
+	// Expand string
+	if (typeof value === 'string' && cell.dataset.collapsed) {
+		options['Show content'] = function () {
+			explore(value)
+		}
+		options['Expand this column'] = function () {
+			var cells = document.querySelectorAll('#query-result td')
+			Array.prototype.forEach.call(cells, function (cell) {
+				if (cell.dataset.path === path && cell.dataset.collapsed) {
+					cell.dataset.collapsed = false
+					cell.innerHTML = json.stringify(value, true, false)
+				}
+			})
+		}
+	}
+
+	// Find
+	options['Find by ' + path] = function () {
+		Query.findByPath(path, value)
+	}
+
+	// Find by id
 	if (value instanceof ObjectId && path !== '_id') {
 		// Let user search for this id in another collection with a related name
 		options['Find by id in'] = Query.getMenuForId(value, path)
-		show = true
 	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
 		// Pseudo-id (stored as string)
 		options['Find by id in'] = Query.getMenuForId(new ObjectId(value), path)
-		show = true
 	}
 
+	// Timestamp from object id
 	if (value instanceof ObjectId) {
 		options['See timestamp'] = function () {
 			// Convert the first 4 bytes to Unix Timestamp then alert it
