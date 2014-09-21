@@ -291,35 +291,43 @@ Query.populateResultTable = function () {
 	var createHeader = function (treeEl, depth, prefix) {
 		var cell = Panel.create('th'),
 			cols = 0,
-			path, newPath
+			path, newPath, terminal
 		if (typeof treeEl === 'string') {
 			path = treeEl
 			cell.rowSpan = treeDepth - depth
 			cols = 1
+			terminal = true
 		} else {
 			path = treeEl.name
 			treeEl.subpaths.forEach(function (each) {
 				cols += createHeader(each, depth + 1, prefix + path + '.')
 			})
 			cell.colSpan = cols
+			terminal = false
 		}
 		rowEls[depth].appendChild(cell)
 
 		newPath = prefix + path
 		cell.textContent = Panel.formatDocPath(path)
-		cell.title = newPath + ' (click to sort)'
-		cell.onclick = function () {
-			var sort, sortEl
-			if (newPath.match(/^[a-z_][a-z0-9_]*$/i)) {
-				sort = '{' + newPath + ': -1}'
-			} else {
-				sort = '{\'' + newPath.replace(/'/g, '\\\'') + '\': -1}'
+		cell.oncontextmenu = function (event) {
+			var options = {
+				'Sort asc': Query.sortByPath.bind(Query, newPath, 1),
+				'Sort desc': Query.sortByPath.bind(Query, newPath, -1)
 			}
-			sortEl = Panel.get('query-sort')
-			sortEl.value = sortEl.value === sort ? sort.substr(0, sort.length - 3) + '1}' : sort
-			Panel.get('query-execute').click()
+
+			if (!terminal) {
+				options['Collapse column'] = function () {
+					// Remove this path and subpaths from expand list
+					Query.pathsToExpand = Query.pathsToExpand.filter(function (each) {
+						return each !== newPath && each.indexOf(newPath + '.') !== 0
+					})
+					Query.populateResultTable()
+				}
+			}
+
+			event.preventDefault()
+			Menu.show(event, options)
 		}
-		cell.style.cursor = 'pointer'
 
 		return cols
 	}
@@ -340,6 +348,22 @@ Query.populateResultTable = function () {
 			Query._fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})
 	})
+}
+
+/**
+ * Change the sort parameter and resend the form
+ * @param {string} path
+ * @param {number} direction - 1 or -1
+ */
+Query.sortByPath = function (path, direction) {
+	var sort
+	if (path.match(/^[a-z_][a-z0-9_]*$/i)) {
+		sort = '{' + path + ': ' + direction + '}'
+	} else {
+		sort = '{\'' + path.replace(/'/g, '\\\'') + '\': ' + direction + '}'
+	}
+	Panel.get('query-sort').value = sort
+	Query.onFormSubmit()
 }
 
 /**
