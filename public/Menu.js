@@ -254,11 +254,11 @@ var Menu = (function () {
 
 			destroyCurrent = function () {
 				menu.destroy()
-				document.body.removeEventListener('click', destroyCurrent)
+				window.removeEventListener('click', destroyCurrent)
 				destroyCurrent = null
 			}
 
-			document.body.addEventListener('click', destroyCurrent)
+			window.addEventListener('click', destroyCurrent)
 		}
 	}
 })()
