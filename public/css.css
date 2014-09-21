@@ -197,6 +197,8 @@ th:hover {
 	border-bottom: thin gray solid;
 	padding: 3px;
 	cursor: pointer;
+	white-space: pre;
+	padding-right: 1.5em;
 }
 .menu-item-disabled {
 	cursor: auto;
@@ -210,12 +212,18 @@ th:hover {
 .menu-submenu-active {
 	background-color: #DCF;
 }
-.menu-submenu {
-	padding-right: 1.5em;
-}
 .menu-submenu::after {
 	content: '\25b6';
 	font-size: smaller;
 	position: absolute;
 	right: 5px;
+}
+.menu.menu-rtl > .menu-submenu::after {
+	content: '\25c0';
+	left: 5px;
+}
+.menu.menu-rtl > .menu-item,
+.menu.menu-rtl > .menu-submenu {
+	padding-left: 1.5em;
+	padding-right: 3px;
 }

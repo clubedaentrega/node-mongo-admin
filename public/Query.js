@@ -450,7 +450,8 @@ Query.getMenuForId = function (value, path) {
 					options[Panel.formatDocPath(coll)] = fn
 				} else {
 					// Submenu for other connection
-					conn2 = ' ' + Panel.formatDocPath(conn)
+					// appending empty space is a hack to avoid name colission
+					conn2 = Panel.formatDocPath(conn) + '\u200b'
 					options[conn2] = options[conn2] || {}
 					options[conn2][Panel.formatDocPath(coll)] = fn
 				}

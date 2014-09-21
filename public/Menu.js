@@ -37,21 +37,82 @@ var Menu = (function () {
 
 		/** @member {boolean} */
 		this.empty = this.items.length === 0
+
+		/** @member {boolean} */
+		this.ltr = true
 	}
 
 	/**
-	 * @param {Number} x
-	 * @param {Number} y
+	 * Layout the root menu
+	 * @param {number} x
+	 * @param {number} y
+	 * @private
+	 */
+	Menu.prototype.setRootPosition = function (x, y) {
+		var maxWith = document.documentElement.clientWidth,
+			maxHeight = document.documentElement.clientHeight
+
+		if (x + this.rect.width > maxWith) {
+			// Not enough space, use right-to-left
+			x -= this.rect.width
+			this.ltr = false
+		} else {
+			this.ltr = true
+		}
+		if (y + this.rect.height > maxHeight) {
+			y = maxHeight - this.rect.height
+		}
+
+		this.el.classList.toggle('menu-rtl', !this.ltr)
+		this.setPosition(x, y)
+	}
+
+	/**
+	 * Layout a sub menu
+	 * @param {number} leftX - minX of the submenu item
+	 * @param {number} rightX - maxX of the submenu item
+	 * @param {number} y - minY of the submenu item
+	 * @param {boolean} ltr - prefer left-to-right layout
+	 * @private
+	 */
+	Menu.prototype.setSubMenuPosition = function (leftX, rightX, y, ltr) {
+		var maxWith = document.documentElement.clientWidth,
+			maxHeight = document.documentElement.clientHeight,
+			x
+
+		this.ltr = ltr
+		if (ltr) {
+			x = rightX
+			if (x + this.rect.width > maxWith) {
+				// Not enough space, use right-to-left
+				x = leftX - this.rect.width
+				this.ltr = false
+			}
+		} else {
+			x = leftX - this.rect.width
+			if (x < 0) {
+				// Not enough space, switch back to left-to-right
+				x = rightX
+				this.ltr = true
+			}
+		}
+
+		if (y + this.rect.height > maxHeight) {
+			y = maxHeight - this.rect.height
+		}
+
+		this.el.classList.toggle('menu-rtl', !this.ltr)
+		this.setPosition(x, y)
+	}
+
+	/**
+	 * Update position and layout submenus
+	 * @param {number} x
+	 * @param {number} y
 	 * @private
 	 */
 	Menu.prototype.setPosition = function (x, y) {
-		if (x + this.rect.width > window.innerWidth) {
-			x = window.innerWidth - this.rect.width
-		}
-		if (y + this.rect.height > window.innerHeight) {
-			y = window.innerHeight - this.rect.height
-		}
-
+		console.log(this.el, x, y)
 		this.el.style.left = x + 'px'
 		this.el.style.top = y + 'px'
 
@@ -59,7 +120,7 @@ var Menu = (function () {
 			if (item instanceof SubMenu) {
 				item.updatePosition()
 			}
-		})
+		}, this)
 	}
 
 	/**
@@ -172,12 +233,13 @@ var Menu = (function () {
 	}
 
 	/**
+	 * @param {boolean} ltr left-to-right layout
 	 * @private
 	 */
 	SubMenu.prototype.updatePosition = function () {
 		var rect = this.el.getBoundingClientRect()
 
-		this.menu.setPosition(rect.right, rect.top)
+		this.menu.setSubMenuPosition(rect.left, rect.right, rect.top, this.parent.ltr)
 		this.menu.close()
 	}
 
@@ -250,7 +312,7 @@ var Menu = (function () {
 				return
 			}
 
-			menu.setPosition(event.clientX, event.clientY)
+			menu.setRootPosition(event.clientX, event.clientY)
 
 			destroyCurrent = function () {
 				menu.destroy()
