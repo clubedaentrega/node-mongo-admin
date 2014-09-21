@@ -11,6 +11,18 @@ Query.docsByPage = 50
  */
 Query.collections = {}
 
+/**
+ * Object paths that are expanded in the result table, displaying subdocs fields
+ * @property {string[]}
+ */
+Query.pathsToExpand = []
+
+/**
+ * Store data of current result
+ * @property {Array<Object>}
+ */
+Query.result = null
+
 Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
 Panel.request('collections', {}, function (result) {
@@ -76,6 +88,7 @@ Query.onChangeConnection = function () {
 Query.onChangeCollection = function () {
 	Panel.get('query-sort').value = '{_id: -1}'
 	Panel.get('query-selector').value = '{}'
+	Query.pathsToExpand = []
 }
 
 /**
@@ -162,13 +175,7 @@ Query.showResult = function (docs, page, findPage) {
 		pageEl = Panel.get('query-page'),
 		prevEl2 = Panel.get('query-prev2'),
 		nextEl2 = Panel.get('query-next2'),
-		pageEl2 = Panel.get('query-page2'),
-		paths = {},
-		tree = [],
-		treeDepth = 1,
-		tableEl = Panel.get('query-result'),
-		rowEls = [],
-		pathNames, i, th
+		pageEl2 = Panel.get('query-page2')
 
 	prevEl.className = prevEl2.className = !page ? 'prev-off' : 'prev-on'
 	prevEl.onmousedown = prevEl2.onmousedown = !page ? null : function (event) {
@@ -185,6 +192,23 @@ Query.showResult = function (docs, page, findPage) {
 	pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
 
 	Panel.get('query-controls2').style.display = docs.length > Query.docsByPage / 2 ? '' : 'none'
+
+	Query.result = docs
+	Query.populateResultTable()
+}
+
+/**
+ * Populate result table with data from Query.result
+ * Paths in Query.pathsToExpanded are shown in the table
+ */
+Query.populateResultTable = function () {
+	var paths = {},
+		tree = [],
+		treeDepth = 1,
+		tableEl = Panel.get('query-result'),
+		rowEls = [],
+		docs = Query.result,
+		pathNames, i, th
 
 	/**
 	 * @param {Array} tree
@@ -228,7 +252,8 @@ Query.showResult = function (docs, page, findPage) {
 				typeof value === 'object' &&
 				!Array.isArray(value) &&
 				Query.specialTypes.indexOf(value.constructor) === -1 &&
-				Object.keys(value).length) {
+				(Object.keys(value).length === 1 ||
+					Query.pathsToExpand.indexOf(subpath) !== -1)) {
 				addSubDoc(value, subpath, i)
 			} else {
 				// Primitive value
@@ -242,7 +267,7 @@ Query.showResult = function (docs, page, findPage) {
 	}
 
 	docs.forEach(function (doc, i) {
-		addSubDoc(doc, '', i, tree)
+		addSubDoc(doc, '', i)
 	})
 
 	pathNames = Object.keys(paths).sort()
@@ -356,9 +381,19 @@ Query._fillResultValue = function (cell, value, path) {
 			create('span.json-number', value.length),
 			']'
 		]))
+		cell.dataset.explore = true
 	} else if (typeof value === 'string' && value.length > 20) {
 		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
-		cell.dataset.collapsed = true
+		cell.dataset.collapsed = 'string'
+		cell.dataset.explore = true
+	} else if (value && typeof value === 'object' && value.constructor === Object) {
+		cell.appendChild(create('span.json-keyword', [
+			'Object{',
+			create('span.json-number', Object.keys(value).length),
+			'}'
+		]))
+		cell.dataset.collapsed = 'object'
+		cell.dataset.explore = true
 	} else {
 		cell.innerHTML = json.stringify(value, true, false)
 	}
@@ -377,18 +412,15 @@ Query._fillResultValue = function (cell, value, path) {
 Query.openMenu = function (value, path, cell, event) {
 	var options = {}
 
-	// Explore array
-	if (Array.isArray(value)) {
+	// Explore array/object
+	if (cell.dataset.explore) {
 		options['Show content'] = function () {
 			explore(value)
 		}
 	}
 
 	// Expand string
-	if (typeof value === 'string' && cell.dataset.collapsed) {
-		options['Show content'] = function () {
-			explore(value)
-		}
+	if (cell.dataset.collapsed === 'string') {
 		options['Expand this column'] = function () {
 			var cells = document.querySelectorAll('#query-result td')
 			Array.prototype.forEach.call(cells, function (cell) {
@@ -397,6 +429,14 @@ Query.openMenu = function (value, path, cell, event) {
 					cell.innerHTML = json.stringify(value, true, false)
 				}
 			})
+		}
+	}
+
+	// Expand path
+	if (cell.dataset.collapsed === 'object') {
+		options['Expand this column'] = function () {
+			Query.pathsToExpand.push(path)
+			Query.populateResultTable()
 		}
 	}
 

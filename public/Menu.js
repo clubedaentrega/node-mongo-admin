@@ -112,7 +112,6 @@ var Menu = (function () {
 	 * @private
 	 */
 	Menu.prototype.setPosition = function (x, y) {
-		console.log(this.el, x, y)
 		this.el.style.left = x + 'px'
 		this.el.style.top = y + 'px'
 
