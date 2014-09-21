@@ -405,6 +405,18 @@ Query.openMenu = function (value, path, event) {
 		show = true
 	}
 
+	if (value instanceof ObjectId) {
+		options['See timestamp'] = function () {
+			// Convert the first 4 bytes to Unix Timestamp then alert it
+			var time = parseInt(String(value).substr(0, 8), 16),
+				date = new Date(time * 1000),
+				iso = date.toISOString().replace('.000', ''),
+				local = String(date)
+
+			alert('Id:\n\t' + value + '\nDatetime:\n\t' + iso + '\nLocal time:\n\t' + local)
+		}
+	}
+
 	event.preventDefault()
 	Menu.show(event, options)
 }
@@ -438,7 +450,7 @@ Query.getMenuForId = function (value, path) {
 					options[Panel.formatDocPath(coll)] = fn
 				} else {
 					// Submenu for other connection
-					conn2 = 'In ' + Panel.formatDocPath(conn)
+					conn2 = ' ' + Panel.formatDocPath(conn)
 					options[conn2] = options[conn2] || {}
 					options[conn2][Panel.formatDocPath(coll)] = fn
 				}
