@@ -410,6 +410,7 @@ Query._fillResultValue = function (cell, value, path) {
 		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
 		cell.dataset.collapsed = 'string'
 		cell.dataset.explore = true
+		cell.dataset.value = value
 	} else if (value && typeof value === 'object' && value.constructor === Object) {
 		cell.appendChild(create('span.json-keyword', [
 			'Object{',
@@ -450,7 +451,7 @@ Query.openMenu = function (value, path, cell, event) {
 			Array.prototype.forEach.call(cells, function (cell) {
 				if (cell.dataset.path === path && cell.dataset.collapsed) {
 					cell.dataset.collapsed = false
-					cell.innerHTML = json.stringify(value, true, false)
+					cell.innerHTML = json.stringify(cell.dataset.value, true, false)
 				}
 			})
 		}
