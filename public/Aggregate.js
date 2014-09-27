@@ -5,7 +5,7 @@ var Aggregate = {}
 
 Aggregate.name = 'aggregate'
 
-Query.registerMode(Aggregate)
+//Query.registerMode(Aggregate)
 
 /**
  * Called after the page is loaded
