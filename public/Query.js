@@ -384,12 +384,19 @@ Query.findById = function (connection, collection, id) {
  * Find all docs that have the given value for the given path
  * @param {string} path
  * @param {*} value
+ * @param {string} [op='$eq'] - one of '$eq', '$ne', '$gt', '$lt', '$gte', '$lte'
  */
-Query.findByPath = function (path, value) {
+Query.findByPath = function (path, value, op) {
+	var query
 	if (!/^[a-z_][a-z0-9_$]*$/.test(path)) {
 		path = '\'' + path.replace(/'/g, '\\\'') + '\''
 	}
-	Panel.get('query-selector').value = '{' + path + ': ' + json.stringify(value, false, false) + '}'
+	if (!op || op === '$eq') {
+		query = json.stringify(value, false, false)
+	} else {
+		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
+	}
+	Panel.get('query-selector').value = '{' + path + ': ' + query + '}'
 	Query.onFormSubmit()
 }
 
@@ -467,8 +474,13 @@ Query.openMenu = function (value, path, cell, event) {
 	}
 
 	// Find
-	options['Find by ' + path] = function () {
-		Query.findByPath(path, value)
+	options['Find by ' + path] = {
+		Equal: Query.findByPath.bind(Query, path, value),
+		Different: Query.findByPath.bind(Query, path, value, '$ne'),
+		Greater: Query.findByPath.bind(Query, path, value, '$gt'),
+		Less: Query.findByPath.bind(Query, path, value, '$lt'),
+		'Greater or equal': Query.findByPath.bind(Query, path, value, '$gte'),
+		'Less or equal': Query.findByPath.bind(Query, path, value, '$lte')
 	}
 
 	// Find by id

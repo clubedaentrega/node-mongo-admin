@@ -162,7 +162,7 @@ json.stringify = function (value, html, pretty) {
 		if (key.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/)) {
 			return key
 		} else {
-			key = '"' + key.replace(/"/g, '\\"') + '"'
+			key = '\'' + key.replace(/'/g, '\\\'') + '\''
 			return html ? Panel.escape(key) : key
 		}
 	}
@@ -206,18 +206,18 @@ json.stringify = function (value, html, pretty) {
 			indentLevel--
 			pushStr(']', true)
 		} else if (value instanceof ObjectId) {
-			pushStr(html ? value.$oid : 'ObjectId("' + value.$oid + '")', false, false, 'id')
+			pushStr(html ? value.$oid : 'ObjectId(\'' + value.$oid + '\')', false, false, 'id')
 		} else if (value instanceof BinData) {
 			if (html) {
 				pushStr('Bin(<span class="json-binary">' + value.$binary + '</span>)', false, false, 'keyword')
 			} else {
-				pushStr('BinData(' + value.$type + ', "' + value.$binary + '")')
+				pushStr('BinData(' + value.$type + ', \'' + value.$binary + '\')')
 			}
 		} else if (value instanceof DBRef) {
 			if (html) {
 				pushStr('Ref(<span class="json-string">' + Panel.escape(value.$ref) + '</span>, ' + json.stringify(value.$id, true, false) + ')', false, false, 'keyword')
 			} else {
-				pushStr('DBRef("' + value.$ref + '", ' + json.stringify(value.$id, false, false) + ')')
+				pushStr('DBRef(\'' + value.$ref + '\', ' + json.stringify(value.$id, false, false) + ')')
 			}
 		} else if (value instanceof MinKey) {
 			pushStr('MinKey()', false, false, 'keyword')
@@ -227,10 +227,10 @@ json.stringify = function (value, html, pretty) {
 			if (html) {
 				pushStr('Long(<span class="json-number">' + value.$numberLong + '</span>)', false, false, 'keyword')
 			} else {
-				pushStr('NumberLong("' + value.$numberLong + '")')
+				pushStr('NumberLong(\'' + value.$numberLong + '\')')
 			}
 		} else if (value instanceof Date) {
-			pushStr(html ? value.toISOString() : 'ISODate("' + value.toISOString() + '")', false, false, 'date')
+			pushStr(html ? value.toISOString() : 'ISODate(\'' + value.toISOString() + '\')', false, false, 'date')
 		} else if (value instanceof RegExp) {
 			pushStr(html ? Panel.escape(value) : String(value), false, false, 'regexp')
 		} else if (!Object.keys(value).length) {
