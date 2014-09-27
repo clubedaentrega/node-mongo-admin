@@ -9,8 +9,10 @@
 	<script type="text/javascript" src="explore.js"></script>
 	<script type="text/javascript" src="Menu.js"></script>
 	<script type="text/javascript" src="Panel.js"></script>
-	<script type="text/javascript" src="Simple.js"></script>
 	<script type="text/javascript" src="Query.js"></script>
+	<script type="text/javascript" src="Simple.js"></script>
+	<script type="text/javascript" src="Distinct.js"></script>
+	<script type="text/javascript" src="Aggregate.js"></script>
 </head>
 
 <body>
@@ -21,17 +23,26 @@
 	<h2>Query the database</h2>
 
 	<form id="query-form">
-		<p>
-			<input type="button" value="Simple" id="bt-simple" disabled>
-			<input type="button" value="Distinct" id="bt-distinct" disabled>
-			<input type="button" value="Aggregate" id="aggregate" disabled>
+		<p id="mode-buttons">
 		</p>
 		<p>
 			<select id="query-connections"></select>.
 			<select id="query-collections"></select>
-			.<span id="simple-find">find</span>(
+
+			<span id="query-simple">
+				.<span id="simple-find">find</span>(
 			<input size="50" id="simple-selector" value="{}">).sort(
 			<input size="30" id="simple-sort" value="{_id: -1}">)
+			</span>
+
+			<span id="query-distinct">
+				.distinct(<input size="30" id="distinct-field" value="">, 
+				<input size="40" id="distinct-selector" value="">)
+			</span>
+
+			<span id="query-aggregate">
+				TODO
+			</span>
 		</p>
 
 		<p>

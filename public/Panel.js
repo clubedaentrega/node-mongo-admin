@@ -1,3 +1,4 @@
+/*global json*/
 'use strict'
 
 // Global panel manager

@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Simple*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu*/
 'use strict'
 
 var Query = {}
@@ -26,21 +26,57 @@ Query.result = null
 
 /**
  * Active connection
+ * @property {string}
  * @readonly
  */
 Query.connection = ''
 
 /**
  * Active connection
+ * @property {string}
  * @readonly
  */
 Query.collection = ''
 
+/**
+ * @typedef {Object} Mode
+ * @property {string} name
+ * @propert {function()} execute
+ * @propert {function():Array} toSearchParts
+ * @propert {function(...*)} executeFromSearchParts
+ * @propert {function()} [init]
+ * @propert {boolean} [default=false]
+ * @propert {function()} [onChangeCollection]
+ * @propert {function(*,string,HTMLElement,Object):Object} [processCellMenu]
+ * @propert {function(string,Object):Object} [processHeadMenu]
+ */
+
+/**
+ * Active mode
+ * @property {Mode}
+ */
+Query.mode = null
+
+/**
+ * Registered modes
+ * @property {Array<Mode>}
+ */
+Query.modes = []
+
 Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
-Panel.request('collections', {}, function (result) {
-	Query.init(result.connections)
+window.addEventListener('load', function () {
+	Panel.request('collections', {}, function (result) {
+		Query.init(result.connections)
+	})
 })
+
+/**
+ * @param {Mode} mode
+ */
+Query.registerMode = function (mode) {
+	Query.modes.push(mode)
+}
 
 /**
  * @param {Array<Object>} connections
@@ -49,7 +85,22 @@ Panel.request('collections', {}, function (result) {
  */
 Query.init = function (connections) {
 	var connectionNames = [],
-		lastConnection = window.localStorage.getItem('node-mongo-admin-connection')
+		lastConnection = window.localStorage.getItem('node-mongo-admin-connection'),
+		initialMode
+
+	// Setup modes
+	Query.modes.forEach(function (mode) {
+		var btEl = Panel.create('input[type=button]')
+		btEl.value = mode.name
+		btEl.id = 'bt-' + mode.name
+		btEl.onclick = Query.setMode.bind(Query, mode)
+		Panel.get('mode-buttons').appendChild(btEl)
+		if (mode.default) {
+			initialMode = mode
+		}
+	})
+
+	Query.setMode(initialMode)
 
 	connections.forEach(function (connection) {
 		Query.collections[connection.name] = connection.collections
@@ -57,6 +108,12 @@ Query.init = function (connections) {
 			value: connection.name,
 			text: Panel.formatDocPath(connection.name)
 		})
+	})
+
+	Query.modes.forEach(function (mode) {
+		if (mode.init) {
+			mode.init()
+		}
 	})
 
 	Panel.populateSelectWithArray('query-connections', connectionNames)
@@ -72,8 +129,6 @@ Query.init = function (connections) {
 	if (window.location.search) {
 		Query.executeFromSearch()
 	}
-
-	Simple.init()
 }
 
 Query.onChangeConnection = function () {
@@ -107,7 +162,20 @@ Query.onChangeConnection = function () {
 Query.onChangeCollection = function () {
 	Query.pathsToExpand = []
 	Query.collection = Panel.get('query-collections').value
-	Simple.onChangeCollection()
+	if (Query.mode.onChangeCollection) {
+		Query.mode.onChangeCollection()
+	}
+}
+
+/**
+ * @param {Mode} mode
+ */
+Query.setMode = function (mode) {
+	Query.mode = mode
+	Query.modes.forEach(function (each) {
+		Panel.get('bt-' + each.name).disabled = each === mode
+		Panel.get('query-' + each.name).style.display = each === mode ? '' : 'none'
+	})
 }
 
 /**
@@ -137,7 +205,7 @@ Query.setCollection = function (connection, collection) {
 Query.onFormSubmit = function (event, dontPushState) {
 	event && event.preventDefault()
 
-	Simple.execute()
+	Query.mode.execute()
 
 	if (!dontPushState) {
 		// Update page URL
@@ -312,10 +380,7 @@ Query.populateResultTable = function () {
 		newPath = prefix + path
 		cell.textContent = Panel.formatDocPath(path)
 		cell.oncontextmenu = function (event) {
-			var options = {
-				'Sort asc': Simple.sortByPath.bind(Query, newPath, 1),
-				'Sort desc': Simple.sortByPath.bind(Query, newPath, -1)
-			}
+			var options = {}
 
 			if (!terminal) {
 				options['Collapse column'] = function () {
@@ -328,6 +393,9 @@ Query.populateResultTable = function () {
 			}
 
 			event.preventDefault()
+			if (Query.mode.processHeadMenu) {
+				options = Query.mode.processHeadMenu(newPath, options)
+			}
 			Menu.show(event, options)
 		}
 		cell.title = path
@@ -426,25 +494,6 @@ Query.openMenu = function (value, path, cell, event) {
 		}
 	}
 
-	// Find
-	options['Find by ' + path] = {
-		Equal: Simple.findByPath.bind(Simple, path, value),
-		Different: Simple.findByPath.bind(Simple, path, value, '$ne'),
-		Greater: Simple.findByPath.bind(Simple, path, value, '$gt'),
-		Less: Simple.findByPath.bind(Simple, path, value, '$lt'),
-		'Greater or equal': Simple.findByPath.bind(Simple, path, value, '$gte'),
-		'Less or equal': Simple.findByPath.bind(Simple, path, value, '$lte')
-	}
-
-	// Find by id
-	if (value instanceof ObjectId && path !== '_id') {
-		// Let user search for this id in another collection with a related name
-		options['Find by id in'] = Query.getMenuForId(value, path)
-	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
-		// Pseudo-id (stored as string)
-		options['Find by id in'] = Query.getMenuForId(new ObjectId(value), path)
-	}
-
 	// Timestamp from object id
 	if (value instanceof ObjectId) {
 		options['See timestamp'] = function () {
@@ -459,55 +508,17 @@ Query.openMenu = function (value, path, cell, event) {
 	}
 
 	event.preventDefault()
+	if (Query.mode.processCellMenu) {
+		options = Query.mode.processCellMenu(value, path, cell, options)
+	}
 	Menu.show(event, options)
-}
-
-/**
- * Construct the find-by-id context menu
- * @param {ObjectId} value
- * @param {string} path
- * @returns {Object<Function>}
- */
-Query.getMenuForId = function (value, path) {
-	var options = {},
-		pathParts = path.split('.')
-
-	Object.keys(Query.collections).forEach(function (conn) {
-		Query.collections[conn].forEach(function (coll) {
-			// For each collection, test if match with the path
-			var fn, conn2, match = pathParts.some(function (part) {
-				if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
-					part = part.substr(0, part.length - 2)
-				}
-				return coll.toLowerCase().indexOf(part.toLowerCase()) !== -1
-			})
-
-			if (match) {
-				fn = function () {
-					Simple.findById(conn, coll, value)
-				}
-
-				if (conn === Query.connection) {
-					options[Panel.formatDocPath(coll)] = fn
-				} else {
-					// Submenu for other connection
-					// appending empty space is a hack to avoid name colission
-					conn2 = Panel.formatDocPath(conn) + '\u200b'
-					options[conn2] = options[conn2] || {}
-					options[conn2][Panel.formatDocPath(coll)] = fn
-				}
-			}
-		})
-	})
-
-	return options
 }
 
 /**
  * Convert the current query to a URL search component
  */
 Query.toSearch = function () {
-	var parts = ['simple', Query.connection, Query.collection].concat(Simple.toSearchParts())
+	var parts = [Query.mode.name, Query.connection, Query.collection].concat(Query.mode.toSearchParts())
 
 	return '?' + parts.map(encodeURIComponent).join('&')
 }
@@ -516,18 +527,25 @@ Query.toSearch = function () {
  * Do a find operation based on a search URL component (generated by Query.toSearch)
  */
 Query.executeFromSearch = function () {
-	var search = window.location.search
+	var search = window.location.search,
+		i
 	if (search[0] !== '?') {
 		return
 	}
 
 	var parts = search.substr(1).split('&').map(decodeURIComponent),
-		// mode = parts[0], ignore for now
+		mode = parts[0],
 		connection = parts[1],
 		collection = parts[2]
 
+	for (i = 0; i < Query.modes.length; i++) {
+		if (Query.modes[i].name === mode) {
+			Query.setMode(Query.modes[i])
+			break
+		}
+	}
 	Query.setCollection(connection, collection)
-	Simple.executeFromSearchParts.apply(Simple, parts.slice(3))
+	Query.mode.executeFromSearchParts.apply(Query.mode, parts.slice(3))
 }
 
 window.addEventListener('popstate', function () {

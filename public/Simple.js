@@ -6,7 +6,13 @@
 
 var Simple = {}
 
+Simple.name = 'simple'
+
+Simple.default = true
+
 Simple.docsByPage = 50
+
+Query.registerMode(Simple)
 
 /**
  * Called after the page is loaded
@@ -115,6 +121,7 @@ Simple.findById = function (connection, collection, id) {
  */
 Simple.findByPath = function (path, value, op) {
 	var query
+	value = value === undefined ? null : value
 	if (!/^[a-z_][a-z0-9_$]*$/.test(path)) {
 		path = '\'' + path.replace(/'/g, '\\\'') + '\''
 	}
@@ -125,6 +132,90 @@ Simple.findByPath = function (path, value, op) {
 	}
 	Panel.get('simple-selector').value = '{' + path + ': ' + query + '}'
 	Query.onFormSubmit()
+}
+
+/**
+ * Add custom options to cell context menu
+ * @param {*} value
+ * @param {string} path
+ * @param {HTMLElement} cell
+ * @param {Object} options
+ * @returns {Object}
+ */
+Simple.processCellMenu = function (value, path, cell, options) {
+	// Find
+	options['Find by ' + path] = {
+		Equal: Simple.findByPath.bind(Simple, path, value),
+		Different: Simple.findByPath.bind(Simple, path, value, '$ne'),
+		Greater: Simple.findByPath.bind(Simple, path, value, '$gt'),
+		Less: Simple.findByPath.bind(Simple, path, value, '$lt'),
+		'Greater or equal': Simple.findByPath.bind(Simple, path, value, '$gte'),
+		'Less or equal': Simple.findByPath.bind(Simple, path, value, '$lte')
+	}
+
+	// Find by id
+	if (value instanceof ObjectId && path !== '_id') {
+		// Let user search for this id in another collection with a related name
+		options['Find by id in'] = Simple.getMenuForId(value, path)
+	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
+		// Pseudo-id (stored as string)
+		options['Find by id in'] = Simple.getMenuForId(new ObjectId(value), path)
+	}
+
+	return options
+}
+
+/**
+ * Add custom options to column header context menu
+ * @param {string} path
+ * @param {Object} options
+ * @returns {Object}
+ */
+Simple.processHeadMenu = function (path, options) {
+	options['Sort asc'] = Simple.sortByPath.bind(Simple, path, 1)
+	options['Sort desc'] = Simple.sortByPath.bind(Simple, path, -1)
+	return options
+}
+
+/**
+ * Construct the find-by-id context menu
+ * @param {ObjectId} value
+ * @param {string} path
+ * @returns {Object<Function>}
+ */
+Simple.getMenuForId = function (value, path) {
+	var options = {},
+		pathParts = path.split('.')
+
+	Object.keys(Query.collections).forEach(function (conn) {
+		Query.collections[conn].forEach(function (coll) {
+			// For each collection, test if match with the path
+			var fn, conn2, match = pathParts.some(function (part) {
+				if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
+					part = part.substr(0, part.length - 2)
+				}
+				return coll.toLowerCase().indexOf(part.toLowerCase()) !== -1
+			})
+
+			if (match) {
+				fn = function () {
+					Simple.findById(conn, coll, value)
+				}
+
+				if (conn === Query.connection) {
+					options[Panel.formatDocPath(coll)] = fn
+				} else {
+					// Submenu for other connection
+					// appending empty space is a hack to avoid name colission
+					conn2 = Panel.formatDocPath(conn) + '\u200b'
+					options[conn2] = options[conn2] || {}
+					options[conn2][Panel.formatDocPath(coll)] = fn
+				}
+			}
+		})
+	})
+
+	return options
 }
 
 /**
