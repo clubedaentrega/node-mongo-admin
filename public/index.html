@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="explore.js"></script>
 	<script type="text/javascript" src="Menu.js"></script>
 	<script type="text/javascript" src="Panel.js"></script>
+	<script type="text/javascript" src="Simple.js"></script>
 	<script type="text/javascript" src="Query.js"></script>
 </head>
 
@@ -21,11 +22,16 @@
 
 	<form id="query-form">
 		<p>
+			<input type="button" value="Simple" id="bt-simple" disabled>
+			<input type="button" value="Distinct" id="bt-distinct" disabled>
+			<input type="button" value="Aggregate" id="aggregate" disabled>
+		</p>
+		<p>
 			<select id="query-connections"></select>.
 			<select id="query-collections"></select>
-			.<span id="query-find">find</span>(
-			<input size="50" id="query-selector" value="{}">).sort(
-			<input size="50" id="query-sort" value="{_id: -1}">)
+			.<span id="simple-find">find</span>(
+			<input size="50" id="simple-selector" value="{}">).sort(
+			<input size="30" id="simple-sort" value="{_id: -1}">)
 		</p>
 
 		<p>
@@ -33,7 +39,7 @@
 			<span id="query-loading" style="display: none">loading</span>
 		</p>
 	</form>
-	<p>
+	<p id="query-controls">
 		<span id="query-prev" class="prev-off"></span>
 		<span id="query-page"></span>
 		<span id="query-next" class="next-off"></span>

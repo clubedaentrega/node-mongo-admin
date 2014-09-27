@@ -1,9 +1,10 @@
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu*/
+/**
+ * @file Manage the result display
+ */
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Simple*/
 'use strict'
 
 var Query = {}
-
-Query.docsByPage = 50
 
 /**
  * Query.collections[connectionName] is a array of collection names
@@ -22,6 +23,18 @@ Query.pathsToExpand = []
  * @property {Array<Object>}
  */
 Query.result = null
+
+/**
+ * Active connection
+ * @readonly
+ */
+Query.connection = ''
+
+/**
+ * Active connection
+ * @readonly
+ */
+Query.collection = ''
 
 Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
@@ -53,17 +66,14 @@ Query.init = function (connections) {
 	}
 	Query.onChangeConnection()
 
-	Panel.get('query-selector').oninput = function () {
-		Panel.get('query-find').textContent = Query.readId(this.value) ? 'findById' : 'find'
-	}
-
 	Panel.get('query-collections').onchange = Query.onChangeCollection
-
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 
 	if (window.location.search) {
-		Query.findFromSearch(window.location.search)
+		Query.executeFromSearch()
 	}
+
+	Simple.init()
 }
 
 Query.onChangeConnection = function () {
@@ -86,6 +96,8 @@ Query.onChangeConnection = function () {
 	// Try to recover selected collection
 	if (collections.indexOf(collection) !== -1) {
 		Panel.get('query-collections').value = collection
+	} else {
+		Query.onChangeCollection()
 	}
 
 	// Save to keep on reload
@@ -93,9 +105,9 @@ Query.onChangeConnection = function () {
 }
 
 Query.onChangeCollection = function () {
-	Panel.get('query-sort').value = '{_id: -1}'
-	Panel.get('query-selector').value = '{}'
 	Query.pathsToExpand = []
+	Query.collection = Panel.get('query-collections').value
+	Simple.onChangeCollection()
 }
 
 /**
@@ -125,58 +137,36 @@ Query.setCollection = function (connection, collection) {
 Query.onFormSubmit = function (event, dontPushState) {
 	event && event.preventDefault()
 
-	var oid = Query.readId(Panel.get('query-selector').value),
-		selector = (oid ? oid : Panel.processJSInEl('query-selector')) || {},
-		sort = Panel.processJSInEl('query-sort') || {},
-		connection = Query.connection,
-		collection = Panel.get('query-collections').value
-
-	Panel.get('query-find').textContent = oid ? 'findById' : 'find'
-	Query.find(connection, collection, selector, sort, 0)
+	Simple.execute()
 
 	if (!dontPushState) {
 		// Update page URL
-		window.history.pushState(null, '', Query.toSearch(connection, collection, selector, sort))
+		window.history.pushState(null, '', Query.toSearch())
 	}
 }
 
 /**
- * @param {string} connection
- * @param {string} collection
- * @param {Object} selector
- * @param {Object} sort
- * @param {number} page
+ * Set current layout for a loading state
+ * @param {boolean} loading
  */
-Query.find = function (connection, collection, selector, sort, page) {
-	var loadingEl = Panel.get('query-loading')
-	loadingEl.style.display = ''
-	Panel.get('query-result').classList.add('loading')
-
-	Panel.request('find', {
-		connection: connection,
-		collection: collection,
-		selector: selector,
-		limit: Query.docsByPage,
-		skip: Query.docsByPage * page,
-		sort: sort
-	}, function (result) {
-		loadingEl.style.display = 'none'
+Query.setLoading = function (loading) {
+	if (loading) {
+		Panel.get('query-loading').style.display = ''
+		Panel.get('query-result').classList.add('loading')
+	} else {
+		Panel.get('query-loading').style.display = 'none'
 		Panel.get('query-result').classList.remove('loading')
 		Panel.get('query-form').scrollIntoView()
-		if (!result.error) {
-			Query.showResult(result.docs, page, function (page) {
-				Query.find(connection, collection, selector, sort, page)
-			})
-		}
-	})
+	}
 }
 
 /**
  * @param {Object[]} docs
- * @param {number} page
- * @param {Function} findPage
+ * @param {number} [page=0]
+ * @param {boolean} [hasMore=false]
+ * @param {function(number)} [findPage=null]
  */
-Query.showResult = function (docs, page, findPage) {
+Query.showResult = function (docs, page, hasMore, findPage) {
 	var prevEl = Panel.get('query-prev'),
 		nextEl = Panel.get('query-next'),
 		pageEl = Panel.get('query-page'),
@@ -184,21 +174,26 @@ Query.showResult = function (docs, page, findPage) {
 		nextEl2 = Panel.get('query-next2'),
 		pageEl2 = Panel.get('query-page2')
 
-	prevEl.className = prevEl2.className = !page ? 'prev-off' : 'prev-on'
-	prevEl.onmousedown = prevEl2.onmousedown = !page ? null : function (event) {
-		event.preventDefault()
-		findPage(page - 1)
+	if (findPage) {
+		prevEl.className = prevEl2.className = !page ? 'prev-off' : 'prev-on'
+		prevEl.onmousedown = prevEl2.onmousedown = !page ? null : function (event) {
+			event.preventDefault()
+			findPage(page - 1)
+		}
+
+		nextEl.className = nextEl2.className = hasMore ? 'next-off' : 'next-on'
+		nextEl.onmousedown = nextEl2.onmousedown = hasMore ? null : function (event) {
+			event.preventDefault()
+			findPage(page + 1)
+		}
+
+		pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
+		Panel.get('query-controls').style.display = ''
+		Panel.get('query-controls2').style.display = docs.length > 10 ? '' : 'none'
+	} else {
+		Panel.get('query-controls').style.display =
+			Panel.get('query-controls2').style.display = 'none'
 	}
-
-	nextEl.className = nextEl2.className = docs.length !== Query.docsByPage ? 'next-off' : 'next-on'
-	nextEl.onmousedown = nextEl2.onmousedown = docs.length !== Query.docsByPage ? null : function (event) {
-		event.preventDefault()
-		findPage(page + 1)
-	}
-
-	pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
-
-	Panel.get('query-controls2').style.display = docs.length > Query.docsByPage / 2 ? '' : 'none'
 
 	Query.result = docs
 	Query.populateResultTable()
@@ -318,8 +313,8 @@ Query.populateResultTable = function () {
 		cell.textContent = Panel.formatDocPath(path)
 		cell.oncontextmenu = function (event) {
 			var options = {
-				'Sort asc': Query.sortByPath.bind(Query, newPath, 1),
-				'Sort desc': Query.sortByPath.bind(Query, newPath, -1)
+				'Sort asc': Simple.sortByPath.bind(Query, newPath, 1),
+				'Sort desc': Simple.sortByPath.bind(Query, newPath, -1)
 			}
 
 			if (!terminal) {
@@ -353,62 +348,13 @@ Query.populateResultTable = function () {
 		}
 		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
-			Query._fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
+			Query.fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})
 	})
 }
 
-/**
- * Change the sort parameter and resend the form
- * @param {string} path
- * @param {number} direction - 1 or -1
- */
-Query.sortByPath = function (path, direction) {
-	var sort
-	if (path.match(/^[a-z_][a-z0-9_]*$/i)) {
-		sort = '{' + path + ': ' + direction + '}'
-	} else {
-		sort = '{\'' + path.replace(/'/g, '\\\'') + '\': ' + direction + '}'
-	}
-	Panel.get('query-sort').value = sort
-	Query.onFormSubmit()
-}
-
-/**
- * Run a find by id query in the main form
- * @param {string} connection
- * @param {string} collection
- * @param {ObjectId} id
- */
-Query.findById = function (connection, collection, id) {
-	Query.setCollection(connection, collection)
-	Panel.get('query-selector').value = id
-	Panel.get('query-sort').value = '{_id: -1}'
-	Query.onFormSubmit()
-}
-
-/**
- * Find all docs that have the given value for the given path
- * @param {string} path
- * @param {*} value
- * @param {string} [op='$eq'] - one of '$eq', '$ne', '$gt', '$lt', '$gte', '$lte'
- */
-Query.findByPath = function (path, value, op) {
-	var query
-	if (!/^[a-z_][a-z0-9_$]*$/.test(path)) {
-		path = '\'' + path.replace(/'/g, '\\\'') + '\''
-	}
-	if (!op || op === '$eq') {
-		query = json.stringify(value, false, false)
-	} else {
-		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
-	}
-	Panel.get('query-selector').value = '{' + path + ': ' + query + '}'
-	Query.onFormSubmit()
-}
-
 // Aux function for Query.showResult
-Query._fillResultValue = function (cell, value, path) {
+Query.fillResultValue = function (cell, value, path) {
 	var create = Panel.create
 
 	cell.dataset.path = path
@@ -482,12 +428,12 @@ Query.openMenu = function (value, path, cell, event) {
 
 	// Find
 	options['Find by ' + path] = {
-		Equal: Query.findByPath.bind(Query, path, value),
-		Different: Query.findByPath.bind(Query, path, value, '$ne'),
-		Greater: Query.findByPath.bind(Query, path, value, '$gt'),
-		Less: Query.findByPath.bind(Query, path, value, '$lt'),
-		'Greater or equal': Query.findByPath.bind(Query, path, value, '$gte'),
-		'Less or equal': Query.findByPath.bind(Query, path, value, '$lte')
+		Equal: Simple.findByPath.bind(Simple, path, value),
+		Different: Simple.findByPath.bind(Simple, path, value, '$ne'),
+		Greater: Simple.findByPath.bind(Simple, path, value, '$gt'),
+		Less: Simple.findByPath.bind(Simple, path, value, '$lt'),
+		'Greater or equal': Simple.findByPath.bind(Simple, path, value, '$gte'),
+		'Less or equal': Simple.findByPath.bind(Simple, path, value, '$lte')
 	}
 
 	// Find by id
@@ -538,7 +484,7 @@ Query.getMenuForId = function (value, path) {
 
 			if (match) {
 				fn = function () {
-					Query.findById(conn, coll, value)
+					Simple.findById(conn, coll, value)
 				}
 
 				if (conn === Query.connection) {
@@ -558,54 +504,32 @@ Query.getMenuForId = function (value, path) {
 }
 
 /**
- * Try to read an object id from the string
- * Valid examples: 53f0175172b3dd4af22d1972, "53f0175172b3dd4af22d1972", '53f0175172b3dd4af22d1972'
- * @param {string} str
- * @returns {?ObjectId} null if not valid syntax
- */
-Query.readId = function (str) {
-	var match = str.match(/^(["']?)([0-9a-f]{24})\1$/)
-	return match ? new ObjectId(match[2]) : null
-}
-
-/**
  * Convert the current query to a URL search component
- * @param {string} connection
- * @param {string} collection
- * @param {Object} selector
- * @param {Object} sort
- * @param {number} page
  */
-Query.toSearch = function (connection, collection, selector, sort) {
-	return '?' + [
-		connection,
-		collection,
-		json.stringify(selector),
-		json.stringify(sort)
-	].map(encodeURIComponent).join('&')
+Query.toSearch = function () {
+	var parts = ['simple', Query.connection, Query.collection].concat(Simple.toSearchParts())
+
+	return '?' + parts.map(encodeURIComponent).join('&')
 }
 
 /**
  * Do a find operation based on a search URL component (generated by Query.toSearch)
- * @param {string} search
  */
-Query.findFromSearch = function (search) {
+Query.executeFromSearch = function () {
+	var search = window.location.search
 	if (search[0] !== '?') {
 		return
 	}
 
 	var parts = search.substr(1).split('&').map(decodeURIComponent),
-		connection = parts[0],
-		collection = parts[1],
-		selector = parts[2],
-		sort = parts[3]
+		// mode = parts[0], ignore for now
+		connection = parts[1],
+		collection = parts[2]
 
 	Query.setCollection(connection, collection)
-	Panel.get('query-selector').value = selector
-	Panel.get('query-sort').value = sort
-	Query.onFormSubmit(null, true)
+	Simple.executeFromSearchParts.apply(Simple, parts.slice(3))
 }
 
 window.addEventListener('popstate', function () {
-	Query.findFromSearch(window.location.search)
+	Query.executeFromSearch()
 })
