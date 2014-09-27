@@ -35,7 +35,8 @@ Panel.request('collections', {}, function (result) {
  * @param {Array<string>} connections.$.collections
  */
 Query.init = function (connections) {
-	var connectionNames = []
+	var connectionNames = [],
+		lastConnection = window.localStorage.getItem('node-mongo-admin-connection')
 
 	connections.forEach(function (connection) {
 		Query.collections[connection.name] = connection.collections
@@ -47,6 +48,9 @@ Query.init = function (connections) {
 
 	Panel.populateSelectWithArray('query-connections', connectionNames)
 	Panel.get('query-connections').onchange = Query.onChangeConnection
+	if (lastConnection) {
+		Panel.get('query-connections').value = lastConnection
+	}
 	Query.onChangeConnection()
 
 	Panel.get('query-selector').oninput = function () {
@@ -83,6 +87,9 @@ Query.onChangeConnection = function () {
 	if (collections.indexOf(collection) !== -1) {
 		Panel.get('query-collections').value = collection
 	}
+
+	// Save to keep on reload
+	window.localStorage.setItem('node-mongo-admin-connection', connection)
 }
 
 Query.onChangeCollection = function () {
