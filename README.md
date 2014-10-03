@@ -13,13 +13,14 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 * HTTPs and BasicAuth
 * Relaxed query language (accepts not only JSON, but also plain JS)
 * Right click to quick search (even between databases)
+* Support for distinct and aggregate query
 
 ## Example
 ![screen shot](https://raw.githubusercontent.com/clubedaentrega/node-mongo-admin/master/ss.png)
 
 ## TODO
-* Aggregate
 * Edit documents
 * Remove documents
 * Manage collections
 * Manage indexes
+* Export result set to HTML and CSV

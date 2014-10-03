@@ -163,15 +163,20 @@ Panel.populateSelectWithArray = function (selectEl, array, valueKey, textKey) {
 	})
 }
 
-// Process the content of a HTML input element as JS
-// If soft is true, don't alert parse errors
-// Return the JS value or "" if the element is empty
-Panel.processJSInEl = function (id, soft) {
+/**
+ * Process the content of a HTML input element as JS
+ * @param {string|HTMLElement} id
+ * @param {boolean} [soft] - if true, don't alert parse errors
+ * @param {boolean} [implicitObject] - embbed field value in '{...}' before parsing
+ * @returns {*} a JS value or "" if the element is empty
+ * @throws if invalid syntax
+ */
+Panel.processJSInEl = function (id, soft, implicitObject) {
 	var value = Panel.get(id).value
 	var Func = Function
 	if (value) {
 		try {
-			value = new Func('return (' + value + ')')()
+			value = new Func('return (' + (implicitObject ? '{' + value + '}' : value) + ')')()
 		} catch (err) {
 			if (!soft) {
 				alert(err)

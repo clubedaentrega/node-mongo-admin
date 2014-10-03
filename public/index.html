@@ -25,25 +25,11 @@
 	<form id="query-form">
 		<p id="mode-buttons">
 		</p>
-		<p>
-			<select id="query-connections"></select>.
-			<select id="query-collections"></select>
-
-			<span id="query-simple">
-				.<span id="simple-find">find</span>(
-			<input size="50" id="simple-selector" value="{}">).sort(
-			<input size="30" id="simple-sort" value="{_id: -1}">)
-			</span>
-
-			<span id="query-distinct">
-				.distinct(<input size="30" id="distinct-field" value="">, 
-				<input size="40" id="distinct-selector" value="">)
-			</span>
-
-			<!--<span id="query-aggregate">
-				TODO
-			</span>-->
-		</p>
+		<pre><select id="query-connections"></select>.<select id="query-collections"></select><span
+		id="query-simple">.<span id="simple-find">find</span>(<input size="50" id="simple-selector" value="{}">).sort(<input size="30" id="simple-sort" value="{_id: -1}">)</span><span
+		id="query-distinct">.distinct(<input size="30" id="distinct-field">, <input size="40" id="distinct-selector">)</span><span
+		id="query-aggregate">.aggregate([ <span class="add" id="aggregate-add"></span>
+<span id="aggregate-stages"></span>])</span></pre>
 
 		<p>
 			<input type="submit" value="Execute" id="query-execute">

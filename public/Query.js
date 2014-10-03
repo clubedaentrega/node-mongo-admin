@@ -91,7 +91,7 @@ Query.init = function (connections) {
 	// Setup modes
 	Query.modes.forEach(function (mode) {
 		var btEl = Panel.create('input[type=button]')
-		btEl.value = mode.name
+		btEl.value = Panel.formatDocPath(mode.name)
 		btEl.id = 'bt-' + mode.name
 		btEl.onclick = Query.setMode.bind(Query, mode)
 		Panel.get('mode-buttons').appendChild(btEl)

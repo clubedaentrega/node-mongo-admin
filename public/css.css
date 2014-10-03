@@ -44,20 +44,24 @@ input {
 canvas {
 	float: right;
 }
-/* Prev and next buttons */
+/* Icon buttons */
 
 .prev-on,
 .prev-off,
 .next-on,
 .next-off,
-.eye {
+.eye,
+.add,
+.delete {
 	display: inline-block;
 	width: 16px;
 	height: 16px;
 }
 .prev-on,
 .next-on,
-.eye {
+.eye,
+.add,
+.delete {
 	cursor: pointer
 }
 .prev-on {
@@ -74,6 +78,16 @@ canvas {
 }
 .eye {
 	background-image: url(img/eye.png);
+}
+.add {
+	background-image: url(img/add.png);
+}
+.delete {
+	background-image: url(img/delete.png);
+}
+pre .add,
+pre .delete {
+	margin-bottom: -4px;
 }
 /* Table */
 
