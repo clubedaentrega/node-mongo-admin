@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export*/
 'use strict'
 
 var Query = {}
@@ -125,6 +125,7 @@ Query.init = function (connections) {
 
 	Panel.get('query-collections').onchange = Query.onChangeCollection
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
+	Panel.get('export').onclick = Query.export
 
 	if (window.location.search) {
 		Query.executeFromSearch()
@@ -165,6 +166,20 @@ Query.onChangeCollection = function () {
 	if (Query.mode.onChangeCollection) {
 		Query.mode.onChangeCollection()
 	}
+}
+
+/**
+ * Export the current result set
+ */
+Query.export = function () {
+	var title, url
+
+	title = Panel.formatDocPath(Query.mode.name) +
+		' query on ' +
+		Panel.formatDocPath(Query.connection + '.' + Query.collection)
+	url = Export.export(Query.result, title)
+	window.open(url)
+	window.URL.revokeObjectURL(url)
 }
 
 /**
@@ -262,6 +277,8 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 		Panel.get('query-controls').style.display =
 			Panel.get('query-controls2').style.display = 'none'
 	}
+
+	Panel.get('export').style.display = docs.length ? '' : 'none'
 
 	Query.result = docs
 	Query.populateResultTable()
@@ -361,19 +378,19 @@ Query.populateResultTable = function () {
 	var createHeader = function (treeEl, depth, prefix) {
 		var cell = Panel.create('th'),
 			cols = 0,
-			path, newPath, terminal
+			path, newPath, leaf
 		if (typeof treeEl === 'string') {
 			path = treeEl
 			cell.rowSpan = treeDepth - depth
 			cols = 1
-			terminal = true
+			leaf = true
 		} else {
 			path = treeEl.name
 			treeEl.subpaths.forEach(function (each) {
 				cols += createHeader(each, depth + 1, prefix + path + '.')
 			})
 			cell.colSpan = cols
-			terminal = false
+			leaf = false
 		}
 		rowEls[depth].appendChild(cell)
 
@@ -382,7 +399,7 @@ Query.populateResultTable = function () {
 		cell.oncontextmenu = function (event) {
 			var options = {}
 
-			if (!terminal) {
+			if (!leaf) {
 				options['Collapse column'] = function () {
 					// Remove this path and subpaths from expand list
 					Query.pathsToExpand = Query.pathsToExpand.filter(function (each) {

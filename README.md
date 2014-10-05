@@ -14,6 +14,7 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 * Relaxed query language (accepts not only JSON, but also plain JS)
 * Right click to quick search (even between databases)
 * Support for distinct and aggregate query
+* Export to HTML
 
 ## Example
 ![screen shot](https://raw.githubusercontent.com/clubedaentrega/node-mongo-admin/master/ss.png)
@@ -23,4 +24,3 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 * Remove documents
 * Manage collections
 * Manage indexes
-* Export result set to HTML and CSV
