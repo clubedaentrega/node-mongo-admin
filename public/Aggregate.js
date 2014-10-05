@@ -54,7 +54,7 @@ Aggregate.addStage = function (pos) {
 		stage.opEl = Panel.create('select'),
 		': ',
 		stage.preEl = Panel.create('span', '{'),
-		stage.valueEl = Panel.create('input[size=40]'),
+		stage.valueEl = Panel.create('input[size=100]'),
 		stage.posEl = Panel.create('span', '}'),
 		'}, ',
 		stage.addEl = Panel.create('span.add'),
@@ -103,7 +103,7 @@ Aggregate.updateLayout = function () {
 		var type = Aggregate.operators[stage.opEl.value]
 		stage.preEl.textContent = type === 'object' ? '{' : (type === 'field' ? '\'$' : '')
 		stage.posEl.textContent = type === 'object' ? '}' : (type === 'field' ? '\'' : '')
-		stage.valueEl.size = type === 'object' ? 40 : 20
+		stage.valueEl.size = type === 'object' ? 100 : 20
 	})
 }
 
