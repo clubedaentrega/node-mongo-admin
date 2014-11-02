@@ -128,7 +128,7 @@ Simple.findByPath = function (path, value, op) {
 	if (!op || op === '$eq') {
 		query = json.stringify(value, false, false)
 	} else {
-		query = op + ': ' + json.stringify(value, false, false)
+		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
 	}
 	Panel.get('simple-selector').value = path + ': ' + query
 	Query.onFormSubmit()
