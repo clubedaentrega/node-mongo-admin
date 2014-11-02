@@ -12,7 +12,7 @@ Query.registerMode(Distinct)
  */
 Distinct.execute = function () {
 	var field = Panel.get('distinct-field').value,
-		selector = Panel.processJSInEl('distinct-selector') || {}
+		selector = Panel.processJSInEl('distinct-selector', false, true) || {}
 
 	Query.setLoading(true)
 	Panel.request('distinct', {
@@ -25,7 +25,7 @@ Distinct.execute = function () {
 		if (!result.error) {
 			Query.showResult(result.docs.map(function (doc) {
 				var ret = {}
-				ret[Panel.formatDocPath(field)] = doc
+				ret[field] = doc
 				return ret
 			}))
 		}

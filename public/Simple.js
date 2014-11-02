@@ -38,8 +38,8 @@ Simple.readId = function (str) {
  * Called when active collection is changed
  */
 Simple.onChangeCollection = function () {
-	Panel.get('simple-sort').value = '{_id: -1}'
-	Panel.get('simple-selector').value = '{}'
+	Panel.get('simple-sort').value = '_id: -1'
+	Panel.get('simple-selector').value = ''
 }
 
 /**
@@ -47,8 +47,8 @@ Simple.onChangeCollection = function () {
  */
 Simple.execute = function () {
 	var oid = Simple.readId(Panel.get('simple-selector').value),
-		selector = (oid ? oid : Panel.processJSInEl('simple-selector')) || {},
-		sort = Panel.processJSInEl('simple-sort') || {}
+		selector = (oid ? oid : Panel.processJSInEl('simple-selector', false, true)) || {},
+		sort = Panel.processJSInEl('simple-sort', false, true) || {}
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
 	Simple.find(Query.connection, Query.collection, selector, sort, 0)
@@ -91,9 +91,9 @@ Simple.find = function (connection, collection, selector, sort, page) {
 Simple.sortByPath = function (path, direction) {
 	var sort
 	if (path.match(/^[a-z_][a-z0-9_]*$/i)) {
-		sort = '{' + path + ': ' + direction + '}'
+		sort = path + ': ' + direction
 	} else {
-		sort = '{\'' + path.replace(/'/g, '\\\'') + '\': ' + direction + '}'
+		sort = '\'' + path.replace(/'/g, '\\\'') + '\': ' + direction
 	}
 	Panel.get('simple-sort').value = sort
 	Query.onFormSubmit()
@@ -108,7 +108,7 @@ Simple.sortByPath = function (path, direction) {
 Simple.findById = function (connection, collection, id) {
 	Query.setCollection(connection, collection)
 	Panel.get('simple-selector').value = id
-	Panel.get('simple-sort').value = '{_id: -1}'
+	Panel.get('simple-sort').value = '_id: -1'
 	Query.onFormSubmit()
 }
 
@@ -128,9 +128,9 @@ Simple.findByPath = function (path, value, op) {
 	if (!op || op === '$eq') {
 		query = json.stringify(value, false, false)
 	} else {
-		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
+		query = op + ': ' + json.stringify(value, false, false)
 	}
-	Panel.get('simple-selector').value = '{' + path + ': ' + query + '}'
+	Panel.get('simple-selector').value = path + ': ' + query
 	Query.onFormSubmit()
 }
 

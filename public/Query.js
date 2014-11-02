@@ -409,13 +409,17 @@ Query.populateResultTable = function () {
 				}
 			}
 
+			options['Show field name'] = function () {
+				explore(newPath)
+			}
+
 			event.preventDefault()
 			if (Query.mode.processHeadMenu) {
 				options = Query.mode.processHeadMenu(newPath, options)
 			}
 			Menu.show(event, options)
 		}
-		cell.title = path
+		cell.title = newPath
 
 		return cols
 	}
