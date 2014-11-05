@@ -119,7 +119,7 @@ Query.init = function (connections) {
 	Panel.populateSelectWithArray('query-connections', connectionNames)
 	Panel.get('query-connections').onchange = Query.onChangeConnection
 	if (lastConnection) {
-		Panel.get('query-connections').value = lastConnection
+		Panel.value('query-connections', lastConnection)
 	}
 	Query.onChangeConnection()
 
@@ -133,9 +133,9 @@ Query.init = function (connections) {
 }
 
 Query.onChangeConnection = function () {
-	var collection = Panel.get('query-collections').value,
+	var collection = Panel.value('query-collections'),
 		collectionNames = [],
-		connection = Panel.get('query-connections').value,
+		connection = Panel.value('query-connections'),
 		collections = Query.collections[connection]
 
 	Query.connection = connection
@@ -151,7 +151,7 @@ Query.onChangeConnection = function () {
 
 	// Try to recover selected collection
 	if (collections.indexOf(collection) !== -1) {
-		Panel.get('query-collections').value = collection
+		Panel.value('query-collections', collection)
 	} else {
 		Query.onChangeCollection()
 	}
@@ -162,7 +162,7 @@ Query.onChangeConnection = function () {
 
 Query.onChangeCollection = function () {
 	Query.pathsToExpand = []
-	Query.collection = Panel.get('query-collections').value
+	Query.collection = Panel.value('query-collections')
 	if (Query.mode.onChangeCollection) {
 		Query.mode.onChangeCollection()
 	}

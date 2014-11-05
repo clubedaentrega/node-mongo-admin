@@ -4,13 +4,28 @@
 // Global panel manager
 var Panel = {}
 
-// Alias for document.getElementById
+/**
+ * @param {string|HTMLElement} id
+ * @returns {HTMLElement}
+ */
 Panel.get = function (id) {
 	if (typeof id === 'object') {
 		return id
 	} else {
 		return document.getElementById(id)
 	}
+}
+
+/**
+ * @param {string|HTMLElement} id
+ * @param {string} [newValue] - if present, set the input value
+ * @returns {string} - the input value
+ */
+Panel.value = function (id, newValue) {
+	if (newValue !== undefined) {
+		return (Panel.get(id).value = newValue)
+	}
+	return Panel.get(id).value
 }
 
 /**
@@ -172,7 +187,7 @@ Panel.populateSelectWithArray = function (selectEl, array, valueKey, textKey) {
  * @throws if invalid syntax
  */
 Panel.processJSInEl = function (id, soft, implicitObject) {
-	var value = Panel.get(id).value
+	var value = Panel.value(id)
 	var Func = Function
 	if (value) {
 		try {

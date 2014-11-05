@@ -1,7 +1,7 @@
 /**
  * @file Manage simple queries
  */
-/*globals Panel, ObjectId, Query, json*/
+/*globals Panel, ObjectId, Query, json, explore, Distinct*/
 'use strict'
 
 var Simple = {}
@@ -36,18 +36,18 @@ Simple.readId = function (str) {
  * Called when active collection is changed
  */
 Simple.onChangeCollection = function () {
-	Panel.get('simple-sort').value = '_id: -1'
-	Panel.get('simple-selector').value = ''
+	Panel.value('simple-sort', '_id: -1')
+	Panel.value('simple-selector', '')
 }
 
 /**
  * Called when a query is submited
  */
 Simple.execute = function () {
-	var oid = Simple.readId(Panel.get('simple-selector').value),
+	var oid = Simple.readId(Panel.value('simple-selector')),
 		selector = (oid ? oid : Panel.processJSInEl('simple-selector', false, true)) || {},
 		sort = Panel.processJSInEl('simple-sort', false, true) || {},
-		limit = Number(Panel.get('simple-limit').value)
+		limit = Number(Panel.value('simple-limit'))
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
 	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0)
@@ -94,7 +94,7 @@ Simple.sortByPath = function (path, direction) {
 	} else {
 		sort = '\'' + path.replace(/'/g, '\\\'') + '\': ' + direction
 	}
-	Panel.get('simple-sort').value = sort
+	Panel.value('simple-sort', sort)
 	Query.onFormSubmit()
 }
 
@@ -106,11 +106,32 @@ Simple.sortByPath = function (path, direction) {
  */
 Simple.findById = function (connection, collection, id) {
 	Query.setCollection(connection, collection)
-	Panel.get('simple-selector').value = id
-	Panel.get('simple-sort').value = '_id: -1'
+	Panel.valud('simple-selector', id)
+	Panel.value('simple-sort', '_id: -1')
 	Query.onFormSubmit()
 }
 
+/**
+ * Run a find by id query and show the result in the explore window
+ * @param {string} connection
+ * @param {string} collection
+ * @param {ObjectId} id
+ */
+Simple.exploreById = function (connection, collection, id) {
+	explore('Loading...')
+	Panel.request('find', {
+		connection: connection,
+		collection: collection,
+		selector: {
+			_id: id
+		},
+		limit: 1,
+		skip: 0,
+		sort: {}
+	}, function (result) {
+		explore(result.docs[0])
+	})
+}
 
 /**
  * Find all docs that have the given value for the given path
@@ -129,7 +150,7 @@ Simple.findByPath = function (path, value, op) {
 	} else {
 		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
 	}
-	Panel.get('simple-selector').value = path + ': ' + query
+	Panel.value('simple-selector', path + ': ' + query)
 	Query.onFormSubmit()
 }
 
@@ -148,17 +169,26 @@ Simple.processCellMenu = function (value, path, cell, options) {
 		Different: Simple.findByPath.bind(Simple, path, value, '$ne'),
 		Greater: Simple.findByPath.bind(Simple, path, value, '$gt'),
 		Less: Simple.findByPath.bind(Simple, path, value, '$lt'),
-		'Greater or equal': Simple.findByPath.bind(Simple, path, value, '$gte'),
-		'Less or equal': Simple.findByPath.bind(Simple, path, value, '$lte')
+		'Equal to': function () {
+			var value = prompt(),
+				el
+			if (value) {
+				el = document.createElement('input')
+				el.value = value
+				Simple.findByPath(path, Panel.processJSInEl(el))
+			}
+		}
 	}
 
 	// Find by id
 	if (value instanceof ObjectId && path !== '_id') {
 		// Let user search for this id in another collection with a related name
-		options['Find by id in'] = Simple.getMenuForId(value, path)
+		options['Find by id in'] = Simple.getMenuForId(value, path, false)
+		options['Show doc from'] = Simple.getMenuForId(value, path, true)
 	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
 		// Pseudo-id (stored as string)
-		options['Find by id in'] = Simple.getMenuForId(new ObjectId(value), path)
+		options['Find by id in'] = Simple.getMenuForId(new ObjectId(value), path, false)
+		options['Show doc from'] = Simple.getMenuForId(new ObjectId(value), path, true)
 	}
 
 	return options
@@ -173,6 +203,7 @@ Simple.processCellMenu = function (value, path, cell, options) {
 Simple.processHeadMenu = function (path, options) {
 	options['Sort asc'] = Simple.sortByPath.bind(Simple, path, 1)
 	options['Sort desc'] = Simple.sortByPath.bind(Simple, path, -1)
+	options['Show distinct'] = Distinct.run.bind(Distinct, path, Panel.value('simple-selector'))
 	return options
 }
 
@@ -180,9 +211,10 @@ Simple.processHeadMenu = function (path, options) {
  * Construct the find-by-id context menu
  * @param {ObjectId} value
  * @param {string} path
+ * @param {boolean} modal - if true show the query result in the explore window
  * @returns {Object<Function>}
  */
-Simple.getMenuForId = function (value, path) {
+Simple.getMenuForId = function (value, path, modal) {
 	var options = {},
 		pathParts = path.split('.')
 
@@ -198,7 +230,11 @@ Simple.getMenuForId = function (value, path) {
 
 			if (match) {
 				fn = function () {
-					Simple.findById(conn, coll, value)
+					if (modal) {
+						Simple.exploreById(conn, coll, value)
+					} else {
+						Simple.findById(conn, coll, value)
+					}
 				}
 
 				if (conn === Query.connection) {
@@ -222,9 +258,9 @@ Simple.getMenuForId = function (value, path) {
  */
 Simple.toSearchParts = function () {
 	return [
-		Panel.get('simple-selector').value,
-		Panel.get('simple-sort').value,
-		Panel.get('simple-limit').value
+		Panel.value('simple-selector'),
+		Panel.value('simple-sort'),
+		Panel.value('simple-limit')
 	]
 }
 
@@ -235,8 +271,8 @@ Simple.toSearchParts = function () {
  * @param {string} limit
  */
 Simple.executeFromSearchParts = function (selector, sort, limit) {
-	Panel.get('simple-selector').value = selector
-	Panel.get('simple-sort').value = sort
-	Panel.get('simple-limit').value = limit
+	Panel.value('simple-selector', selector)
+	Panel.value('simple-sort', sort)
+	Panel.value('simple-limit', limit)
 	Query.onFormSubmit(null, true)
 }

@@ -11,7 +11,7 @@ Query.registerMode(Distinct)
  * Called when a query is submited
  */
 Distinct.execute = function () {
-	var field = Panel.get('distinct-field').value,
+	var field = Panel.value('distinct-field'),
 		selector = Panel.processJSInEl('distinct-selector', false, true) || {}
 
 	Query.setLoading(true)
@@ -33,10 +33,22 @@ Distinct.execute = function () {
 }
 
 /**
+ * Run a distinct query
+ * @param {string} field
+ * @param {string} selector
+ */
+Distinct.run = function (field, selector) {
+	Query.setMode(Distinct)
+	Panel.value('distinct-field', field)
+	Panel.value('distinct-selector', selector)
+	Query.onFormSubmit()
+}
+
+/**
  * @returns {Array}
  */
 Distinct.toSearchParts = function () {
-	return [Panel.get('distinct-field').value, Panel.get('distinct-selector').value]
+	return [Panel.value('distinct-field'), Panel.value('distinct-selector')]
 }
 
 /**
@@ -45,7 +57,7 @@ Distinct.toSearchParts = function () {
  * @param {string} selector
  */
 Distinct.executeFromSearchParts = function (field, selector) {
-	Panel.get('distinct-field').value = field
-	Panel.get('distinct-selector').value = selector
+	Panel.value('distinct-field', field)
+	Panel.value('distinct-selector', selector)
 	Query.onFormSubmit(null, true)
 }
