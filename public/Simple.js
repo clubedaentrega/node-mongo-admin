@@ -10,8 +10,6 @@ Simple.name = 'simple'
 
 Simple.default = true
 
-Simple.docsByPage = 50
-
 Query.registerMode(Simple)
 
 /**
@@ -48,10 +46,11 @@ Simple.onChangeCollection = function () {
 Simple.execute = function () {
 	var oid = Simple.readId(Panel.get('simple-selector').value),
 		selector = (oid ? oid : Panel.processJSInEl('simple-selector', false, true)) || {},
-		sort = Panel.processJSInEl('simple-sort', false, true) || {}
+		sort = Panel.processJSInEl('simple-sort', false, true) || {},
+		limit = Number(Panel.get('simple-limit').value)
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
-	Simple.find(Query.connection, Query.collection, selector, sort, 0)
+	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0)
 }
 
 /**
@@ -61,23 +60,23 @@ Simple.execute = function () {
  * @param {Object} sort
  * @param {number} page
  */
-Simple.find = function (connection, collection, selector, sort, page) {
+Simple.find = function (connection, collection, selector, sort, limit, page) {
 	Query.setLoading(true)
 
 	Panel.request('find', {
 		connection: connection,
 		collection: collection,
 		selector: selector,
-		limit: Simple.docsByPage,
-		skip: Simple.docsByPage * page,
+		limit: limit,
+		skip: limit * page,
 		sort: sort
 	}, function (result) {
 		var hasMore
 		Query.setLoading(false)
 		if (!result.error) {
-			hasMore = result.docs.length !== Simple.docsByPage
+			hasMore = result.docs.length === limit
 			Query.showResult(result.docs, page, hasMore, function (page) {
-				Simple.find(connection, collection, selector, sort, page)
+				Simple.find(connection, collection, selector, sort, limit, page)
 			})
 		}
 	})
@@ -222,16 +221,22 @@ Simple.getMenuForId = function (value, path) {
  * @returns {Array}
  */
 Simple.toSearchParts = function () {
-	return [Panel.get('simple-selector').value, Panel.get('simple-sort').value]
+	return [
+		Panel.get('simple-selector').value,
+		Panel.get('simple-sort').value,
+		Panel.get('simple-limit').value
+	]
 }
 
 /**
  * Called when parsing a search URL component
  * @param {string} selector
  * @param {string} sort
+ * @param {string} limit
  */
-Simple.executeFromSearchParts = function (selector, sort) {
+Simple.executeFromSearchParts = function (selector, sort, limit) {
 	Panel.get('simple-selector').value = selector
 	Panel.get('simple-sort').value = sort
+	Panel.get('simple-limit').value = limit
 	Query.onFormSubmit(null, true)
 }

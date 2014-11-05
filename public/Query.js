@@ -264,8 +264,8 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 			findPage(page - 1)
 		}
 
-		nextEl.className = nextEl2.className = hasMore ? 'next-off' : 'next-on'
-		nextEl.onmousedown = nextEl2.onmousedown = hasMore ? null : function (event) {
+		nextEl.className = nextEl2.className = !hasMore ? 'next-off' : 'next-on'
+		nextEl.onmousedown = nextEl2.onmousedown = !hasMore ? null : function (event) {
 			event.preventDefault()
 			findPage(page + 1)
 		}
