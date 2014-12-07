@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage*/
 'use strict'
 
 var Query = {}
@@ -14,9 +14,9 @@ Query.collections = {}
 
 /**
  * Object paths that are expanded in the result table, displaying subdocs fields
- * @property {string[]}
+ * @property {Storage}
  */
-Query.pathsToExpand = []
+Query.expandedPaths = new Storage('expand')
 
 /**
  * Store data of current result
@@ -47,8 +47,9 @@ Query.collection = ''
  * @propert {function()} [init]
  * @propert {boolean} [default=false]
  * @propert {function()} [onChangeCollection]
- * @propert {function(*,string,HTMLElement,Object):Object} [processCellMenu]
- * @propert {function(string,Object):Object} [processHeadMenu]
+ * @propert {function(*,string,HTMLElement,Object)} [processCellMenu]
+ * @propert {function(*,string,HTMLElement,Object)} [processGlobalCellMenu]
+ * @propert {function(string,Object)} [processHeadMenu]
  */
 
 /**
@@ -70,6 +71,12 @@ Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegE
  * @property {Array<HTMLElement>}
  */
 Query.selection = []
+
+/**
+ * Hidden columns
+ * @property {Storage}
+ */
+Query.hiddenPaths = new Storage('hide')
 
 window.addEventListener('load', function () {
 	Panel.request('collections', {}, function (result) {
@@ -167,7 +174,6 @@ Query.onChangeConnection = function () {
 }
 
 Query.onChangeCollection = function () {
-	Query.pathsToExpand = []
 	Query.collection = Panel.value('query-collections')
 	if (Query.mode.onChangeCollection) {
 		Query.mode.onChangeCollection()
@@ -292,7 +298,7 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 
 /**
  * Populate result table with data from Query.result
- * Paths in Query.pathsToExpanded are shown in the table
+ * Paths in Query.expandedPaths are shown in the table
  */
 Query.populateResultTable = function () {
 	var paths = {},
@@ -301,8 +307,8 @@ Query.populateResultTable = function () {
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
 		docs = Query.result,
-		hideKey = 'node-mongo-admin.hide.' + Query.connection + '.' + Query.collection,
-		pathsToHide = JSON.parse(localStorage.getItem(hideKey) || '[]'),
+		pathsToHide = Query.hiddenPaths.getArray(Query.connection, Query.collection),
+		pathsToExpand = Query.expandedPaths.getArray(Query.connection, Query.collection),
 		pathNames, i, th
 
 	/**
@@ -351,7 +357,7 @@ Query.populateResultTable = function () {
 				!Array.isArray(value) &&
 				Query.specialTypes.indexOf(value.constructor) === -1 &&
 				(Object.keys(value).length === 1 ||
-					Query.pathsToExpand.indexOf(subpath) !== -1)) {
+					pathsToExpand.indexOf(subpath) !== -1)) {
 				addSubDoc(value, subpath, i)
 			} else {
 				// Primitive value
@@ -366,7 +372,7 @@ Query.populateResultTable = function () {
 
 	Panel.get('query-unhide-p').style.display = pathsToHide.length ? '' : 'none'
 	Panel.get('query-unhide').onclick = function () {
-		localStorage.removeItem(hideKey, null)
+		pathsToHide.clear()
 		Query.populateResultTable()
 	}
 
@@ -420,9 +426,9 @@ Query.populateResultTable = function () {
 			if (!leaf) {
 				options['Collapse column'] = function () {
 					// Remove this path and subpaths from expand list
-					Query.pathsToExpand = Query.pathsToExpand.filter(function (each) {
+					pathsToExpand.set(pathsToExpand.filter(function (each) {
 						return each !== newPath && each.indexOf(newPath + '.') !== 0
-					})
+					}))
 					Query.populateResultTable()
 				}
 			}
@@ -432,15 +438,15 @@ Query.populateResultTable = function () {
 			}
 
 			options['Hide this column'] = function () {
-				pathsToHide.push(newPath)
-				localStorage.setItem(hideKey, JSON.stringify(pathsToHide))
+				pathsToHide.pushAndSave(newPath)
 				Query.populateResultTable()
 			}
 
+			// Add custom buttons
+			Query.mode.processHeadMenu && Query.mode.processHeadMenu(newPath, options)
+
+			// Show it
 			event.preventDefault()
-			if (Query.mode.processHeadMenu) {
-				options = Query.mode.processHeadMenu(newPath, options)
-			}
 			Menu.show(event, options)
 		}
 		cell.title = newPath
@@ -566,7 +572,9 @@ Query.fillResultValue = function (cell, value, path) {
  * @param {MouseEvent} event
  */
 Query.openMenu = function (value, path, cell, event) {
-	var options = {}
+	var options = {},
+		conn = Query.connection,
+		coll = Query.collection
 
 	// Explore array/object
 	if (cell.dataset.explore) {
@@ -591,7 +599,7 @@ Query.openMenu = function (value, path, cell, event) {
 	// Expand path
 	if (cell.dataset.collapsed === 'object') {
 		options['Expand this column'] = function () {
-			Query.pathsToExpand.push(path)
+			Query.expandedPaths.getArray(conn, coll).pushAndSave(path)
 			Query.populateResultTable()
 		}
 	}
@@ -609,11 +617,55 @@ Query.openMenu = function (value, path, cell, event) {
 		}
 	}
 
+	// Add custom buttons
+	Query.modes.forEach(function (mode) {
+		mode.processGlobalCellMenu && mode.processGlobalCellMenu(value, path, cell, options)
+	})
+	Query.mode.processCellMenu && Query.mode.processCellMenu(value, path, cell, options)
+
+	// Show it
 	event.preventDefault()
-	if (Query.mode.processCellMenu) {
-		options = Query.mode.processCellMenu(value, path, cell, options)
-	}
 	Menu.show(event, options)
+}
+
+/**
+ * Construct the a context menu
+ * @param {ObjectId} value
+ * @param {string} path
+ * @param {function(string, string)} fn - the click function(connection, collection)
+ * @returns {Object<Function>}
+ */
+Query.getMenuForId = function (value, path, fn) {
+	var options = {},
+		pathParts = path.split('.')
+
+	Object.keys(Query.collections).forEach(function (conn) {
+		Query.collections[conn].forEach(function (coll) {
+			// For each collection, test if match with the path
+			var match = pathParts.some(function (part) {
+					if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
+						part = part.substr(0, part.length - 2)
+					}
+					return coll.toLowerCase().indexOf(part.toLowerCase()) !== -1
+				}),
+				fn2 = fn.bind(fn, conn, coll),
+				conn2
+
+			if (match) {
+				if (conn === Query.connection) {
+					options[Panel.formatDocPath(coll)] = fn2
+				} else {
+					// Submenu for other connection
+					// appending empty space is a hack to avoid name colission
+					conn2 = Panel.formatDocPath(conn) + '\u200b'
+					options[conn2] = options[conn2] || {}
+					options[conn2][Panel.formatDocPath(coll)] = fn2
+				}
+			}
+		})
+	})
+
+	return options
 }
 
 /**

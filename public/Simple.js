@@ -99,14 +99,15 @@ Simple.sortByPath = function (path, direction) {
 }
 
 /**
- * Run a find by id query in the main form
+ * Run a find by id query in the main form (may be called by other modes)
  * @param {string} connection
  * @param {string} collection
  * @param {ObjectId} id
  */
 Simple.findById = function (connection, collection, id) {
 	Query.setCollection(connection, collection)
-	Panel.valud('simple-selector', id)
+	Query.setMode(Simple)
+	Panel.value('simple-selector', id)
 	Panel.value('simple-sort', '_id: -1')
 	Query.onFormSubmit()
 }
@@ -155,12 +156,38 @@ Simple.findByPath = function (path, value, op) {
 }
 
 /**
+ * Add custom options to cell context menu in any mode
+ * @param {*} value
+ * @param {string} path
+ * @param {HTMLElement} cell
+ * @param {Object} options
+ */
+Simple.processGlobalCellMenu = function (value, path, cell, options) {
+	// Find by id
+	if (value instanceof ObjectId && path !== '_id') {
+		// Let user search for this id in another collection with a related name
+		addIdMenu(value)
+	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
+		// Pseudo-id (stored as string)
+		addIdMenu(new ObjectId(value))
+	}
+
+	function addIdMenu(value) {
+		options['Find by id in'] = Query.getMenuForId(value, path, function (conn, coll) {
+			Simple.findById(conn, coll, value)
+		})
+		options['Show doc from'] = Query.getMenuForId(value, path, function (conn, coll) {
+			Simple.exploreById(conn, coll, value)
+		})
+	}
+}
+
+/**
  * Add custom options to cell context menu
  * @param {*} value
  * @param {string} path
  * @param {HTMLElement} cell
  * @param {Object} options
- * @returns {Object}
  */
 Simple.processCellMenu = function (value, path, cell, options) {
 	// Find
@@ -179,78 +206,17 @@ Simple.processCellMenu = function (value, path, cell, options) {
 			}
 		}
 	}
-
-	// Find by id
-	if (value instanceof ObjectId && path !== '_id') {
-		// Let user search for this id in another collection with a related name
-		options['Find by id in'] = Simple.getMenuForId(value, path, false)
-		options['Show doc from'] = Simple.getMenuForId(value, path, true)
-	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
-		// Pseudo-id (stored as string)
-		options['Find by id in'] = Simple.getMenuForId(new ObjectId(value), path, false)
-		options['Show doc from'] = Simple.getMenuForId(new ObjectId(value), path, true)
-	}
-
-	return options
 }
 
 /**
  * Add custom options to column header context menu
  * @param {string} path
  * @param {Object} options
- * @returns {Object}
  */
 Simple.processHeadMenu = function (path, options) {
 	options['Sort asc'] = Simple.sortByPath.bind(Simple, path, 1)
 	options['Sort desc'] = Simple.sortByPath.bind(Simple, path, -1)
 	options['Show distinct'] = Distinct.run.bind(Distinct, path, Panel.value('simple-selector'))
-	return options
-}
-
-/**
- * Construct the find-by-id context menu
- * @param {ObjectId} value
- * @param {string} path
- * @param {boolean} modal - if true show the query result in the explore window
- * @returns {Object<Function>}
- */
-Simple.getMenuForId = function (value, path, modal) {
-	var options = {},
-		pathParts = path.split('.')
-
-	Object.keys(Query.collections).forEach(function (conn) {
-		Query.collections[conn].forEach(function (coll) {
-			// For each collection, test if match with the path
-			var fn, conn2, match = pathParts.some(function (part) {
-				if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
-					part = part.substr(0, part.length - 2)
-				}
-				return coll.toLowerCase().indexOf(part.toLowerCase()) !== -1
-			})
-
-			if (match) {
-				fn = function () {
-					if (modal) {
-						Simple.exploreById(conn, coll, value)
-					} else {
-						Simple.findById(conn, coll, value)
-					}
-				}
-
-				if (conn === Query.connection) {
-					options[Panel.formatDocPath(coll)] = fn
-				} else {
-					// Submenu for other connection
-					// appending empty space is a hack to avoid name colission
-					conn2 = Panel.formatDocPath(conn) + '\u200b'
-					options[conn2] = options[conn2] || {}
-					options[conn2][Panel.formatDocPath(coll)] = fn
-				}
-			}
-		})
-	})
-
-	return options
 }
 
 /**

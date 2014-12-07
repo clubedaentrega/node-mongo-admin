@@ -89,8 +89,10 @@ canvas {
 }
 .toggle {
 	background-image: url(img/toggle.png);
+	width: 10px;
+	height: 10px;
 	position: relative;
-	top: 4px;
+	top: 1px;
 }
 pre .add,
 pre .delete {
