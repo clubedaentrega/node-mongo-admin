@@ -122,12 +122,28 @@ Populate.run = function (op) {
 		ids: ids,
 		path: op.targetPath
 	}, function (result) {
-		var path = pathParts[pathParts.length - 1]
+		var parentPath = pathParts[pathParts.length - 1],
+			parts = op.targetPath.split('.')
 		result.docs.forEach(function (doc) {
 			replaceSites[doc._id].forEach(function (each) {
-				each[path] = op.targetPath ? doc[op.targetPath] : doc
+				each[parentPath] = op.targetPath ? getInPath(doc, parts) : doc
 			})
 		})
 		Query.populateResultTable()
 	})
+
+	// return doc[path], but considering sub-docs
+	function getInPath(doc, parts) {
+		var i
+		for (i = 0; i < parts.length; i++) {
+			if (!doc ||
+				typeof doc !== 'object' ||
+				Array.isArray(doc) ||
+				Query.specialTypes.indexOf(doc.constructor) !== -1) {
+				return
+			}
+			doc = doc[parts[i]]
+		}
+		return doc
+	}
 }
