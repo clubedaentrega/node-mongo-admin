@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate*/
 'use strict'
 
 var Query = {}
@@ -294,6 +294,8 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 
 	Query.result = docs
 	Query.populateResultTable()
+
+	Populate.runAll(Query.connection, Query.collection)
 }
 
 /**
@@ -307,8 +309,11 @@ Query.populateResultTable = function () {
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
 		docs = Query.result,
-		pathsToHide = Query.hiddenPaths.getArray(Query.connection, Query.collection),
-		pathsToExpand = Query.expandedPaths.getArray(Query.connection, Query.collection),
+		conn = Query.connection,
+		coll = Query.collection,
+		pathsToHide = Query.hiddenPaths.getArray(conn, coll),
+		pathsToExpand = Query.expandedPaths.getArray(conn, coll),
+		populatedPaths = Populate.getPaths(conn, coll),
 		pathNames, i, th
 
 	/**
@@ -450,6 +455,9 @@ Query.populateResultTable = function () {
 			Menu.show(event, options)
 		}
 		cell.title = newPath
+		if (Populate.isPopulated(populatedPaths, newPath)) {
+			cell.classList.add('populated')
+		}
 
 		return cols
 	}
@@ -467,7 +475,11 @@ Query.populateResultTable = function () {
 		}
 		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
-			Query.fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
+			var cell = rowEl.insertCell(-1)
+			Query.fillResultValue(cell, paths[path][i], path)
+			if (Populate.isPopulated(populatedPaths, path)) {
+				cell.classList.add('populated')
+			}
 		})
 		rowEl.onclick = Query.selectRow
 		rowEl.onmousedown = function (e) {
@@ -574,7 +586,8 @@ Query.fillResultValue = function (cell, value, path) {
 Query.openMenu = function (value, path, cell, event) {
 	var options = {},
 		conn = Query.connection,
-		coll = Query.collection
+		coll = Query.collection,
+		isPopulated = cell.classList.contains('populated')
 
 	// Explore array/object
 	if (cell.dataset.explore) {
@@ -614,6 +627,22 @@ Query.openMenu = function (value, path, cell, event) {
 				local = String(date)
 
 			alert('Id:\n\t' + value + '\nDatetime:\n\t' + iso + '\nLocal time:\n\t' + local)
+		}
+
+		if (path !== '_id' && !isPopulated) {
+			options['Populate with'] = Query.getMenuForId(value, path, function (conn2, coll2) {
+				var foreignPath = prompt('Path from ' + coll2 + ' to populate with')
+				if (foreignPath !== null) {
+					Populate.create(conn, coll, path, conn2, coll2, foreignPath)
+					Query.populateResultTable()
+				}
+			})
+		}
+	}
+
+	if (isPopulated) {
+		options.Unpopulate = function () {
+			Populate.remove(conn, coll, path)
 		}
 	}
 

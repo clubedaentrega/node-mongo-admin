@@ -110,6 +110,10 @@ th {
 	padding: 5px;
 	text-align: center;
 }
+.populated {
+	border-bottom: thin gray dashed;
+	border-right: thin gray dashed;
+}
 tr:hover > td,
 th:hover {
 	background-color: #DDD;
