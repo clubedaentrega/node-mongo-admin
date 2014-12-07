@@ -65,6 +65,12 @@ Query.modes = []
 
 Query.specialTypes = [ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Date, RegExp]
 
+/**
+ * Selected rows
+ * @property {Array<HTMLElement>}
+ */
+Query.selection = []
+
 window.addEventListener('load', function () {
 	Panel.request('collections', {}, function (result) {
 		Query.init(result.connections)
@@ -368,6 +374,7 @@ Query.populateResultTable = function () {
 	th = Panel.create('th', ' ')
 	th.rowSpan = treeDepth
 	rowEls[0].appendChild(th)
+	Query.selection = []
 
 	/**
 	 * @param {(string|Object)} treeEl
@@ -439,7 +446,64 @@ Query.populateResultTable = function () {
 		pathNames.forEach(function (path) {
 			Query.fillResultValue(rowEl.insertCell(-1), paths[path][i], path)
 		})
+		rowEl.onclick = Query.selectRow
+		rowEl.onmousedown = function (e) {
+			// Prevent ctrl+click selection
+			e.preventDefault()
+		}
 	})
+}
+
+/**
+ * Select the clicked row
+ * @param {Event} event
+ */
+Query.selectRow = function (event) {
+	var multi = event.shiftKey,
+		add = event.ctrlKey,
+		row = event.currentTarget,
+		previous = Query.selection,
+		start, end
+
+	event.preventDefault()
+
+	if (!add) {
+		// Clear previous selection
+		Query.selection.forEach(function (el) {
+			el.classList.remove('selected')
+		})
+
+		Query.selection = []
+		if (previous.length === 1 && previous[0] === row) {
+			// Toggle effect
+			return
+		}
+	}
+
+	if (!multi || !previous.length) {
+		// Select current
+		row.classList.add('selected')
+		Query.selection.push(row)
+	} else {
+		previous = previous[previous.length - 1]
+
+		if (row.compareDocumentPosition(previous) & Node.DOCUMENT_POSITION_FOLLOWING) {
+			start = row
+			end = previous.nextSibling
+		} else {
+			start = previous
+			end = row.nextSibling
+		}
+
+		do {
+			start.classList.add('selected')
+			Query.selection.push(start)
+			start = start.nextSibling
+		} while (start && start !== end)
+
+		// Put the last clicked element at the end
+		Query.selection.push(row)
+	}
 }
 
 // Aux function for Query.showResult
