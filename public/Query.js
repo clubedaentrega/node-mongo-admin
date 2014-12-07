@@ -32,7 +32,7 @@ Query.result = null
 Query.connection = ''
 
 /**
- * Active connection
+ * Active collection
  * @property {string}
  * @readonly
  */
@@ -301,6 +301,8 @@ Query.populateResultTable = function () {
 		tableEl = Panel.get('query-result'),
 		rowEls = [],
 		docs = Query.result,
+		hideKey = 'node-mongo-admin.hide.' + Query.connection + '.' + Query.collection,
+		pathsToHide = JSON.parse(localStorage.getItem(hideKey) || '[]'),
 		pathNames, i, th
 
 	/**
@@ -340,6 +342,9 @@ Query.populateResultTable = function () {
 		for (key in subdoc) {
 			subpath = path ? path + '.' + key : key
 			value = subdoc[key]
+			if (pathsToHide.indexOf(subpath) !== -1) {
+				continue
+			}
 
 			if (value &&
 				typeof value === 'object' &&
@@ -357,6 +362,12 @@ Query.populateResultTable = function () {
 				paths[subpath][i] = value
 			}
 		}
+	}
+
+	Panel.get('query-unhide-p').style.display = pathsToHide.length ? '' : 'none'
+	Panel.get('query-unhide').onclick = function () {
+		localStorage.removeItem(hideKey, null)
+		Query.populateResultTable()
 	}
 
 	docs.forEach(function (doc, i) {
@@ -418,6 +429,12 @@ Query.populateResultTable = function () {
 
 			options['Show field name'] = function () {
 				explore(newPath)
+			}
+
+			options['Hide this column'] = function () {
+				pathsToHide.push(newPath)
+				localStorage.setItem(hideKey, JSON.stringify(pathsToHide))
+				Query.populateResultTable()
 			}
 
 			event.preventDefault()
