@@ -52,7 +52,8 @@ canvas {
 .next-off,
 .eye,
 .add,
-.delete {
+.delete,
+.toggle {
 	display: inline-block;
 	width: 16px;
 	height: 16px;
@@ -61,7 +62,8 @@ canvas {
 .next-on,
 .eye,
 .add,
-.delete {
+.delete,
+.toggle {
 	cursor: pointer
 }
 .prev-on {
@@ -85,6 +87,11 @@ canvas {
 .delete {
 	background-image: url(img/delete.png);
 }
+.toggle {
+	background-image: url(img/toggle.png);
+	position: relative;
+	top: 4px;
+}
 pre .add,
 pre .delete {
 	margin-bottom: -4px;
@@ -106,7 +113,7 @@ th:hover {
 	background-color: #DDD;
 }
 tr.selected > td {
-	background-color: #BBF;
+	background-color: #CCF;
 }
 /* JSON fields */
 

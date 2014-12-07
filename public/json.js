@@ -139,8 +139,8 @@ json.reviver = function (key, value) {
 /**
  * Convert the given value into a string
  * @param {*} value
- * @param {boolean} [html] False to return plain text, true to return html text
- * @param {boolean} [pretty] False to return one-line text, true to return multi-line with tabs
+ * @param {boolean} [html] - false to return plain text, true to return html text
+ * @param {boolean} [pretty] - false to return one-line text, true to return multi-line with tabs
  * @returns {string}
  */
 json.stringify = function (value, html, pretty) {
@@ -237,6 +237,13 @@ json.stringify = function (value, html, pretty) {
 			pushStr('{}')
 		} else {
 			indentLevel++
+			if (html && indentLevel > 1) {
+				pushStr('<span onclick="' +
+					'this.nextSibling.style.display=\'\';' +
+					'this.style.display=\'none\'' +
+					'">{<span class="toggle"></span>}</span>' +
+					'<span style="display:none">')
+			}
 			pushStr('{', false, true)
 			needComma = false
 			for (key in value) {
@@ -254,6 +261,9 @@ json.stringify = function (value, html, pretty) {
 			}
 			indentLevel--
 			pushStr('}', true)
+			if (html) {
+				pushStr('</span>')
+			}
 		}
 	}
 	pushJsonValue(value, '')
