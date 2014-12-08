@@ -482,9 +482,11 @@ Query.populateResultTable = function () {
 			}
 		})
 		rowEl.onclick = Query.selectRow
-		rowEl.onmousedown = function (e) {
+		rowEl.onmousedown = function (event) {
 			// Prevent ctrl+click selection
-			e.preventDefault()
+			if (event.ctrlKey) {
+				event.preventDefault()
+			}
 		}
 	})
 }
