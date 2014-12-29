@@ -39,3 +39,23 @@ Storage.prototype.getArray = function (conn, coll) {
 
 	return arr
 }
+
+/**
+ * Simple global value
+ * @param {string} name
+ * @returns {*}
+ */
+Storage.get = function (name) {
+	var key = 'node-mongo-admin.' + name
+	return JSON.parse(localStorage.getItem(key) || 'null')
+}
+
+/**
+ * Simple global value
+ * @param {string} name
+ * @param {*} value
+ */
+Storage.set = function (name, value) {
+	var key = 'node-mongo-admin.' + name
+	localStorage.setItem(key, JSON.stringify(value))
+}

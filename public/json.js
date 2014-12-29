@@ -141,9 +141,10 @@ json.reviver = function (key, value) {
  * @param {*} value
  * @param {boolean} [html] - false to return plain text, true to return html text
  * @param {boolean} [pretty] - false to return one-line text, true to return multi-line with tabs
+ * @param {boolean} [localDate] - show date in local (browser) time (only works if html=true)
  * @returns {string}
  */
-json.stringify = function (value, html, pretty) {
+json.stringify = function (value, html, pretty, localDate) {
 	var finalStr = '',
 		indentLevel = 0
 
@@ -164,6 +165,23 @@ json.stringify = function (value, html, pretty) {
 		} else {
 			key = '\'' + key.replace(/'/g, '\\\'') + '\''
 			return html ? Panel.escape(key) : key
+		}
+	}
+	var formatDate = function (date) {
+		if (!localDate) {
+			return date.toISOString()
+		}
+		var yr = date.getFullYear(),
+			mo = n2s(date.getMonth() + 1),
+			d = n2s(date.getDate()),
+			h = n2s(date.getHours()),
+			min = n2s(date.getMinutes()),
+			s = n2s(date.getSeconds())
+
+		return yr + '/' + mo + '/' + d + ' ' + h + ':' + min + ':' + s
+
+		function n2s(n) {
+			return (n < 10 ? '0' : '') + n
 		}
 	}
 	var pushStr = function (str, breakBefore, breakAfter, className) {
@@ -230,7 +248,7 @@ json.stringify = function (value, html, pretty) {
 				pushStr('NumberLong(\'' + value.$numberLong + '\')')
 			}
 		} else if (value instanceof Date) {
-			pushStr(html ? value.toISOString() : 'ISODate(\'' + value.toISOString() + '\')', false, false, 'date')
+			pushStr(html ? formatDate(value) : 'ISODate(\'' + value.toISOString() + '\')', false, false, 'date')
 		} else if (value instanceof RegExp) {
 			pushStr(html ? Panel.escape(value) : String(value), false, false, 'regexp')
 		} else if (!Object.keys(value).length) {

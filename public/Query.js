@@ -550,7 +550,8 @@ Query.selectRow = function (event) {
 // Aux function for Query.showResult
 Query.fillResultValue = function (cell, value, path) {
 	var create = Panel.create,
-		original = value
+		original = value,
+		localDate = Boolean(Storage.get('localDate'))
 
 	if (value instanceof Populated) {
 		original = value.original
@@ -581,7 +582,7 @@ Query.fillResultValue = function (cell, value, path) {
 		cell.dataset.collapsed = 'object'
 		cell.dataset.explore = true
 	} else {
-		cell.innerHTML = json.stringify(value, true, false)
+		cell.innerHTML = json.stringify(value, true, false, localDate)
 	}
 
 	// Add context menu
@@ -599,7 +600,8 @@ Query.openMenu = function (value, path, cell, event) {
 	var options = {},
 		conn = Query.connection,
 		coll = Query.collection,
-		isPopulated = cell.classList.contains('populated')
+		isPopulated = cell.classList.contains('populated'),
+		localDate = Boolean(Storage.get('localDate'))
 
 	// Explore array/object
 	if (cell.dataset.explore) {
@@ -655,6 +657,13 @@ Query.openMenu = function (value, path, cell, event) {
 	if (isPopulated) {
 		options.Unpopulate = function () {
 			Populate.remove(conn, coll, path)
+		}
+	}
+	
+	if (value instanceof Date) {
+		options[localDate ? 'Show UTC date' : 'Show local date'] = function () {
+			Storage.set('localDate', !localDate)
+			Query.populateResultTable()
 		}
 	}
 
