@@ -22,13 +22,12 @@ module.exports.handler = function (dbs, body, success, error) {
 
 	async.map(dbNames, function (dbName, done) {
 		var db = dbs[dbName]
-		db.collectionNames({
-			namesOnly: true
-		}, function (err, collNames) {
+		db.collectionNames(function (err, collNames) {
 			if (err) {
 				return done(err)
 			}
-			collNames = collNames.map(function (name) {
+			collNames = collNames.map(function (coll) {
+				var name = coll.name
 				if (name.indexOf(db.databaseName) === 0) {
 					return name.substr(db.databaseName.length + 1)
 				}
