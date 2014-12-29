@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated*/
 'use strict'
 
 var Query = {}
@@ -475,10 +475,14 @@ Query.populateResultTable = function () {
 		}
 		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
-			var cell = rowEl.insertCell(-1)
-			Query.fillResultValue(cell, paths[path][i], path)
+			var cell = rowEl.insertCell(-1),
+				value = paths[path][i]
+			Query.fillResultValue(cell, value, path)
 			if (Populate.isPopulated(populatedPaths, path)) {
 				cell.classList.add('populated')
+				if (!(value instanceof Populated)) {
+					cell.classList.add('populated-fail')
+				}
 			}
 		})
 		rowEl.onclick = Query.selectRow
@@ -545,8 +549,14 @@ Query.selectRow = function (event) {
 
 // Aux function for Query.showResult
 Query.fillResultValue = function (cell, value, path) {
-	var create = Panel.create
+	var create = Panel.create,
+		original = value
 
+	if (value instanceof Populated) {
+		original = value.original
+		value = value.display
+	}
+	
 	cell.dataset.path = path
 	if (value === undefined) {
 		cell.innerHTML = '-'
@@ -575,7 +585,7 @@ Query.fillResultValue = function (cell, value, path) {
 	}
 
 	// Add context menu
-	cell.oncontextmenu = Query.openMenu.bind(Query, value, path, cell)
+	cell.oncontextmenu = Query.openMenu.bind(Query, original, path, cell)
 }
 
 /**

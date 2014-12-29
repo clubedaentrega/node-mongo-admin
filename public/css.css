@@ -117,6 +117,10 @@ th {
 	border-bottom: thin gray dashed;
 	border-right: thin gray dashed;
 }
+.populated-fail {
+	border-bottom: thin darkred dashed;
+	border-right: thin darkred dashed;
+}
 tr:hover > td,
 th:hover {
 	background-color: #DDD;

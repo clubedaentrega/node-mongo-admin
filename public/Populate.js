@@ -1,4 +1,4 @@
-/*globals Storage, Query, ObjectId, Panel*/
+/*globals Storage, Query, ObjectId, Panel, Populated*/
 /**
  * @file Manage populate operations
  */
@@ -43,7 +43,7 @@ Populate.remove = function (conn, coll, path) {
 	ops.set(ops.filter(function (op) {
 		return op.path !== path && path.indexOf(op.path + '.') !== 0
 	}))
-	// TODO: find a better way of doing this
+	// TODO: find a better way of doing this (restore original data for all Populated instances)
 	window.location.reload()
 }
 
@@ -126,7 +126,9 @@ Populate.run = function (op) {
 			parts = op.targetPath.split('.')
 		result.docs.forEach(function (doc) {
 			replaceSites[doc._id].forEach(function (each) {
-				each[parentPath] = op.targetPath ? getInPath(doc, parts) : doc
+				var original = each[parentPath],
+					display = op.targetPath ? getInPath(doc, parts) : doc
+				each[parentPath] = new Populated(original, display)
 			})
 		})
 		Query.populateResultTable()
