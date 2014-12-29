@@ -4,10 +4,13 @@
 	box-sizing: border-box;
 }
 body {
-	padding-top: 70px;
+	padding: 70px 10px 10px 10px;
 	font: Verdana sans-serif;
 	color: #333333;
 	background: #FAFAFA;
+	min-width: 100%;
+	position: absolute;
+	margin: 0;
 }
 a {
 	text-decoration: none;
