@@ -489,7 +489,7 @@ Query.populateResultTable = function () {
 		rowEl.onclick = Query.selectRow
 		rowEl.onmousedown = function (event) {
 			// Prevent ctrl+click selection
-			if (event.ctrlKey) {
+			if (event.ctrlKey || event.shiftKey) {
 				event.preventDefault()
 			}
 		}
