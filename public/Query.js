@@ -356,6 +356,10 @@ Query.populateResultTable = function () {
 			if (pathsToHide.indexOf(subpath) !== -1) {
 				continue
 			}
+			
+			if (value instanceof Populated) {
+				value = value.display
+			}
 
 			if (value &&
 				typeof value === 'object' &&
@@ -480,9 +484,6 @@ Query.populateResultTable = function () {
 			Query.fillResultValue(cell, value, path)
 			if (Populate.isPopulated(populatedPaths, path)) {
 				cell.classList.add('populated')
-				if (!(value instanceof Populated)) {
-					cell.classList.add('populated-fail')
-				}
 			}
 		})
 		rowEl.onclick = Query.selectRow
