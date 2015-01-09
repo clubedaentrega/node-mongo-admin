@@ -162,6 +162,7 @@ tr.selected > td {
 }
 .json-binary {
 	color: #006060;
+	font-family: monospace;
 }
 .json-id {
 	text-align: left;

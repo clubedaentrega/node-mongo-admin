@@ -142,9 +142,10 @@ json.reviver = function (key, value) {
  * @param {boolean} [html] - false to return plain text, true to return html text
  * @param {boolean} [pretty] - false to return one-line text, true to return multi-line with tabs
  * @param {boolean} [localDate] - show date in local (browser) time (only works if html=true)
+ * @param {boolean} [hexBinary] - show binary date in hex (only works if html=true)
  * @returns {string}
  */
-json.stringify = function (value, html, pretty, localDate) {
+json.stringify = function (value, html, pretty, localDate, hexBinary) {
 	var finalStr = '',
 		indentLevel = 0
 
@@ -183,6 +184,29 @@ json.stringify = function (value, html, pretty, localDate) {
 		function n2s(n) {
 			return (n < 10 ? '0' : '') + n
 		}
+	}
+	var formatBinary = function (base64) {
+		var hex = '',
+			codes = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+			i, c1, c2, h1, h2, h3
+		if (!hexBinary) {
+			return base64
+		}
+		for (i = 0; i < base64.length; i += 2) {
+			c1 = codes.indexOf(base64[i])
+			c2 = codes.indexOf(base64[i + 1])
+			if (c1 === -1) {
+				hex = hex.substr(0, hex.length - 1)
+			} else if (c2 === -1) {
+				hex += (c1 >> 2).toString(16)
+			} else {
+				h1 = (c1 >> 2).toString(16)
+				h2 = (((c1 & 0x3) << 2) + (c2 >> 4)).toString(16)
+				h3 = (c2 & 0xF).toString(16)
+				hex += h1 + h2 + h3
+			}
+		}
+		return hex
 	}
 	var pushStr = function (str, breakBefore, breakAfter, className) {
 		if (!hasBreak && breakBefore) {
@@ -227,7 +251,7 @@ json.stringify = function (value, html, pretty, localDate) {
 			pushStr(html ? value.$oid : 'ObjectId(\'' + value.$oid + '\')', false, false, 'id')
 		} else if (value instanceof BinData) {
 			if (html) {
-				pushStr('Bin(<span class="json-binary">' + value.$binary + '</span>)', false, false, 'keyword')
+				pushStr(formatBinary(value.$binary), false, false, 'binary')
 			} else {
 				pushStr('BinData(' + value.$type + ', \'' + value.$binary + '\')')
 			}

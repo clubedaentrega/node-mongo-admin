@@ -559,6 +559,7 @@ Query.selectRow = function (event) {
 Query.fillResultValue = function (cell, value, path) {
 	var create = Panel.create,
 		localDate = Boolean(Storage.get('localDate')),
+		hexBinary = Boolean(Storage.get('hexBinary')),
 		display = value instanceof Populated ? value.display : value
 
 	cell.dataset.path = path
@@ -585,7 +586,7 @@ Query.fillResultValue = function (cell, value, path) {
 		cell.dataset.collapsed = 'object'
 		cell.dataset.explore = true
 	} else {
-		cell.innerHTML = json.stringify(display, true, false, localDate)
+		cell.innerHTML = json.stringify(display, true, false, localDate, hexBinary)
 	}
 
 	// Add context menu
@@ -605,6 +606,7 @@ Query.openMenu = function (value, path, cell, event) {
 		coll = Query.collection,
 		isPopulated = value instanceof Populated,
 		localDate = Boolean(Storage.get('localDate')),
+		hexBinary = Boolean(Storage.get('hexBinary')),
 		display = isPopulated ? value.display : value
 
 	// Explore array/object
@@ -664,9 +666,18 @@ Query.openMenu = function (value, path, cell, event) {
 		}
 	}
 
+	// Date display format
 	if (display instanceof Date) {
 		options[localDate ? 'Show UTC date' : 'Show local date'] = function () {
 			Storage.set('localDate', !localDate)
+			Query.populateResultTable()
+		}
+	}
+	
+	// Binary display format
+	if (display instanceof BinData) {
+		options[hexBinary ? 'Show in base64' : 'Show in hex'] = function () {
+			Storage.set('hexBinary', !hexBinary)
 			Query.populateResultTable()
 		}
 	}
