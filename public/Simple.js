@@ -1,7 +1,7 @@
 /**
  * @file Manage simple queries
  */
-/*globals Panel, ObjectId, Query, json, explore, Distinct*/
+/*globals Panel, ObjectId, Query, json, explore, Distinct, Populated*/
 'use strict'
 
 var Simple = {}
@@ -163,20 +163,36 @@ Simple.findByPath = function (path, value, op) {
  * @param {Object} options
  */
 Simple.processGlobalCellMenu = function (value, path, cell, options) {
+	var isPopulated = value instanceof Populated,
+		display = isPopulated ? value.display : value,
+		original
+
 	// Find by id
-	if (value instanceof ObjectId && path !== '_id') {
+	if (display instanceof ObjectId && path !== '_id') {
 		// Let user search for this id in another collection with a related name
-		addIdMenu(value)
-	} else if (typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)) {
+		addIdMenu(display, false)
+	} else if (typeof display === 'string' && /^[0-9a-f]{24}$/.test(display)) {
 		// Pseudo-id (stored as string)
-		addIdMenu(new ObjectId(value))
+		addIdMenu(new ObjectId(display), false)
+	}
+	if (isPopulated) {
+		original = value.original
+		if (original instanceof ObjectId && path !== '_id') {
+			// Let user search for this id in another collection with a related name
+			addIdMenu(original, true)
+		} else if (typeof original === 'string' && /^[0-9a-f]{24}$/.test(original)) {
+			// Pseudo-id (stored as string)
+			addIdMenu(new ObjectId(original), true)
+		}
 	}
 
-	function addIdMenu(value) {
-		options['Find by id in'] = Query.getMenuForId(value, path, function (conn, coll) {
+	function addIdMenu(value, isOriginal) {
+		var labelFind = 'Find by ' + (isOriginal ? 'original ' : '') + 'id in',
+			labelShow = 'Show ' + (isOriginal ? 'original ' : '') + 'doc from'
+		options[labelFind] = Query.getMenuForId(value, path, function (conn, coll) {
 			Simple.findById(conn, coll, value)
 		})
-		options['Show doc from'] = Query.getMenuForId(value, path, function (conn, coll) {
+		options[labelShow] = Query.getMenuForId(value, path, function (conn, coll) {
 			Simple.exploreById(conn, coll, value)
 		})
 	}
@@ -190,19 +206,24 @@ Simple.processGlobalCellMenu = function (value, path, cell, options) {
  * @param {Object} options
  */
 Simple.processCellMenu = function (value, path, cell, options) {
-	// Find
-	options['Find by ' + path] = {
-		Equal: Simple.findByPath.bind(Simple, path, value),
-		Different: Simple.findByPath.bind(Simple, path, value, '$ne'),
-		Greater: Simple.findByPath.bind(Simple, path, value, '$gt'),
-		Less: Simple.findByPath.bind(Simple, path, value, '$lt'),
-		'Equal to': function () {
-			var value = prompt(),
-				el
-			if (value) {
-				el = document.createElement('input')
-				el.value = value
-				Simple.findByPath(path, Panel.processJSInEl(el))
+	var isPopulated = value instanceof Populated,
+		display = isPopulated ? value.display : value
+
+	if (!isPopulated) {
+		// Find
+		options['Find by ' + path] = {
+			Equal: Simple.findByPath.bind(Simple, path, display),
+			Different: Simple.findByPath.bind(Simple, path, display, '$ne'),
+			Greater: Simple.findByPath.bind(Simple, path, display, '$gt'),
+			Less: Simple.findByPath.bind(Simple, path, display, '$lt'),
+			'Equal to': function () {
+				var value = prompt(),
+					el
+				if (value) {
+					el = document.createElement('input')
+					el.value = value
+					Simple.findByPath(path, Panel.processJSInEl(el))
+				}
 			}
 		}
 	}

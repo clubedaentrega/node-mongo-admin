@@ -347,8 +347,10 @@ Query.populateResultTable = function () {
 	 * @param {Object} subdoc
 	 * @param {string} path
 	 * @param {number} i
+	 * @param {boolean} populated
+	 * @param {*} original - original value, before population
 	 */
-	var addSubDoc = function (subdoc, path, i) {
+	var addSubDoc = function (subdoc, path, i, populated, original) {
 		var key, subpath, value
 		for (key in subdoc) {
 			subpath = path ? path + '.' + key : key
@@ -358,6 +360,8 @@ Query.populateResultTable = function () {
 			}
 			
 			if (value instanceof Populated) {
+				populated = true
+				original = value.original
 				value = value.display
 			}
 
@@ -367,14 +371,14 @@ Query.populateResultTable = function () {
 				Query.specialTypes.indexOf(value.constructor) === -1 &&
 				(Object.keys(value).length === 1 ||
 					pathsToExpand.indexOf(subpath) !== -1)) {
-				addSubDoc(value, subpath, i)
+				addSubDoc(value, subpath, i, populated, original)
 			} else {
 				// Primitive value
 				if (!(subpath in paths)) {
 					// New result path
 					paths[subpath] = []
 				}
-				paths[subpath][i] = value
+				paths[subpath][i] = populated ? new Populated(original, value) : value
 			}
 		}
 	}
@@ -484,6 +488,9 @@ Query.populateResultTable = function () {
 			Query.fillResultValue(cell, value, path)
 			if (Populate.isPopulated(populatedPaths, path)) {
 				cell.classList.add('populated')
+				if (value !== undefined && !(value instanceof Populated)) {
+					cell.classList.add('populated-fail')
+				}
 			}
 		})
 		rowEl.onclick = Query.selectRow
@@ -551,43 +558,38 @@ Query.selectRow = function (event) {
 // Aux function for Query.showResult
 Query.fillResultValue = function (cell, value, path) {
 	var create = Panel.create,
-		original = value,
-		localDate = Boolean(Storage.get('localDate'))
+		localDate = Boolean(Storage.get('localDate')),
+		display = value instanceof Populated ? value.display : value
 
-	if (value instanceof Populated) {
-		original = value.original
-		value = value.display
-	}
-	
 	cell.dataset.path = path
-	if (value === undefined) {
+	if (display === undefined) {
 		cell.innerHTML = '-'
-	} else if (Array.isArray(value)) {
+	} else if (Array.isArray(display)) {
 		cell.appendChild(create('span.json-keyword', [
 			'Array[',
-			create('span.json-number', value.length),
+			create('span.json-number', display.length),
 			']'
 		]))
 		cell.dataset.explore = true
-	} else if (typeof value === 'string' && value.length > 20) {
-		cell.innerHTML = json.stringify(value.substr(0, 17), true, false) + '&#133;'
+	} else if (typeof display === 'string' && display.length > 20) {
+		cell.innerHTML = json.stringify(display.substr(0, 17), true, false) + '&#133;'
 		cell.dataset.collapsed = 'string'
 		cell.dataset.explore = true
-		cell.dataset.value = value
-	} else if (value && typeof value === 'object' && value.constructor === Object) {
+		cell.dataset.display = display
+	} else if (display && typeof display === 'object' && display.constructor === Object) {
 		cell.appendChild(create('span.json-keyword', [
 			'Object{',
-			create('span.json-number', Object.keys(value).length),
+			create('span.json-number', Object.keys(display).length),
 			'}'
 		]))
 		cell.dataset.collapsed = 'object'
 		cell.dataset.explore = true
 	} else {
-		cell.innerHTML = json.stringify(value, true, false, localDate)
+		cell.innerHTML = json.stringify(display, true, false, localDate)
 	}
 
 	// Add context menu
-	cell.oncontextmenu = Query.openMenu.bind(Query, original, path, cell)
+	cell.oncontextmenu = Query.openMenu.bind(Query, value, path, cell)
 }
 
 /**
@@ -601,13 +603,14 @@ Query.openMenu = function (value, path, cell, event) {
 	var options = {},
 		conn = Query.connection,
 		coll = Query.collection,
-		isPopulated = cell.classList.contains('populated'),
-		localDate = Boolean(Storage.get('localDate'))
+		isPopulated = value instanceof Populated,
+		localDate = Boolean(Storage.get('localDate')),
+		display = isPopulated ? value.display : value
 
 	// Explore array/object
 	if (cell.dataset.explore) {
 		options['Show content'] = function () {
-			explore(value)
+			explore(display)
 		}
 	}
 
@@ -633,19 +636,19 @@ Query.openMenu = function (value, path, cell, event) {
 	}
 
 	// Timestamp from object id
-	if (value instanceof ObjectId) {
+	if (display instanceof ObjectId) {
 		options['See timestamp'] = function () {
 			// Convert the first 4 bytes to Unix Timestamp then alert it
-			var time = parseInt(String(value).substr(0, 8), 16),
+			var time = parseInt(String(display).substr(0, 8), 16),
 				date = new Date(time * 1000),
 				iso = date.toISOString().replace('.000', ''),
 				local = String(date)
 
-			alert('Id:\n\t' + value + '\nDatetime:\n\t' + iso + '\nLocal time:\n\t' + local)
+			alert('Id:\n\t' + display + '\nDatetime:\n\t' + iso + '\nLocal time:\n\t' + local)
 		}
 
 		if (path !== '_id' && !isPopulated) {
-			options['Populate with'] = Query.getMenuForId(value, path, function (conn2, coll2) {
+			options['Populate with'] = Query.getMenuForId(display, path, function (conn2, coll2) {
 				var foreignPath = prompt('Path from ' + coll2 + ' to populate with')
 				if (foreignPath !== null) {
 					Populate.create(conn, coll, path, conn2, coll2, foreignPath)
@@ -660,8 +663,8 @@ Query.openMenu = function (value, path, cell, event) {
 			Populate.remove(conn, coll, path)
 		}
 	}
-	
-	if (value instanceof Date) {
+
+	if (display instanceof Date) {
 		options[localDate ? 'Show UTC date' : 'Show local date'] = function () {
 			Storage.set('localDate', !localDate)
 			Query.populateResultTable()
