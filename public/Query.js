@@ -576,7 +576,7 @@ Query.fillResultValue = function (cell, value, path) {
 		cell.innerHTML = json.stringify(display.substr(0, 17), true, false) + '&#133;'
 		cell.dataset.collapsed = 'string'
 		cell.dataset.explore = true
-		cell.dataset.display = display
+		cell.dataset.value = display
 	} else if (display && typeof display === 'object' && display.constructor === Object) {
 		cell.appendChild(create('span.json-keyword', [
 			'Object{',

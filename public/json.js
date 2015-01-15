@@ -224,7 +224,9 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 	}
 	var pushJsonValue = function (value, path) {
 		var key, needComma, subpath
-		if (value === false) {
+		if (value === undefined) {
+			pushStr(html ? '<em>undefined</em>' : 'undefined', false, false, 'keyword')
+		} else if (value === false) {
 			pushStr(html ? '<em>false</em>' : 'false', false, false, 'keyword')
 		} else if (value === true) {
 			pushStr(html ? '<em>true</em>' : 'true', false, false, 'keyword')
