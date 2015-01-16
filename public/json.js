@@ -239,6 +239,13 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 		} else if (Array.isArray(value) && !value.length) {
 			pushStr('[]')
 		} else if (Array.isArray(value)) {
+			if (html && indentLevel % 2) {
+				pushStr('<span onclick="' +
+					'this.nextSibling.style.display=\'\';' +
+					'this.style.display=\'none\'' +
+					'">[<span class="toggle"></span>]</span>' +
+					'<span style="display:none">')
+			}
 			indentLevel++
 			pushStr('[', false, true)
 			for (key = 0; key < value.length; key++) {
@@ -249,6 +256,9 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 			}
 			indentLevel--
 			pushStr(']', true)
+			if (html && indentLevel % 2) {
+				pushStr('</span>')
+			}
 		} else if (value instanceof ObjectId) {
 			pushStr(html ? value.$oid : 'ObjectId(\'' + value.$oid + '\')', false, false, 'id')
 		} else if (value instanceof BinData) {
@@ -280,14 +290,14 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 		} else if (!Object.keys(value).length) {
 			pushStr('{}')
 		} else {
-			indentLevel++
-			if (html && indentLevel > 1) {
+			if (html && indentLevel % 2) {
 				pushStr('<span onclick="' +
 					'this.nextSibling.style.display=\'\';' +
 					'this.style.display=\'none\'' +
 					'">{<span class="toggle"></span>}</span>' +
 					'<span style="display:none">')
 			}
+			indentLevel++
 			pushStr('{', false, true)
 			needComma = false
 			for (key in value) {
@@ -305,7 +315,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 			}
 			indentLevel--
 			pushStr('}', true)
-			if (html) {
+			if (html && indentLevel % 2) {
 				pushStr('</span>')
 			}
 		}
