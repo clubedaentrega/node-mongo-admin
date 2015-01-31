@@ -296,6 +296,7 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 	Query.populateResultTable()
 
 	Populate.runAll(Query.connection, Query.collection)
+	fixedHeader()
 }
 
 /**
@@ -358,7 +359,7 @@ Query.populateResultTable = function () {
 			if (pathsToHide.indexOf(subpath) !== -1) {
 				continue
 			}
-			
+
 			if (value instanceof Populated) {
 				populated = true
 				original = value.original
@@ -429,6 +430,7 @@ Query.populateResultTable = function () {
 			cell.colSpan = cols
 			leaf = false
 		}
+		rowEls[depth].className = 'header';
 		rowEls[depth].appendChild(cell)
 
 		newPath = prefix + path
@@ -673,7 +675,7 @@ Query.openMenu = function (value, path, cell, event) {
 			Query.populateResultTable()
 		}
 	}
-	
+
 	// Binary display format
 	if (display instanceof BinData) {
 		options[hexBinary ? 'Show in base64' : 'Show in hex'] = function () {
@@ -770,3 +772,30 @@ Query.executeFromSearch = function () {
 window.addEventListener('popstate', function () {
 	Query.executeFromSearch()
 })
+
+/* Make table header fixed after scroll limit is reached */
+function fixedHeader() {
+
+	document.getElementById('fixed-table-header').innerHTML = ''
+
+	var headers = document.getElementsByClassName('header')
+	headers = Array.prototype.slice.call(headers)
+	var newTable = document.createElement('table')
+	var newTBody = document.createElement('tbody')
+
+	headers.forEach(function (each) {
+		var cols = each.children
+		cols = Array.prototype.slice.call(cols)
+		cols.forEach(function (eachCol) {
+			eachCol.style.width = eachCol.offsetWidth + 'px'
+			eachCol.style.height = eachCol.offsetHeight + 'px'
+		})
+		var newTr = document.createElement('tr')
+		newTr = each.cloneNode(true)
+		newTBody.appendChild(newTr)
+	})
+
+	newTable.appendChild(newTBody)
+	document.getElementById('fixed-table-header').appendChild(newTable)
+
+}
