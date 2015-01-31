@@ -3,6 +3,7 @@
 * {
 	box-sizing: border-box;
 }
+
 body {
 	padding: 70px 10px 10px 10px;
 	font: Verdana sans-serif;
@@ -12,10 +13,12 @@ body {
 	position: absolute;
 	margin: 0;
 }
+
 a {
 	text-decoration: none;
 	outline: none;
 }
+
 header {
 	width: 100%;
 	height: 70px;
@@ -26,24 +29,30 @@ header {
 	z-index: 1;
 	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
+
 header > h1 {
 	margin: 20px 30px;
 	text-align: left;
 	color: #FAFAFA;
 	font-size: 20px;
 }
+
 .details {
 	font-size: smaller;
 }
+
 .error {
 	background-color: #FCC;
 }
+
 h2 {
 	border-bottom: thin gray solid;
 }
+
 input {
 	font-family: monospace;
 }
+
 canvas {
 	float: right;
 }
@@ -61,6 +70,7 @@ canvas {
 	width: 16px;
 	height: 16px;
 }
+
 .prev-on,
 .next-on,
 .eye,
@@ -69,34 +79,41 @@ canvas {
 .toggle {
 	cursor: pointer
 }
+
 .prev-on {
 	background-image: url(img/prev_on.png);
 }
+
 .prev-off {
 	background-image: url(img/prev_off.png);
 }
+
 .next-on {
 	background-image: url(img/next_on.png);
 }
+
 .next-off {
 	background-image: url(img/next_off.png);
 }
+
 .eye {
 	background-image: url(img/eye.png);
 }
+
 .add {
 	background-image: url(img/add.png);
 }
+
 .delete {
 	background-image: url(img/delete.png);
 }
+
 .toggle {
 	background-image: url(img/toggle.png);
-	width: 10px;
-	height: 10px;
 	position: relative;
-	top: 1px;
+	top: 5px;
 }
+
 pre .add,
 pre .delete {
 	margin-bottom: -4px;
@@ -106,6 +123,7 @@ pre .delete {
 table.loading * {
 	color: #666 !important;
 }
+
 td,
 th {
 	border-bottom: thin gray solid;
@@ -113,18 +131,22 @@ th {
 	padding: 5px;
 	text-align: center;
 }
+
 .populated {
 	border-bottom: thin gray dashed;
 	border-right: thin gray dashed;
 }
+
 .populated-fail {
 	border-bottom: thin darkred dashed;
 	border-right: thin darkred dashed;
 }
+
 tr:hover > td,
 th:hover {
 	background-color: #DDD;
 }
+
 tr.selected > td {
 	background-color: #CCF;
 }
@@ -138,21 +160,26 @@ tr.selected > td {
 	white-space: pre;
 	text-align: left;
 }
+
 .json-field {
 	font-weight: bold;
 	color: #660E7A;
 }
+
 .json-keyword {
 	color: #505000;
 }
+
 .json-number {
 	color: #0000FF;
 }
+
 .json-string {
 	text-align: left;
 	color: #008000;
 	white-space: pre-wrap;
 }
+
 .json-date,
 .json-regexp {
 	text-align: left;
@@ -160,16 +187,19 @@ tr.selected > td {
 	white-space: pre;
 	font-family: monospace;
 }
+
 .json-binary {
 	color: #006060;
 	font-family: monospace;
 }
+
 .json-id {
 	text-align: left;
 	color: #660E7A;
 	white-space: pre;
 	font-family: monospace;
 }
+
 .json .focus {
 	background-color: #FCC;
 	border: thin #F99 solid;
@@ -185,6 +215,7 @@ tr.selected > td {
 	z-index: 2;
 	background-color: rgba(128, 128, 128, .25);
 }
+
 .window-content {
 	position: fixed;
 	height: 80%;
@@ -198,6 +229,7 @@ tr.selected > td {
 	padding: 15px;
 	overflow: auto;
 }
+
 .window-content >:last-child {
 	margin-bottom: 15px;
 	margin-right: 15px;
@@ -230,6 +262,7 @@ tr.selected > td {
 	background-color: white;
 	z-index: 1000;
 }
+
 .menu-item,
 .menu-submenu {
 	border-bottom: thin gray solid;
@@ -238,28 +271,34 @@ tr.selected > td {
 	white-space: pre;
 	padding-right: 1.5em;
 }
+
 .menu-item-disabled {
 	cursor: auto;
 	background-color: #CCC !important;
 	color: #666;
 }
+
 .menu-item:hover,
 .menu-submenu:hover {
 	background-color: #DBF;
 }
+
 .menu-submenu-active {
 	background-color: #DCF;
 }
+
 .menu-submenu::after {
 	content: '\25b6';
 	font-size: smaller;
 	position: absolute;
 	right: 5px;
 }
+
 .menu.menu-rtl > .menu-submenu::after {
 	content: '\25c0';
 	left: 5px;
 }
+
 .menu.menu-rtl > .menu-item,
 .menu.menu-rtl > .menu-submenu {
 	padding-left: 1.5em;
