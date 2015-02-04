@@ -430,7 +430,7 @@ Query.populateResultTable = function () {
 			cell.colSpan = cols
 			leaf = false
 		}
-		rowEls[depth].className = 'header';
+		rowEls[depth].className = 'header'
 		rowEls[depth].appendChild(cell)
 
 		newPath = prefix + path
@@ -773,29 +773,29 @@ window.addEventListener('popstate', function () {
 	Query.executeFromSearch()
 })
 
-/* Make table header fixed after scroll limit is reached */
+/* 
+ * Make table header fixed after scroll limit is reached
+ */
 function fixedHeader() {
 
-	document.getElementById('fixed-table-header').innerHTML = ''
+	Panel.get('fixed-table-header').innerHTML = ''
 
 	var headers = document.getElementsByClassName('header')
-	headers = Array.prototype.slice.call(headers)
-	var newTable = document.createElement('table')
-	var newTBody = document.createElement('tbody')
+	var newTable = Panel.create('table')
+	var newTBody = Panel.create('tbody')
 
-	headers.forEach(function (each) {
+	Array.prototype.forEach.call(headers, function (each) {
 		var cols = each.children
-		cols = Array.prototype.slice.call(cols)
-		cols.forEach(function (eachCol) {
+		Array.prototype.forEach.call(cols, function (eachCol) {
 			eachCol.style.width = eachCol.offsetWidth + 'px'
 			eachCol.style.height = eachCol.offsetHeight + 'px'
 		})
-		var newTr = document.createElement('tr')
+		var newTr = Panel.create('tr')
 		newTr = each.cloneNode(true)
 		newTBody.appendChild(newTr)
 	})
 
 	newTable.appendChild(newTBody)
-	document.getElementById('fixed-table-header').appendChild(newTable)
+	Panel.get('fixed-table-header').appendChild(newTable)
 
 }
