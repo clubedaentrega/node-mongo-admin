@@ -296,7 +296,7 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 	Query.populateResultTable()
 
 	Populate.runAll(Query.connection, Query.collection)
-	fixedHeader()
+	stickHeader()
 }
 
 /**
@@ -503,6 +503,8 @@ Query.populateResultTable = function () {
 			}
 		}
 	})
+
+	stickHeader()
 }
 
 /**
@@ -776,9 +778,9 @@ window.addEventListener('popstate', function () {
 /* 
  * Make table header fixed after scroll limit is reached
  */
-function fixedHeader() {
+function stickHeader() {
 
-	Panel.get('fixed-table-header').innerHTML = ''
+	Panel.get('sticky-table-header').innerHTML = ''
 
 	var headers = document.getElementsByClassName('header')
 	var newTable = Panel.create('table')
@@ -796,6 +798,6 @@ function fixedHeader() {
 	})
 
 	newTable.appendChild(newTBody)
-	Panel.get('fixed-table-header').appendChild(newTable)
+	Panel.get('sticky-table-header').appendChild(newTable)
 
 }

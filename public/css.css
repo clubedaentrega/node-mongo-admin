@@ -37,7 +37,7 @@ header > h1 {
 	font-size: 20px;
 }
 
-#fixed-table-header {
+#sticky-table-header {
 	position: absolute;
 	background-color: #FAFAFA;
 	display: none;
