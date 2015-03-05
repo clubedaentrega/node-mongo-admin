@@ -37,6 +37,12 @@ header > h1 {
 	font-size: 20px;
 }
 
+#sticky-table-header {
+	position: absolute;
+	background-color: #FAFAFA;
+	display: none;
+}
+
 .details {
 	font-size: smaller;
 }
