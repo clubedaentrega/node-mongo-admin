@@ -296,7 +296,6 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 	Query.populateResultTable()
 
 	Populate.runAll(Query.connection, Query.collection)
-	stickHeader()
 }
 
 /**
