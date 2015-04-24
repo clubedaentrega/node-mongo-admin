@@ -18,34 +18,35 @@ Output:
 */
 
 module.exports.handler = function (dbs, body, success, error) {
-	var dbNames = Object.keys(dbs).sort()
+	var dbNames = Object.keys(dbs).sort(),
+		connections = []
 
-	async.map(dbNames, function (dbName, done) {
+	async.each(dbNames, function (dbName, done) {
 		var db = dbs[dbName]
-		db.collectionNames(function (err, collNames) {
+		db.listCollections().toArray(function (err, collNames) {
 			if (err) {
-				return done(err)
+				// Ignore errors here
+				// A failed connection should not break others
+				return done()
 			}
+
 			collNames = collNames.map(function (coll) {
-				var name = coll.name
-				if (name.indexOf(db.databaseName) === 0) {
-					return name.substr(db.databaseName.length + 1)
-				}
-				return name
+				return coll.name
 			}).sort()
 
-			done(null, {
+			connections.push({
 				name: dbName,
 				collections: collNames
 			})
+			done()
 		})
-	}, function (err, result) {
+	}, function (err) {
 		if (err) {
 			return error(err)
 		}
 
 		success({
-			connections: result
+			connections: connections
 		})
 	})
 }

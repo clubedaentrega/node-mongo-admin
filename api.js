@@ -25,7 +25,7 @@
 
 var express = require('express'),
 	fs = require('fs'),
-	validate = require('validate-fields'),
+	validate = require('validate-fields')(),
 	dbs = require('./dbs'),
 	json = require('./json')
 
@@ -70,6 +70,7 @@ module.exports = function (done) {
 				code = err.code
 				message = err.message
 			} else {
+				console.log(err.stack)
 				code = 100
 				message = err.message || 'Unknown error'
 			}
