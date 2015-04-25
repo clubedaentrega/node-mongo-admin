@@ -18,10 +18,9 @@ Output:
 */
 
 module.exports.handler = function (dbs, body, success, error) {
-	var dbNames = Object.keys(dbs).sort(),
-		connections = []
+	var dbNames = Object.keys(dbs).sort()
 
-	async.each(dbNames, function (dbName, done) {
+	async.map(dbNames, function (dbName, done) {
 		var db = dbs[dbName]
 		db.listCollections().toArray(function (err, collNames) {
 			if (err) {
@@ -34,19 +33,18 @@ module.exports.handler = function (dbs, body, success, error) {
 				return coll.name
 			}).sort()
 
-			connections.push({
+			done(null, {
 				name: dbName,
 				collections: collNames
 			})
-			done()
 		})
-	}, function (err) {
+	}, function (err, connections) {
 		if (err) {
 			return error(err)
 		}
 
 		success({
-			connections: connections
+			connections: connections.filter(Boolean)
 		})
 	})
 }
