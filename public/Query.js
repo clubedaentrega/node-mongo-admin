@@ -479,8 +479,9 @@ Query.populateResultTable = function () {
 		var rowEl = tableEl.insertRow(-1),
 			eye = Panel.create('span.eye')
 		rowEl.insertCell(-1).appendChild(eye)
-		eye.onclick = function () {
+		eye.onclick = function (event) {
 			explore(doc)
+			event.stopPropagation()
 		}
 		eye.title = 'Show raw document'
 		pathNames.forEach(function (path) {
