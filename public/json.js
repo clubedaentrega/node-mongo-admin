@@ -300,19 +300,18 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 			indentLevel++
 			pushStr('{', false, true)
 			needComma = false
-			for (key in value) {
-				if (value.hasOwnProperty(key)) {
-					if (!needComma) {
-						needComma = true
-					} else {
-						pushStr(',', false, true)
-					}
-					subpath = path ? path + '.' + key : key
-					pushStr(escapeKey(key), false, false, 'field')
-					pushStr(pretty ? ': ' : ':')
-					pushJsonValue(value[key], subpath)
+			Object.keys(value).sort().forEach(function (key) {
+				if (!needComma) {
+					needComma = true
+				} else {
+					pushStr(',', false, true)
 				}
-			}
+				subpath = path ? path + '.' + key : key
+				pushStr(escapeKey(key), false, false, 'field')
+				pushStr(pretty ? ': ' : ':')
+				pushJsonValue(value[key], subpath)
+			})
+
 			indentLevel--
 			pushStr('}', true)
 			if (html && indentLevel % 2) {
