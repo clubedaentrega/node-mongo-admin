@@ -13,15 +13,15 @@ Query.registerMode(Aggregate)
  * @property {Object<string>}
  */
 Aggregate.operators = {
-	$geoNear: 'object',
-	$group: 'object',
-	$limit: 'uint',
-	$match: 'object',
-	$project: 'object',
-	$redact: 'object',
-	$skip: 'uint',
-	$sort: 'object',
-	$unwind: 'field'
+	geoNear: 'object',
+	group: 'object',
+	limit: 'uint',
+	match: 'object',
+	project: 'object',
+	redact: 'object',
+	skip: 'uint',
+	sort: 'object',
+	unwind: 'field'
 }
 
 /**
@@ -50,7 +50,7 @@ Aggregate.addStage = function (pos) {
 
 	// Create stage
 	stage.el = Panel.create('span', [
-		'\t{',
+		'\t{$',
 		stage.opEl = Panel.create('select'),
 		': ',
 		stage.preEl = Panel.create('span', '{'),
@@ -139,7 +139,7 @@ Aggregate.execute = function () {
 		}
 
 		return {
-			operator: stage.opEl.value,
+			operator: '$' + stage.opEl.value,
 			operand: value
 		}
 	}).filter(Boolean)
