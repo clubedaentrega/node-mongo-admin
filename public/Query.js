@@ -437,7 +437,7 @@ Query.populateResultTable = function () {
 		cell.oncontextmenu = function (event) {
 			var options = {}
 
-			if (!leaf) {
+			if (!leaf || pathsToExpand.indexOf(newPath) !== -1) {
 				options['Collapse column'] = function () {
 					// Remove this path and subpaths from expand list
 					pathsToExpand.set(pathsToExpand.filter(function (each) {
@@ -486,7 +486,7 @@ Query.populateResultTable = function () {
 		pathNames.forEach(function (path) {
 			var cell = rowEl.insertCell(-1),
 				value = paths[path][i]
-			Query.fillResultValue(cell, value, path)
+			Query.fillResultValue(cell, value, path, pathsToExpand.indexOf(path) === -1)
 			if (Populate.isPopulated(populatedPaths, path)) {
 				cell.classList.add('populated')
 				if (value !== undefined && !(value instanceof Populated)) {
@@ -558,8 +558,14 @@ Query.selectRow = function (event) {
 	}
 }
 
-// Aux function for Query.showResult
-Query.fillResultValue = function (cell, value, path) {
+/**
+ * Aux function for Query.showResult
+ * @param {DOMElement} cell
+ * @param {*} value
+ * @param {string} path
+ * @param {boolean} mayCollapse - whether the value may be expressed in short form
+ */
+Query.fillResultValue = function (cell, value, path, mayCollapse) {
 	var create = Panel.create,
 		localDate = Boolean(Storage.get('localDate')),
 		hexBinary = Boolean(Storage.get('hexBinary')),
@@ -575,18 +581,21 @@ Query.fillResultValue = function (cell, value, path) {
 			']'
 		]))
 		cell.dataset.explore = true
-	} else if (typeof display === 'string' && display.length > 20) {
-		cell.innerHTML = json.stringify(display.substr(0, 17), true, false) + '&#133;'
-		cell.dataset.collapsed = 'string'
-		cell.dataset.explore = true
-		cell.dataset.value = display
+	} else if (typeof display === 'string') {
+		if (mayCollapse && display.length > 20) {
+			cell.innerHTML = json.stringify(display.substr(0, 17), true, false) + '&#133;'
+			cell.dataset.collapsed = true
+			cell.dataset.explore = true
+		} else {
+			cell.innerHTML = json.stringify(display, true, false)
+		}
 	} else if (display && typeof display === 'object' && display.constructor === Object) {
 		cell.appendChild(create('span.json-keyword', [
 			'Object{',
 			create('span.json-number', Object.keys(display).length),
 			'}'
 		]))
-		cell.dataset.collapsed = 'object'
+		cell.dataset.collapsed = true
 		cell.dataset.explore = true
 	} else {
 		cell.innerHTML = json.stringify(display, true, false, localDate, hexBinary)
@@ -619,21 +628,8 @@ Query.openMenu = function (value, path, cell, event) {
 		}
 	}
 
-	// Expand string
-	if (cell.dataset.collapsed === 'string') {
-		options['Expand this column'] = function () {
-			var cells = document.querySelectorAll('#query-result td')
-			Array.prototype.forEach.call(cells, function (cell) {
-				if (cell.dataset.path === path && cell.dataset.collapsed) {
-					cell.dataset.collapsed = false
-					cell.innerHTML = json.stringify(cell.dataset.value, true, false)
-				}
-			})
-		}
-	}
-
-	// Expand path
-	if (cell.dataset.collapsed === 'object') {
+	// Expand path (object or string)
+	if (cell.dataset.collapsed) {
 		options['Expand this column'] = function () {
 			Query.expandedPaths.getArray(conn, coll).pushAndSave(path)
 			Query.populateResultTable()
