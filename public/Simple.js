@@ -45,7 +45,9 @@ Simple.onChangeCollection = function () {
  */
 Simple.execute = function () {
 	var oid = Simple.readId(Panel.value('simple-selector')),
-		selector = (oid ? oid : Panel.processJSInEl('simple-selector', false, true)) || {},
+		selector = (oid ? {
+			_id: oid
+		} : Panel.processJSInEl('simple-selector', false, true)) || {},
 		sort = Panel.processJSInEl('simple-sort', false, true) || {},
 		limit = Number(Panel.value('simple-limit'))
 
