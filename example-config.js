@@ -27,10 +27,16 @@ module.exports = {
 	},
 	// HTTP basic auth, leave null to turn off
 	// NOTE: basic HTTP auth is almost useless without https!
-	basicAuth: {
-		user: 'admin',
-		password: 'pass' // CHANGE IT!
-	},
+	basicAuth: [{
+		user: 'user1',
+		password: 'pass1', // CHANGE IT!
+		// List connections this user can access
+		// If no connections is listed, all will be allowed
+		connections: ['dev']
+	}, {
+		user: 'user2',
+		password: 'pass2'
+	}],
 	// https options, for more details see:
 	// http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
 	// Leave null to use http instead of https

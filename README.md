@@ -9,6 +9,7 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 
 ## Features
 * Multiple connections
+* Multiple users and permissions
 * Table-like display
 * HTTPs and BasicAuth
 * Relaxed query language (accepts not only JSON, but also plain JS)
@@ -18,9 +19,3 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 
 ## Example
 ![screen shot](https://raw.githubusercontent.com/clubedaentrega/node-mongo-admin/master/ss.png)
-
-## TODO
-* Edit documents
-* Remove documents
-* Manage collections
-* Manage indexes

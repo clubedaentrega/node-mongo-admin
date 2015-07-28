@@ -87,7 +87,6 @@ module.exports = function (done) {
 	})
 }
 
-
 /**
  * @class
  * @param {number} code
@@ -127,7 +126,20 @@ function processFile(fileName, url, api, dbs) {
  */
 function wrapHandler(handler, dbs) {
 	return function (req, res, next) {
-		handler(dbs, req.body, function (response) {
+		// Filter allowed dbs
+		var allowedDbs
+		if (!req.user.connections) {
+			allowedDbs = dbs
+		} else {
+			allowedDbs = Object.create(null)
+			req.user.connections.forEach(function (conn) {
+				if (conn in dbs) {
+					allowedDbs[conn] = dbs[conn]
+				}
+			})
+		}
+
+		handler(allowedDbs, req.body, function (response) {
 			response = response || {}
 			if (typeof response !== 'object') {
 				throw new Error('The response must be an object')
