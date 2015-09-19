@@ -8,6 +8,7 @@
 	<script type="text/javascript" src="Populated.js"></script>
 	<script type="text/javascript" src="Storage.js"></script>
 	<script type="text/javascript" src="Select.js"></script>
+	<script type="text/javascript" src="Input.js"></script>
 	<script type="text/javascript" src="date.js"></script>
 	<script type="text/javascript" src="json.js"></script>
 	<script type="text/javascript" src="explore.js"></script>
@@ -35,8 +36,8 @@
 		</p>
 		<pre>use <span id="query-connections"></span></pre>
 		<pre>db.<span id="query-collections"></span><span
-		id="query-simple">.<span id="simple-find">find</span>({<input size="50" id="simple-selector" value="">}).sort({<input size="30" id="simple-sort" value="_id: -1">}).limit(<input size="10" id="simple-limit" value="50">)</span><span
-		id="query-distinct">.distinct('<input size="30" id="distinct-field">', {<input size="40" id="distinct-selector">})</span><span
+		id="query-simple">.<span id="simple-find">find</span>({<span id="simple-selector" ></span>}).sort({<span id="simple-sort"></span>}).limit(<span id="simple-limit"></span>)</span><span
+		id="query-distinct">.distinct('<span id="distinct-field"></span>', {<span id="distinct-selector"></span>})</span><span
 		id="query-aggregate">.aggregate([ <span class="add" id="aggregate-add"></span>
 <span id="aggregate-stages"></span>])</span></pre>
 

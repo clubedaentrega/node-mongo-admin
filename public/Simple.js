@@ -1,7 +1,7 @@
 /**
  * @file Manage simple queries
  */
-/*globals Panel, ObjectId, Query, json, explore, Distinct, Populated*/
+/*globals Panel, ObjectId, Query, json, explore, Distinct, Populated, Input*/
 'use strict'
 
 var Simple = {}
@@ -10,13 +10,20 @@ Simple.name = 'simple'
 
 Simple.default = true
 
+Simple.selectorInput = null
+Simple.sortInput = null
+Simple.limitInput = null
+
 Query.registerMode(Simple)
 
 /**
  * Called after the page is loaded
  */
 Simple.init = function () {
-	Panel.get('simple-selector').oninput = function () {
+	Simple.selectorInput = new Input('simple-selector')
+	Simple.sortInput = new Input('simple-sort')
+	Simple.limitInput = new Input('simple-limit')
+	Simple.selectorInput.oninput = function () {
 		Panel.get('simple-find').textContent = Simple.readId(this.value) ? 'findById' : 'find'
 	}
 }
@@ -36,20 +43,21 @@ Simple.readId = function (str) {
  * Called when active collection is changed
  */
 Simple.onChangeCollection = function () {
-	Panel.value('simple-sort', '_id: -1')
-	Panel.value('simple-selector', '')
+	Simple.sortInput.value = '_id: -1'
+	Simple.selectorInput.value = ''
+	Simple.limitInput.value = '50'
 }
 
 /**
  * Called when a query is submited
  */
 Simple.execute = function () {
-	var oid = Simple.readId(Panel.value('simple-selector')),
+	var oid = Simple.readId(Simple.selectorInput.value),
 		selector = (oid ? {
 			_id: oid
-		} : Panel.processJSInEl('simple-selector', false, true)) || {},
-		sort = Panel.processJSInEl('simple-sort', false, true) || {},
-		limit = Number(Panel.value('simple-limit'))
+		} : Panel.processJSInEl(Simple.selectorInput, false, true)) || {},
+		sort = Panel.processJSInEl(Simple.sortInput, false, true) || {},
+		limit = Number(Simple.limitInput.value)
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
 	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0)
@@ -96,7 +104,7 @@ Simple.sortByPath = function (path, direction) {
 	} else {
 		sort = '\'' + path.replace(/'/g, '\\\'') + '\': ' + direction
 	}
-	Panel.value('simple-sort', sort)
+	Simple.sortInput.value = sort
 	Query.onFormSubmit()
 }
 
@@ -109,8 +117,8 @@ Simple.sortByPath = function (path, direction) {
 Simple.findById = function (connection, collection, id) {
 	Query.setCollection(connection, collection)
 	Query.setMode(Simple)
-	Panel.value('simple-selector', id)
-	Panel.value('simple-sort', '_id: -1')
+	Simple.selectorInput.value = id
+	Simple.sortInput.value = '_id: -1'
 	Query.onFormSubmit()
 }
 
@@ -153,7 +161,7 @@ Simple.findByPath = function (path, value, op) {
 	} else {
 		query = '{' + op + ': ' + json.stringify(value, false, false) + '}'
 	}
-	Panel.value('simple-selector', path + ': ' + query)
+	Simple.selectorInput.value = path + ': ' + query
 	Query.onFormSubmit()
 }
 
@@ -239,7 +247,7 @@ Simple.processCellMenu = function (value, path, cell, options) {
 Simple.processHeadMenu = function (path, options) {
 	options['Sort asc'] = Simple.sortByPath.bind(Simple, path, 1)
 	options['Sort desc'] = Simple.sortByPath.bind(Simple, path, -1)
-	options['Show distinct'] = Distinct.run.bind(Distinct, path, Panel.value('simple-selector'))
+	options['Show distinct'] = Distinct.run.bind(Distinct, path, Simple.selectorInput.value)
 }
 
 /**
@@ -247,9 +255,9 @@ Simple.processHeadMenu = function (path, options) {
  */
 Simple.toSearchParts = function () {
 	return [
-		Panel.value('simple-selector'),
-		Panel.value('simple-sort'),
-		Panel.value('simple-limit')
+		Simple.selectorInput.value,
+		Simple.sortInput.value,
+		Simple.limitInput.value
 	]
 }
 
@@ -260,8 +268,8 @@ Simple.toSearchParts = function () {
  * @param {string} limit
  */
 Simple.executeFromSearchParts = function (selector, sort, limit) {
-	Panel.value('simple-selector', selector)
-	Panel.value('simple-sort', sort)
-	Panel.value('simple-limit', limit)
+	Simple.selectorInput.value = selector
+	Simple.sortInput.value = sort
+	Simple.limitInput.value = limit
 	Query.onFormSubmit(null, true)
 }

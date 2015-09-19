@@ -328,13 +328,21 @@ tr.selected > td {
 }
 
 
-/* Custom select */
+/* Custom select and input */
 
-.custom-select > select {
+.custom-select > select,
+.custom-input > input {
 	font-family: monospace;
 }
 
-.custom-select > span {
+.custom-select > span,
+.custom-input > span {
 	cursor: pointer;
 	border-bottom: thin gray dashed;
+	display: inline-block;
+}
+
+.custom-select > span:hover,
+.custom-input > span:hover {
+	background-color: rgba(103, 32, 163, 0.25);
 }

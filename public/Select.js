@@ -55,6 +55,7 @@ function Select(el) {
 		}
 	}
 	this._selectEl.onblur = this.showLabel.bind(this)
+	this._labelEl.textContent = ' '
 }
 
 /**
@@ -81,7 +82,7 @@ Select.prototype.setOptions = function (options) {
 Select.prototype.showLabel = function () {
 	this._labelEl.style.display = ''
 	this._selectEl.style.display = 'none'
-	this._labelEl.textContent = this._selectEl.value
+	this._labelEl.textContent = this._selectEl.value || ' '
 }
 
 /**
@@ -90,5 +91,4 @@ Select.prototype.showLabel = function () {
 Select.prototype.showSelect = function () {
 	this._labelEl.style.display = 'none'
 	this._selectEl.style.display = ''
-	document.body.addEventListener('click', this._resetToLabel)
 }

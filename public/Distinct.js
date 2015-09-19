@@ -1,18 +1,29 @@
-/*globals Query, Panel*/
+/*globals Query, Panel, Input*/
 'use strict'
 
 var Distinct = {}
 
 Distinct.name = 'distinct'
 
+Distinct.fieldInput = null
+Distinct.selectorInput = null
+
 Query.registerMode(Distinct)
+
+/**
+ * Called after the page is loaded
+ */
+Distinct.init = function () {
+	Distinct.fieldInput = new Input('distinct-field')
+	Distinct.selectorInput = new Input('distinct-selector')
+}
 
 /**
  * Called when a query is submited
  */
 Distinct.execute = function () {
-	var field = Panel.value('distinct-field'),
-		selector = Panel.processJSInEl('distinct-selector', false, true) || {}
+	var field = Distinct.fieldInput.value,
+		selector = Panel.processJSInEl(Distinct.selectorInput, false, true) || {}
 
 	Query.setLoading(true)
 	Panel.request('distinct', {
@@ -39,8 +50,8 @@ Distinct.execute = function () {
  */
 Distinct.run = function (field, selector) {
 	Query.setMode(Distinct)
-	Panel.value('distinct-field', field)
-	Panel.value('distinct-selector', selector)
+	Distinct.fieldInput.value = field
+	Distinct.selectorInput.value = selector
 	Query.onFormSubmit()
 }
 
@@ -48,7 +59,7 @@ Distinct.run = function (field, selector) {
  * @returns {Array}
  */
 Distinct.toSearchParts = function () {
-	return [Panel.value('distinct-field'), Panel.value('distinct-selector')]
+	return [Distinct.fieldInput.value, Distinct.selectorInput.value]
 }
 
 /**
@@ -57,7 +68,7 @@ Distinct.toSearchParts = function () {
  * @param {string} selector
  */
 Distinct.executeFromSearchParts = function (field, selector) {
-	Panel.value('distinct-field', field)
-	Panel.value('distinct-selector', selector)
+	Distinct.fieldInput.value = field
+	Distinct.selectorInput.value = selector
 	Query.onFormSubmit(null, true)
 }
