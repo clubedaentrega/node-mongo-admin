@@ -1,4 +1,4 @@
-/*globals Query, Panel*/
+/*globals Query, Panel, Select*/
 'use strict'
 
 var Aggregate = {}
@@ -27,7 +27,7 @@ Aggregate.operators = {
 /**
  * @typedef {Object} Stage
  * @property {HTMLElement} el
- * @property {HTMLElement} opEl
+ * @property {Select} opSelect
  * @property {HTMLElement} valueEl
  * @property {HTMLElement} preEl
  * @property {HTMLElement} posEl
@@ -50,8 +50,7 @@ Aggregate.addStage = function (pos) {
 
 	// Create stage
 	stage.el = Panel.create('span', [
-		'\t{$',
-		stage.opEl = Panel.create('select'),
+		'\t{$', (stage.opSelect = new Select(Panel.create('span'))).el,
 		': ',
 		stage.preEl = Panel.create('span', '{'),
 		stage.valueEl = Panel.create('input[size=100]'),
@@ -63,8 +62,8 @@ Aggregate.addStage = function (pos) {
 		Panel.create('br')
 	])
 
-	Panel.populateSelectWithArray(stage.opEl, Object.keys(Aggregate.operators).sort())
-	stage.opEl.onchange = Aggregate.updateLayout
+	stage.opSelect.setOptions(Object.keys(Aggregate.operators).sort())
+	stage.opSelect.onchange = Aggregate.updateLayout
 	stage.addEl.onclick = function () {
 		Aggregate.addStage(Aggregate.stages.indexOf(stage) + 1)
 	}
@@ -100,7 +99,7 @@ Aggregate.deleteStage = function (stage) {
  */
 Aggregate.updateLayout = function () {
 	Aggregate.stages.forEach(function (stage) {
-		var type = Aggregate.operators[stage.opEl.value]
+		var type = Aggregate.operators[stage.opSelect.value]
 		stage.preEl.textContent = type === 'object' ? '{' : (type === 'field' ? '\'$' : '')
 		stage.posEl.textContent = type === 'object' ? '}' : (type === 'field' ? '\'' : '')
 		stage.valueEl.size = type === 'object' ? 100 : 20
@@ -125,7 +124,7 @@ Aggregate.init = function () {
  */
 Aggregate.execute = function () {
 	var stages = Aggregate.stages.map(function (stage) {
-		var type = Aggregate.operators[stage.opEl.value],
+		var type = Aggregate.operators[stage.opSelect.value],
 			value = stage.valueEl.value
 
 		if (!value) {
@@ -139,7 +138,7 @@ Aggregate.execute = function () {
 		}
 
 		return {
-			operator: '$' + stage.opEl.value,
+			operator: '$' + stage.opSelect.value,
 			operand: value
 		}
 	}).filter(Boolean)
@@ -165,7 +164,7 @@ Aggregate.toSearchParts = function () {
 	var parts = []
 	Aggregate.stages.forEach(function (stage) {
 		if (stage.valueEl.value) {
-			parts.push(stage.opEl.value)
+			parts.push(stage.opSelect.value)
 			parts.push(stage.valueEl.value)
 		}
 	})
@@ -186,7 +185,7 @@ Aggregate.executeFromSearchParts = function () {
 
 	for (i = 0; i < arguments.length; i += 2) {
 		stage = Aggregate.addStage()
-		stage.opEl.value = arguments[i]
+		stage.opSelect.value = arguments[i]
 		stage.valueEl.value = arguments[i + 1]
 	}
 

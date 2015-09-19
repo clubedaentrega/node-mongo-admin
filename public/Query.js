@@ -1,10 +1,20 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select*/
 'use strict'
 
 var Query = {}
+
+/**
+ * @property {Select}
+ */
+Query.connectionsSelect = null
+
+/**
+ * @property {Select}
+ */
+Query.collectionsSelect = null
 
 /**
  * Query.collections[connectionName] is a array of collection names
@@ -101,6 +111,9 @@ Query.init = function (connections) {
 		lastConnection = window.localStorage.getItem('node-mongo-admin-connection'),
 		initialMode
 
+	Query.connectionsSelect = new Select('query-connections')
+	Query.collectionsSelect = new Select('query-collections')
+
 	// Setup modes
 	Query.modes.forEach(function (mode) {
 		var btEl = Panel.create('input[type=button]')
@@ -129,14 +142,14 @@ Query.init = function (connections) {
 		}
 	})
 
-	Panel.populateSelectWithArray('query-connections', connectionNames)
-	Panel.get('query-connections').onchange = Query.onChangeConnection
+	Query.connectionsSelect.setOptions(connectionNames)
+	Query.connectionsSelect.onchange = Query.onChangeConnection
 	if (lastConnection) {
-		Panel.value('query-connections', lastConnection)
+		Query.connectionsSelect.value = lastConnection
 	}
 	Query.onChangeConnection()
 
-	Panel.get('query-collections').onchange = Query.onChangeCollection
+	Query.collectionsSelect.onchange = Query.onChangeCollection
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 	Panel.get('export').onclick = Query.export
 
@@ -146,9 +159,9 @@ Query.init = function (connections) {
 }
 
 Query.onChangeConnection = function () {
-	var collection = Panel.value('query-collections'),
+	var collection = Query.collectionsSelect.value,
 		collectionNames = [],
-		connection = Panel.value('query-connections'),
+		connection = Query.connectionsSelect.value,
 		collections = Query.collections[connection]
 
 	Query.connection = connection
@@ -160,11 +173,11 @@ Query.onChangeConnection = function () {
 		}
 	})
 
-	Panel.populateSelectWithArray('query-collections', collectionNames)
+	Query.collectionsSelect.setOptions(collectionNames)
 
 	// Try to recover selected collection
 	if (collections.indexOf(collection) !== -1) {
-		Panel.value('query-collections', collection)
+		Query.collectionsSelect.value = collection
 	} else {
 		Query.onChangeCollection()
 	}
@@ -174,7 +187,7 @@ Query.onChangeConnection = function () {
 }
 
 Query.onChangeCollection = function () {
-	Query.collection = Panel.value('query-collections')
+	Query.collection = Query.collectionsSelect.value
 	if (Query.mode.onChangeCollection) {
 		Query.mode.onChangeCollection()
 	}
@@ -211,16 +224,13 @@ Query.setMode = function (mode) {
  * @param {string} collection
  */
 Query.setCollection = function (connection, collection) {
-	var connEl = Panel.get('query-connections'),
-		collEl = Panel.get('query-collections')
-
-	if (connEl.value !== connection) {
-		connEl.value = connection
+	if (Query.connectionsSelect.value !== connection) {
+		Query.connectionsSelect.value = connection
 		Query.onChangeConnection()
 	}
 
-	if (collEl.value !== collection) {
-		collEl.value = collection
+	if (Query.collectionsSelect.value !== collection) {
+		Query.collectionsSelect.value = collection
 		Query.onChangeCollection()
 	}
 }

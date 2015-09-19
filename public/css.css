@@ -62,6 +62,8 @@ input {
 canvas {
 	float: right;
 }
+
+
 /* Icon buttons */
 
 .prev-on,
@@ -126,6 +128,8 @@ pre .add,
 pre .delete {
 	margin-bottom: -4px;
 }
+
+
 /* Table */
 
 table.loading * {
@@ -158,6 +162,8 @@ th:hover {
 tr.selected > td {
 	background-color: #CCF;
 }
+
+
 /* JSON fields */
 
 .json {
@@ -212,6 +218,8 @@ tr.selected > td {
 	background-color: #FCC;
 	border: thin #F99 solid;
 }
+
+
 /* Window */
 
 .window {
@@ -242,6 +250,8 @@ tr.selected > td {
 	margin-bottom: 15px;
 	margin-right: 15px;
 }
+
+
 /* Panels */
 
 .panel {
@@ -251,6 +261,8 @@ tr.selected > td {
 	overflow: auto;
 	text-align: center;
 }
+
+
 /* Clear float */
 
 .clear:after {
@@ -261,6 +273,8 @@ tr.selected > td {
 	display: block;
 	overflow: hidden;
 }
+
+
 /* Menu */
 
 .menu {
@@ -311,4 +325,16 @@ tr.selected > td {
 .menu.menu-rtl > .menu-submenu {
 	padding-left: 1.5em;
 	padding-right: 3px;
+}
+
+
+/* Custom select */
+
+.custom-select > select {
+	font-family: monospace;
+}
+
+.custom-select > span {
+	cursor: pointer;
+	border-bottom: thin gray dashed;
 }
