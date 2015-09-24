@@ -26,6 +26,7 @@ function Input(el) {
 		},
 		set: function (newValue) {
 			this._inputEl.value = newValue
+			this._inputEl.style.width = (this._inputEl.value.length + 1) + 'ch'
 		}
 	})
 
