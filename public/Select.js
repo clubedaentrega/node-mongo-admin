@@ -26,7 +26,6 @@ function Select(el) {
 		},
 		set: function (newValue) {
 			this._selectEl.value = newValue
-			this.showLabel()
 		}
 	})
 
@@ -36,26 +35,14 @@ function Select(el) {
 	 */
 	this._selectEl = document.createElement('select')
 
-	/**
-	 * @member {HTMLElement}
-	 * @private
-	 */
-	this._labelEl = document.createElement('span')
-
 	// Build internal HTML
 	this.el.classList.add('custom-select')
-	this.el.appendChild(this._labelEl)
 	this.el.appendChild(this._selectEl)
-	this._selectEl.style.display = 'none'
-	this._labelEl.onclick = this.showSelect.bind(this)
 	this._selectEl.onchange = function () {
-		that.showLabel()
 		if (that.onchange) {
 			that.onchange.call(that)
 		}
 	}
-	this._selectEl.onblur = this.showLabel.bind(this)
-	this._labelEl.textContent = ' '
 }
 
 /**
@@ -73,22 +60,4 @@ Select.prototype.setOptions = function (options) {
 		}
 		this._selectEl.appendChild(optionEl)
 	}, this)
-	this.showLabel()
-}
-
-/**
- * Hide the select box and show the label
- */
-Select.prototype.showLabel = function () {
-	this._labelEl.style.display = ''
-	this._selectEl.style.display = 'none'
-	this._labelEl.textContent = this._selectEl.value || ' '
-}
-
-/**
- * Hide the label and show the select box
- */
-Select.prototype.showSelect = function () {
-	this._labelEl.style.display = 'none'
-	this._selectEl.style.display = ''
 }
