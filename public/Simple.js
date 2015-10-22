@@ -60,7 +60,7 @@ Simple.execute = function () {
 		limit = Number(Simple.limitInput.value)
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
-	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0)
+	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0, Boolean(oid))
 }
 
 /**
@@ -69,8 +69,9 @@ Simple.execute = function () {
  * @param {Object} selector
  * @param {Object} sort
  * @param {number} page
+ * @param {boolean} byId
  */
-Simple.find = function (connection, collection, selector, sort, limit, page) {
+Simple.find = function (connection, collection, selector, sort, limit, page, byId) {
 	Query.setLoading(true)
 
 	Panel.request('find', {
@@ -86,8 +87,11 @@ Simple.find = function (connection, collection, selector, sort, limit, page) {
 		if (!result.error) {
 			hasMore = result.docs.length === limit
 			Query.showResult(result.docs, page, hasMore, function (page) {
-				Simple.find(connection, collection, selector, sort, limit, page)
+				Simple.find(connection, collection, selector, sort, limit, page, byId)
 			})
+			if (byId && result.docs.length === 1) {
+				explore(result.docs[0])
+			}
 		}
 	})
 }
