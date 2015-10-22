@@ -1,3 +1,6 @@
+# 2.1.1
+* Fixed: `json.preParse`
+
 # 2.1.0
 * Added: support for GeoJSON
 * Added: support for count queries
