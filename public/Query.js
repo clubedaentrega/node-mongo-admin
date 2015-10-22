@@ -292,7 +292,14 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 			findPage(page + 1)
 		}
 
-		pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
+		if (!docs.length) {
+			pageEl.textContent = pageEl2.textContent = 'No results'
+		} else if (docs.length === 1) {
+			pageEl.textContent = pageEl2.textContent = 'Page ' + (page + 1)
+		} else {
+			pageEl.textContent = pageEl2.textContent = docs.length +
+				' results on page ' + (page + 1)
+		}
 		Panel.get('query-controls').style.display = ''
 		Panel.get('query-controls2').style.display = docs.length > 10 ? '' : 'none'
 	} else {
