@@ -129,6 +129,10 @@ json.reviver = function (key, value) {
 			return new MaxKey()
 		} else if (typeof value.$numberLong === 'string') {
 			return new Long(value.$numberLong)
+		} else if (typeof value.$infinity === 'number') {
+			return value.$infinity * Infinity
+		} else if (value.$nan === 1) {
+			return NaN
 		} else {
 			return value
 		}
@@ -322,4 +326,74 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 	pushJsonValue(value, '')
 
 	return finalStr
+}
+
+/**
+ * Return a treated copy of the given value
+ */
+json.preParse = function preParse(value) {
+	var r, key
+	if (value instanceof ObjectId) {
+		return {
+			$oid: value.toHexString()
+		}
+	} else if (value instanceof BinData) {
+		return {
+			$binary: value.toString('base64'),
+			$type: value.sub_type
+		}
+	} else if (value instanceof Date) {
+		return {
+			$date: value.getTime()
+		}
+	} else if (value instanceof RegExp) {
+		return {
+			$regex: value.source,
+			$options: (value.global ? 'g' : '') + (value.ignoreCase ? 'i' : '') + (value.multiline ? 'm' : '')
+		}
+	} else if (value instanceof DBRef) {
+		return {
+			$ref: value.namespace,
+			$id: preParse(value.oid)
+		}
+	} else if (value === undefined) {
+		return {
+			$undefined: true
+		}
+	} else if (value instanceof MinKey) {
+		return {
+			$minKey: 1
+		}
+	} else if (value instanceof MaxKey) {
+		return {
+			$maxKey: 1
+		}
+	} else if (value instanceof Long) {
+		if (value.getNumBitsAbs() < 51) {
+			return value.toNumber()
+		} else {
+			return {
+				$numberLong: value.toString()
+			}
+		}
+	} else if (Array.isArray(value)) {
+		return value.map(preParse)
+	} else if (value && typeof value === 'object' && !value.toJSON) {
+		// Simple hash-map
+		r = {}
+		for (key in value) {
+			r[key] = preParse(value[key])
+		}
+		return r
+	} else if (value === Infinity || value === -Infinity) {
+		return {
+			$infinity: value === Infinity ? 1 : -1
+		}
+	} else if (Number.isNaN(value)) {
+		return {
+			$nan: 1
+		}
+	} else {
+		return value
+	}
 }

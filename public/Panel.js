@@ -138,7 +138,7 @@ Panel.request = function (action, body, callback) {
 	var ajax = new XMLHttpRequest()
 	ajax.open('POST', '/api/' + action)
 	ajax.setRequestHeader('Content-Type', 'application/json; charset=utf-8')
-	ajax.send(JSON.stringify(body))
+	ajax.send(JSON.stringify(json.preParse(body)))
 	ajax.onload = function () {
 		var result = null
 		if (ajax.status !== 200) {

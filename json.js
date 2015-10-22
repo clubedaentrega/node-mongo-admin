@@ -50,6 +50,10 @@ module.exports.reviver = function (key, value) {
 			return new MaxKey()
 		} else if (typeof value.$numberLong === 'string') {
 			return Long.fromString(value.$numberLong)
+		} else if (typeof value.$infinity === 'number') {
+			return value.$infinity * Infinity
+		} else if (value.$nan === 1) {
+			return NaN
 		} else {
 			return value
 		}
@@ -114,6 +118,14 @@ function preParse(value) {
 			r[key] = preParse(value[key])
 		}
 		return r
+	} else if (value === Infinity || value === -Infinity) {
+		return {
+			$infinity: value === Infinity ? 1 : -1
+		}
+	} else if (Number.isNaN(value)) {
+		return {
+			$nan: 1
+		}
 	} else {
 		return value
 	}
