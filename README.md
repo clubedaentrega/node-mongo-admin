@@ -19,3 +19,6 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 
 ## Example
 ![screen shot](https://raw.githubusercontent.com/clubedaentrega/node-mongo-admin/master/ss.png)
+
+## Credits
+Icons by [FamFamFam](http://www.famfamfam.com/lab/icons/silk/)
