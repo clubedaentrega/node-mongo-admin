@@ -18,6 +18,7 @@
 	<script type="text/javascript" src="Query.js"></script>
 	<script type="text/javascript" src="Simple.js"></script>
 	<script type="text/javascript" src="Distinct.js"></script>
+	<script type="text/javascript" src="Count.js"></script>
 	<script type="text/javascript" src="Aggregate.js"></script>
 	<script type="text/javascript" src="Export.js"></script>
 	<script type="text/javascript" src="header.js"></script>
@@ -39,7 +40,8 @@
 		id="query-simple">.<span id="simple-find">find</span>({<span id="simple-selector" ></span>}).sort({<span id="simple-sort"></span>}).limit(<span id="simple-limit"></span>)</span><span
 		id="query-distinct">.distinct('<span id="distinct-field"></span>', {<span id="distinct-selector"></span>})</span><span
 		id="query-aggregate">.aggregate([ <span class="add" id="aggregate-add"></span>
-<span id="aggregate-stages"></span>])</span></pre>
+<span id="aggregate-stages"></span>])</span><span
+		id="query-count">.count({<span id="count-selector"></span>})</span></pre>
 
 		<p>
 			<input type="submit" value="Execute" id="query-execute">
