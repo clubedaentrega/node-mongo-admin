@@ -1,5 +1,9 @@
-# 2.0.0
+# 2.1.0
+* Added: support for GeoJSON
+* Added: support for count queries
+* Changed: custom input elements
 
+# 2.0.0
 * Added: support for multiple users in basic http auth
 * Added: allow a users to use only some connections
 
