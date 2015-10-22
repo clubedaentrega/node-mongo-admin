@@ -387,7 +387,8 @@ Query.populateResultTable = function () {
 				!Array.isArray(value) &&
 				Query.specialTypes.indexOf(value.constructor) === -1 &&
 				(Object.keys(value).length === 1 ||
-					pathsToExpand.indexOf(subpath) !== -1)) {
+					pathsToExpand.indexOf(subpath) !== -1) &&
+				!isGeoJSON(value)) {
 				addSubDoc(value, subpath, i, populated, original)
 			} else {
 				// Primitive value
@@ -607,6 +608,13 @@ Query.fillResultValue = function (cell, value, path, mayCollapse) {
 		} else {
 			cell.innerHTML = json.stringify(display, true, false)
 		}
+	} else if (isGeoJSON(display)) {
+		cell.appendChild(create('span.json-keyword', ['GeoJSON{',
+			create('span.json-string', display.type),
+			'}'
+		]))
+		cell.dataset.isGeoJson = true
+		cell.dataset.explore = true
 	} else if (display && typeof display === 'object' && display.constructor === Object) {
 		cell.appendChild(create('span.json-keyword', [
 			'Object{',
@@ -651,6 +659,14 @@ Query.openMenu = function (value, path, cell, event) {
 		options['Expand this column'] = function () {
 			Query.expandedPaths.getArray(conn, coll).pushAndSave(path)
 			Query.populateResultTable()
+		}
+	}
+
+	// Show GeoJSON in map
+	if (cell.dataset.isGeoJson) {
+		options['Show in map'] = function () {
+			open('http://geojson.io/#data=data:application/json,' +
+				encodeURIComponent(JSON.stringify(display)))
 		}
 	}
 
@@ -813,4 +829,25 @@ function stickHeader() {
 	newTable.appendChild(newTBody)
 	Panel.get('sticky-table-header').appendChild(newTable)
 
+}
+
+/**
+ * Checks if a given value is a geojson
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isGeoJSON(value) {
+	if (!value || typeof value !== 'object' || typeof value.type !== 'string') {
+		return false
+	}
+	if (['Point', 'MultiPoint', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon', 'GeometryCollection'].indexOf(value.type) !== -1 && Array.isArray(value.coordinates)) {
+		return true
+	} else if (value.type === 'GeometryCollection' && Array.isArray(value.geometries)) {
+		return true
+	} else if (value.type === 'Feature' && value.geometry) {
+		return true
+	} else if (value.type === 'FeatureCollection' && Array.isArray(value.features)) {
+		return true
+	}
+	return false
 }
