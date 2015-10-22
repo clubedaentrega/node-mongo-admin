@@ -6,19 +6,6 @@
 
 var json = {}
 
-Date.prototype.toJSON = function () {
-	return {
-		$date: this.getTime()
-	}
-}
-
-RegExp.prototype.toJSON = function () {
-	return {
-		$regex: this.source,
-		$options: (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '') + (this.multiline ? 'm' : '')
-	}
-}
-
 /**
  * @param {string} isoStr
  */
@@ -333,16 +320,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
  */
 json.preParse = function preParse(value) {
 	var r, key
-	if (value instanceof ObjectId) {
-		return {
-			$oid: value.toHexString()
-		}
-	} else if (value instanceof BinData) {
-		return {
-			$binary: value.toString('base64'),
-			$type: value.sub_type
-		}
-	} else if (value instanceof Date) {
+	if (value instanceof Date) {
 		return {
 			$date: value.getTime()
 		}
@@ -351,30 +329,9 @@ json.preParse = function preParse(value) {
 			$regex: value.source,
 			$options: (value.global ? 'g' : '') + (value.ignoreCase ? 'i' : '') + (value.multiline ? 'm' : '')
 		}
-	} else if (value instanceof DBRef) {
-		return {
-			$ref: value.namespace,
-			$id: preParse(value.oid)
-		}
 	} else if (value === undefined) {
 		return {
 			$undefined: true
-		}
-	} else if (value instanceof MinKey) {
-		return {
-			$minKey: 1
-		}
-	} else if (value instanceof MaxKey) {
-		return {
-			$maxKey: 1
-		}
-	} else if (value instanceof Long) {
-		if (value.getNumBitsAbs() < 51) {
-			return value.toNumber()
-		} else {
-			return {
-				$numberLong: value.toString()
-			}
 		}
 	} else if (Array.isArray(value)) {
 		return value.map(preParse)
