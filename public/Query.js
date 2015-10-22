@@ -184,13 +184,23 @@ Query.onChangeConnection = function () {
 
 	// Save to keep on reload
 	window.localStorage.setItem('node-mongo-admin-connection', connection)
+
+	Query.updateTitle()
 }
 
 Query.onChangeCollection = function () {
 	Query.collection = Query.collectionsSelect.value
+	Query.updateTitle()
 	if (Query.mode.onChangeCollection) {
 		Query.mode.onChangeCollection()
 	}
+}
+
+/**
+ * Update the window title
+ */
+Query.updateTitle = function () {
+	document.title = Query.connection + '.' + Query.collection + ' - Node Mongo Admin'
 }
 
 /**
