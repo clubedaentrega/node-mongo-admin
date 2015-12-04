@@ -1,7 +1,7 @@
 /**
  * @file Manage the export feature
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Storage*/
 'use strict'
 
 var Export = {}
@@ -77,7 +77,8 @@ Export.export = function (docs, title, queryString) {
  * @returns {string}
  */
 Export.generateHTML = function (valuesByPath, length, title, paragraph) {
-	var html, pathNames, i
+	var localDate = Boolean(Storage.get('localDate')),
+		html, pathNames, i
 
 	// HTML head
 	html = '<!DOCTYPE html>\n' +
@@ -109,7 +110,9 @@ Export.generateHTML = function (valuesByPath, length, title, paragraph) {
 	function generateRow(i) {
 		html += '<tr>\n'
 		pathNames.forEach(function (path) {
-			html += '<td>' + Panel.escape(Export.toString(valuesByPath[path][i])) + '</td>'
+			html += '<td>' +
+				Panel.escape(Export.toString(valuesByPath[path][i], localDate)) +
+				'</td>'
 		})
 		html += '</tr>\n'
 	}
@@ -126,9 +129,10 @@ Export.generateHTML = function (valuesByPath, length, title, paragraph) {
 
 /**
  * @param {*} value
+ * @param {boolean} [localDate] - show date in local (browser) time
  * @returns {string}
  */
-Export.toString = function (value) {
+Export.toString = function (value, localDate) {
 	if (value === undefined) {
 		return ''
 	} else if (value instanceof BinData) {
@@ -136,7 +140,7 @@ Export.toString = function (value) {
 	} else if (value instanceof Long) {
 		return value.$numberLong
 	} else if (value instanceof Date) {
-		return value.toISOString()
+		return localDate ? value.toLocaleString() : value.toISOString()
 	} else {
 		// ObjectId, RegExp and others
 		return String(value)
