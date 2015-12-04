@@ -160,21 +160,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 		}
 	}
 	var formatDate = function (date) {
-		if (!localDate) {
-			return date.toISOString()
-		}
-		var yr = date.getFullYear(),
-			mo = n2s(date.getMonth() + 1),
-			d = n2s(date.getDate()),
-			h = n2s(date.getHours()),
-			min = n2s(date.getMinutes()),
-			s = n2s(date.getSeconds())
-
-		return yr + '/' + mo + '/' + d + ' ' + h + ':' + min + ':' + s
-
-		function n2s(n) {
-			return (n < 10 ? '0' : '') + n
-		}
+		return localDate ? date.toLocaleString() : date.toISOString()
 	}
 	var formatBinary = function (base64) {
 		var hex = '',
