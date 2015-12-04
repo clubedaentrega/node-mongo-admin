@@ -1,0 +1,6 @@
+{
+	"name": "node-mongo-admin",
+	"script": "index.js",
+	"min_uptime": "5m",
+	"max_restarts": 5
+}

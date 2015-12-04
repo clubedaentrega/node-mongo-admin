@@ -14,20 +14,20 @@
 		"phpmyadmin"
 	],
 	"dependencies": {
-		"async": "^1.4.2",
+		"async": "^1.5.0",
 		"body-parser": "^1.14.1",
 		"constant-equals": "^1.2.0",
 		"express": "^4.13.3",
-		"mongodb": "^2.0.46",
+		"mongodb": "^2.0.49",
 		"validate-fields": "^3.3.1"
 	},
 	"license": "MIT",
 	"engines": {
-		"node": ">=0.10"
+		"node": ">=0.12"
 	},
 	"scripts": {
 		"test": "exit 1",
-		"start": "forever start -l forever.log -a -o out.log -e err.log index.js"
+		"start": "pm2 startOrGracefulReload pm2.json"
 	},
 	"devDependencies": {}
 }

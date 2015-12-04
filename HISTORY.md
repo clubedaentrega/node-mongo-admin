@@ -1,3 +1,9 @@
+# 3.0.0
+
+## Breaking changes
+* Changed: use `PM2` instead of `forever` in `npm start`
+* Changed: dropped support for node v0.10
+
 # 2.1.1
 * Fixed: `json.preParse`
 

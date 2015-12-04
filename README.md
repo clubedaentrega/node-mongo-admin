@@ -5,7 +5,7 @@ A simple web application to visualize mongo data inspired by PHPMyAdmin
 ## Install
 1. Clone [the repo](https://github.com/clubedaentrega/node-mongo-admin)
 2. Copy the file `example-config.js` to `config.js` and edit what you want
-3. Start with `node index` or, if you have `forever`, `npm start`
+3. Start with `node index` or, if you have `pm2`, `npm start`
 
 ## Features
 * Multiple connections
