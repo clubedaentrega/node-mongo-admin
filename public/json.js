@@ -134,9 +134,10 @@ json.reviver = function (key, value) {
  * @param {boolean} [pretty] - false to return one-line text, true to return multi-line with tabs
  * @param {boolean} [localDate] - show date in local (browser) time (only works if html=true)
  * @param {boolean} [hexBinary] - show binary date in hex (only works if html=true)
+ * @param {boolean} [oidTimestamp] - show object-id's timestamp (only works if html=true)
  * @returns {string}
  */
-json.stringify = function (value, html, pretty, localDate, hexBinary) {
+json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimestamp) {
 	var finalStr = '',
 		indentLevel = 0
 
@@ -161,6 +162,16 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 	}
 	var formatDate = function (date) {
 		return localDate ? date.toLocaleString() : date.toISOString()
+	}
+	var formatObjectId = function (oid) {
+		if (!oidTimestamp) {
+			return oid.$oid
+		}
+
+		// Convert the first 4 bytes to Unix Timestamp
+		var time = parseInt(oid.$oid.substr(0, 8), 16),
+			date = new Date(time * 1000)
+		return date.toLocaleString()
 	}
 	var formatBinary = function (base64) {
 		var hex = '',
@@ -237,7 +248,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary) {
 				pushStr('</span>')
 			}
 		} else if (value instanceof ObjectId) {
-			pushStr(html ? value.$oid : 'ObjectId(\'' + value.$oid + '\')', false, false, 'id')
+			pushStr(html ? formatObjectId(value) : 'ObjectId(\'' + value.$oid + '\')', false, false, 'id')
 		} else if (value instanceof BinData) {
 			if (html) {
 				pushStr(formatBinary(value.$binary), false, false, 'binary')

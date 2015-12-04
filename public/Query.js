@@ -597,6 +597,7 @@ Query.selectRow = function (event) {
 Query.fillResultValue = function (cell, value, path, mayCollapse) {
 	var create = Panel.create,
 		localDate = Boolean(Storage.get('localDate')),
+		oidTimestamp = Boolean(Storage.get('oidTimestamp')),
 		hexBinary = Boolean(Storage.get('hexBinary')),
 		display = value instanceof Populated ? value.display : value
 
@@ -634,7 +635,7 @@ Query.fillResultValue = function (cell, value, path, mayCollapse) {
 		cell.dataset.collapsed = true
 		cell.dataset.explore = true
 	} else {
-		cell.innerHTML = json.stringify(display, true, false, localDate, hexBinary)
+		cell.innerHTML = json.stringify(display, true, false, localDate, hexBinary, oidTimestamp)
 	}
 
 	// Add context menu
@@ -654,6 +655,7 @@ Query.openMenu = function (value, path, cell, event) {
 		coll = Query.collection,
 		isPopulated = value instanceof Populated,
 		localDate = Boolean(Storage.get('localDate')),
+		oidTimestamp = Boolean(Storage.get('oidTimestamp')),
 		hexBinary = Boolean(Storage.get('hexBinary')),
 		display = isPopulated ? value.display : value
 
@@ -682,14 +684,9 @@ Query.openMenu = function (value, path, cell, event) {
 
 	// Timestamp from object id
 	if (display instanceof ObjectId) {
-		options['See timestamp'] = function () {
-			// Convert the first 4 bytes to Unix Timestamp then alert it
-			var time = parseInt(String(display).substr(0, 8), 16),
-				date = new Date(time * 1000),
-				iso = date.toISOString().replace('.000', ''),
-				local = String(date)
-
-			alert('Id:\n\t' + display + '\nDatetime:\n\t' + iso + '\nLocal time:\n\t' + local)
+		options[oidTimestamp ? 'Show ObjectId' : 'Show timestamp'] = function () {
+			Storage.set('oidTimestamp', !oidTimestamp)
+			Query.populateResultTable()
 		}
 
 		if (path !== '_id' && !isPopulated) {
