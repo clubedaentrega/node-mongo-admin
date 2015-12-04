@@ -40,14 +40,27 @@ Storage.prototype.getArray = function (conn, coll) {
 	return arr
 }
 
+Storage.cache = Object.create(null)
+
 /**
- * Simple global value
+ * Simple global value, updates cached value
  * @param {string} name
  * @returns {*}
  */
 Storage.get = function (name) {
-	var key = 'node-mongo-admin.' + name
-	return JSON.parse(localStorage.getItem(key) || 'null')
+	var key = 'node-mongo-admin.' + name,
+		result = JSON.parse(localStorage.getItem(key) || 'null')
+	Storage.cache[name] = result
+	return result
+}
+
+/**
+ * Read cached value (if available)
+ * @param {string} name
+ * @returns {?*}
+ */
+Storage.getCached = function (name) {
+	return Storage.cache[name]
 }
 
 /**

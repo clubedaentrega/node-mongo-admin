@@ -654,9 +654,9 @@ Query.openMenu = function (value, path, cell, event) {
 		conn = Query.connection,
 		coll = Query.collection,
 		isPopulated = value instanceof Populated,
-		localDate = Boolean(Storage.get('localDate')),
-		oidTimestamp = Boolean(Storage.get('oidTimestamp')),
-		hexBinary = Boolean(Storage.get('hexBinary')),
+		localDate = Boolean(Storage.getCached('localDate')),
+		oidTimestamp = Boolean(Storage.getCached('oidTimestamp')),
+		hexBinary = Boolean(Storage.getCached('hexBinary')),
 		display = isPopulated ? value.display : value
 
 	// Explore array/object
