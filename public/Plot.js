@@ -1,4 +1,4 @@
-/*globals Panel, Input*/
+/*globals Panel, Input, google, Query*/
 'use strict'
 
 var Plot = {}
@@ -17,32 +17,62 @@ var Plot = {}
 Plot.init = function () {
 	Panel.get('plot').onclick = Plot.start
 	Panel.get('plot-clear').onclick = Plot.stop
+	Panel.get('plot-type').onchange = Plot.update
 	Plot.titleInput = new Input('plot-title')
+	Plot.titleInput.oninput = Plot.update
 	Plot.xAxis = new Plot.DataSelector('plot-x-axis')
+	Plot.xAxis.onchange = Plot.update
 	Plot.series = []
 	Panel.get('plot-add-series').onclick = function () {
 		Plot.addSeries(0)
 	}
 	Plot.addSeries()
+
+	// Load google charts
+	google.charts.load('current', {
+		packages: ['corechart']
+	})
+	google.charts.setOnLoadCallback(function () {
+		Plot.ready = true
+	})
 }
 
 window.addEventListener('load', Plot.init)
+
+/**
+ * Whether google charts has loaded
+ * @property {boolean}
+ */
+Plot.ready = false
 
 /**
  * @class
  * @param {string|HTMLElement} el
  */
 Plot.DataSelector = function (el) {
+	var that = this
+
 	this.el = Panel.get(el)
 
-	// Construct internal DOM (a button and a text input)
-	this.fieldButton = Panel.create('button', 'Select field')
-	this.nameInput = new Input(Panel.create('span'))
-	this.el.appendChild(this.fieldButton)
-	this.el.appendChild(Panel.create('span', ', name: '))
-	this.el.appendChild(this.nameInput.el)
+	/**
+	 * Called when some data has changed
+	 * @member {function()}
+	 */
+	this.onchange = null
 
-	this.fieldButton.onclick = this.selectField.bind(this)
+	// Construct internal DOM (a button and a text input)
+	this._fieldButton = Panel.create('button', 'Select field')
+	this._nameInput = new Input(Panel.create('span'))
+	this.el.appendChild(this._fieldButton)
+	this.el.appendChild(Panel.create('span', ', name: '))
+	this.el.appendChild(this._nameInput.el)
+
+	this._fieldButton.onclick = this.selectField.bind(this)
+	this._nameInput.oninput = function () {
+		if (that.onchange) {
+			that.onchange()
+		}
+	}
 }
 
 /**
@@ -56,17 +86,22 @@ Plot.DataSelector.prototype.selectField = function (originalEvent) {
 	var onTargetClick = function (event) {
 		var fieldName = event.currentTarget.title,
 			formattedFieldName = Panel.formatDocPath(fieldName)
-		that.fieldButton.value = fieldName
-		that.fieldButton.textContent = formattedFieldName
-		if (!that.nameInput.value) {
-			that.nameInput.value = formattedFieldName
+		that._fieldButton.value = fieldName
+		that._fieldButton.textContent = formattedFieldName
+		that._nameInput.value = formattedFieldName
+		that._nameInput.select()
+		if (that.onchange) {
+			that.onchange()
 		}
 	}
 
 	// Finish the operation
 	var dismiss = function (event) {
 		if (event === originalEvent) {
-			// Ignore the original click event
+			targets.forEach(function (target) {
+				target.classList.add('plot-field-target')
+				target.addEventListener('click', onTargetClick)
+			})
 			return
 		}
 		targets.forEach(function (target) {
@@ -78,10 +113,22 @@ Plot.DataSelector.prototype.selectField = function (originalEvent) {
 
 	// Set events
 	document.body.addEventListener('click', dismiss)
-	targets.forEach(function (target) {
-		target.classList.add('plot-field-target')
-		target.addEventListener('click', onTargetClick)
-	})
+}
+
+/**
+ * Return current field name
+ * @returns {string}
+ */
+Plot.DataSelector.prototype.getField = function () {
+	return this._fieldButton.value || ''
+}
+
+/**
+ * Return current data name
+ * @returns {string}
+ */
+Plot.DataSelector.prototype.getName = function () {
+	return this._nameInput.value
 }
 
 /**
@@ -127,6 +174,7 @@ Plot.addSeries = function (pos) {
 	series.deleteEl.onclick = function () {
 		Plot.deleteSeries(series)
 	}
+	series.dataSelector.onchange = Plot.update
 
 	if (pos === -1 || pos === undefined || pos === Plot.series.length) {
 		Panel.get('plot-series').appendChild(series.el)
@@ -149,4 +197,139 @@ Plot.deleteSeries = function (series) {
 	}
 	Plot.series.splice(pos, 1)
 	series.el.parentElement.removeChild(series.el)
+	Plot.update()
+}
+
+/**
+ * Update the current plot
+ */
+Plot.update = function () {
+	// Load current plot options
+	var xField = Plot.xAxis.getField().split('.').filter(Boolean),
+		xName = Plot.xAxis.getName(),
+		series = Plot.series.map(function (series) {
+			return {
+				field: series.dataSelector.getField().split('.').filter(Boolean),
+				name: series.dataSelector.getName()
+			}
+		}).filter(function (series) {
+			// Ignore empty ones
+			return series.field.length
+		})
+
+	if (!xField.length || !series.length || !Plot.ready || !Query.result || !Query.result.length) {
+		// Not enough data
+		return
+	}
+
+	// Create data table header
+	var nCols = series.length + 1,
+		nRows = Query.result.length + 1,
+		header = new Array(nCols)
+	header[0] = xName
+	series.forEach(function (each, i) {
+		header[i + 1] = each.name
+	})
+
+	// Load table data
+	var body = new Array(nRows - 1),
+		i, row, doc, xValue, j, yValue
+	for (i = 1; i < nRows; i++) {
+		row = new Array(series.length + 1)
+		doc = Query.result[i - 1]
+
+		// X value
+		xValue = readField(doc, xField)
+		if (xValue === undefined || xValue === null) {
+			xValue = '(empty)'
+		} else if (typeof xValue !== 'string' &&
+			typeof xValue !== 'number' &&
+			!(xValue instanceof Date)) {
+			// Only strings, numbers and dates are allowed in the x axis
+			continue
+		}
+		row[0] = xValue
+
+		// Series
+		for (j = 1; j < nCols; j++) {
+			yValue = readField(doc, series[j - 1].field)
+			if (typeof yValue !== 'number') {
+				// Only numbers are allowed as series data
+				yValue = null
+			}
+			row[j] = yValue
+		}
+
+		body[i - 1] = row
+	}
+
+	// Sort by x value
+	if (typeof body[0][0] === 'string') {
+		// String comparison
+		body.sort(function (a, b) {
+			var a0 = a[0],
+				b0 = b[0]
+			return a0 === b0 ? 0 : (a0 > b0 ? 1 : -1)
+		})
+	} else {
+		// Numeric comparison
+		body.sort(function (a, b) {
+			var a0 = +a[0],
+				b0 = +b[0]
+			return a0 - b0
+		})
+	}
+
+	// Create final table
+	var table = new Array(nRows)
+	table[0] = header
+	for (i = 1; i < nRows; i++) {
+		table[i] = body[i - 1]
+	}
+
+	// Draw plot
+	var dataTable = google.visualization.arrayToDataTable(table),
+		PlotClass
+	switch (Panel.value('plot-type')) {
+		case 'area':
+			PlotClass = google.visualization.AreaChart
+			break
+		case 'bar':
+			PlotClass = google.visualization.BarChart
+			break
+		case 'column':
+			PlotClass = google.visualization.ColumnChart
+			break
+		case 'line':
+			PlotClass = google.visualization.LineChart
+			break
+	}
+	var chart = new PlotClass(Panel.get('plot-canvas'))
+	chart.draw(dataTable, {
+		title: Plot.titleInput.value,
+		focusTarget: 'category',
+		animation: {
+			duration: 1e3
+		},
+		hAxis: {
+			title: xName
+		}
+	})
+
+	/**
+	 * Extract a field from the document
+	 */
+	function readField(doc, field) {
+		var result = doc,
+			i, len
+
+		for (i = 0, len = field.length; i < len; i++) {
+			if (!result || typeof result !== 'object') {
+				break
+			}
+			result = result[field[i]]
+		}
+
+		return result
+	}
 }

@@ -46,3 +46,10 @@ function Input(el) {
 		}
 	}
 }
+
+/**
+ * Focus the input
+ */
+Input.prototype.select = function () {
+	this._inputEl.select()
+}

@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot*/
 'use strict'
 
 var Query = {}
@@ -323,6 +323,7 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 	Query.populateResultTable()
 
 	Populate.runAll(Query.connection, Query.collection)
+	Plot.update()
 }
 
 /**

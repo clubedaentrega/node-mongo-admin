@@ -353,3 +353,13 @@ ol#plot-series {
 	background-color: #CCF;
 	cursor: pointer;
 }
+
+.plot-canvas {
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	width: 480px;
+	height: 360px;
+	border: thin black solid;
+	background-color: white;
+}
