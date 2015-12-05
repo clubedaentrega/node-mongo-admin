@@ -4,6 +4,12 @@
 * Changed: use `PM2` instead of `forever` in `npm start`
 * Changed: dropped support for node v0.10
 
+## Non-breaking changes
+* Added: option to display object ids as timestamps
+* Added: plot data (beta) (supported chart types: area, bar, column, line, histogram)
+* Fixed: [#19](https://github.com/clubedaentrega/node-mongo-admin/issues/19)
+* Fixed: remove some clutter from the UI
+
 # 2.1.1
 * Fixed: `json.preParse`
 
