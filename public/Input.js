@@ -53,3 +53,10 @@ function Input(el) {
 Input.prototype.select = function () {
 	this._inputEl.select()
 }
+
+/**
+ * @param {boolean} disabled
+ */
+Input.prototype.setDisabled = function (disabled) {
+	this._inputEl.disabled = disabled
+}

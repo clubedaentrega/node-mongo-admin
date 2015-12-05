@@ -1,4 +1,4 @@
-/*globals Panel, Input, google, Query*/
+/*globals Panel, Input, google, Query, DataSelector*/
 'use strict'
 
 var Plot = {}
@@ -6,7 +6,7 @@ var Plot = {}
 /**
  * @typedef {Object} Plot~Series
  * @property {HTMLElement} el
- * @property {Plot.DataSelector} dataSelector
+ * @property {DataSelector} dataSelector
  * @property {HTMLElement} addEl
  * @property {HTMLElement} deleteEl
  */
@@ -24,7 +24,7 @@ Plot.init = function () {
 	Panel.get('plot-stacked').onchange = Plot.update
 	Plot.titleInput = new Input('plot-title')
 	Plot.titleInput.oninput = Plot.update
-	Plot.xAxis = new Plot.DataSelector('plot-x-axis')
+	Plot.xAxis = new DataSelector('plot-x-axis')
 	Plot.xAxis.onchange = Plot.update
 	Plot.series = []
 	Panel.get('plot-add-series').onclick = function () {
@@ -42,98 +42,6 @@ Plot.init = function () {
 }
 
 window.addEventListener('load', Plot.init)
-
-/**
- * Whether google charts has loaded
- * @property {boolean}
- */
-Plot.ready = false
-
-/**
- * @class
- * @param {string|HTMLElement} el
- */
-Plot.DataSelector = function (el) {
-	var that = this
-
-	this.el = Panel.get(el)
-
-	/**
-	 * Called when some data has changed
-	 * @member {function()}
-	 */
-	this.onchange = null
-
-	// Construct internal DOM (a button and a text input)
-	this._fieldButton = Panel.create('button', 'Select field')
-	this._nameInput = new Input(Panel.create('span'))
-	this.el.appendChild(this._fieldButton)
-	this.el.appendChild(Panel.create('span', ', name: '))
-	this.el.appendChild(this._nameInput.el)
-
-	this._fieldButton.onclick = this.selectField.bind(this)
-	this._nameInput.oninput = function () {
-		if (that.onchange) {
-			that.onchange()
-		}
-	}
-}
-
-/**
- * Ask the user to select one field
- */
-Plot.DataSelector.prototype.selectField = function (originalEvent) {
-	var targets = Panel.getAll('.header-leaf'),
-		that = this
-
-	// Select the clicked field
-	var onTargetClick = function (event) {
-		var fieldName = event.currentTarget.title,
-			formattedFieldName = Panel.formatDocPath(fieldName)
-		that._fieldButton.value = fieldName
-		that._fieldButton.textContent = formattedFieldName
-		that._nameInput.value = formattedFieldName
-		that._nameInput.select()
-		if (that.onchange) {
-			that.onchange()
-		}
-	}
-
-	// Finish the operation
-	var dismiss = function (event) {
-		if (event === originalEvent) {
-			targets.forEach(function (target) {
-				target.classList.add('plot-field-target')
-				target.addEventListener('click', onTargetClick)
-			})
-			return
-		}
-		targets.forEach(function (target) {
-			target.classList.remove('plot-field-target')
-			target.removeEventListener('click', onTargetClick)
-		})
-		document.body.removeEventListener('click', dismiss)
-	}
-
-	// Set events
-	document.body.addEventListener('click', dismiss)
-}
-
-/**
- * Return current field name
- * @returns {string}
- */
-Plot.DataSelector.prototype.getField = function () {
-	return this._fieldButton.value || ''
-}
-
-/**
- * Return current data name
- * @returns {string}
- */
-Plot.DataSelector.prototype.getName = function () {
-	return this._nameInput.value
-}
 
 /**
  * Show plot options
@@ -158,7 +66,7 @@ Plot.stop = function () {
  */
 Plot.addSeries = function (pos) {
 	var series = {
-		dataSelector: new Plot.DataSelector(Panel.create('span')),
+		dataSelector: new DataSelector(Panel.create('span')),
 		addEl: Panel.create('span.add'),
 		deleteEl: Panel.create('span.delete')
 	}
