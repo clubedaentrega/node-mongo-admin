@@ -51,10 +51,6 @@ header > h1 {
 	background-color: #FCC;
 }
 
-h2 {
-	border-bottom: thin gray solid;
-}
-
 input {
 	font-family: monospace;
 }
