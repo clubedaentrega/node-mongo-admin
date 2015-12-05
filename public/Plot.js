@@ -17,7 +17,11 @@ var Plot = {}
 Plot.init = function () {
 	Panel.get('plot').onclick = Plot.start
 	Panel.get('plot-clear').onclick = Plot.stop
-	Panel.get('plot-type').onchange = Plot.update
+	Panel.get('plot-type').onchange = function () {
+		Panel.get('plot-stacked').style.display = Panel.value('plot-type') === 'line' ? 'none' : ''
+		Plot.update()
+	}
+	Panel.get('plot-stacked').onchange = Plot.update
 	Plot.titleInput = new Input('plot-title')
 	Plot.titleInput.oninput = Plot.update
 	Plot.xAxis = new Plot.DataSelector('plot-x-axis')
@@ -289,7 +293,7 @@ Plot.update = function () {
 
 	// Draw plot
 	var dataTable = google.visualization.arrayToDataTable(table),
-		PlotClass
+		PlotClass, isStacked
 	switch (Panel.value('plot-type')) {
 		case 'area':
 			PlotClass = google.visualization.AreaChart
@@ -304,6 +308,17 @@ Plot.update = function () {
 			PlotClass = google.visualization.LineChart
 			break
 	}
+	switch (Panel.value('plot-stacked')) {
+		case 'no':
+			isStacked = false
+			break
+		case 'yes':
+			isStacked = true
+			break
+		case 'percent':
+			isStacked = 'percent'
+			break
+	}
 	var chart = new PlotClass(Panel.get('plot-canvas'))
 	chart.draw(dataTable, {
 		title: Plot.titleInput.value,
@@ -313,7 +328,8 @@ Plot.update = function () {
 		},
 		hAxis: {
 			title: xName
-		}
+		},
+		isStacked: isStacked
 	})
 
 	/**
