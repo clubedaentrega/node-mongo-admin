@@ -815,27 +815,24 @@ window.addEventListener('popstate', function () {
  * Make table header fixed after scroll limit is reached
  */
 function stickHeader() {
+	var stickyHeader = Panel.get('sticky-table-header'),
+		rows = Panel.getAll('#query-result tr.header')
 
-	Panel.get('sticky-table-header').innerHTML = ''
+	stickyHeader.innerHTML = ''
 
-	var headers = document.getElementsByClassName('header')
-	var newTable = Panel.create('table')
-	var newTBody = Panel.create('tbody')
+	rows.forEach(function (row) {
+		var newRow = stickyHeader.insertRow(-1),
+			cells = [].slice.call(row.children)
+		cells.forEach(function (cell) {
+			// Fix size
+			cell.style.width = cell.offsetWidth + 'px'
+			cell.style.height = cell.offsetHeight + 'px'
 
-	Array.prototype.forEach.call(headers, function (each) {
-		var cols = each.children
-		Array.prototype.forEach.call(cols, function (eachCol) {
-			eachCol.style.width = eachCol.offsetWidth + 'px'
-			eachCol.style.height = eachCol.offsetHeight + 'px'
+			var newCell = cell.cloneNode(true)
+			newCell.oncontextmenu = cell.oncontextmenu
+			newRow.appendChild(newCell)
 		})
-		var newTr = Panel.create('tr')
-		newTr = each.cloneNode(true)
-		newTBody.appendChild(newTr)
 	})
-
-	newTable.appendChild(newTBody)
-	Panel.get('sticky-table-header').appendChild(newTable)
-
 }
 
 /**

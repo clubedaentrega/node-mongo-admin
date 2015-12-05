@@ -17,6 +17,17 @@ Panel.get = function (id) {
 }
 
 /**
+ * Like document.querySelectorAll, but returns an Array
+ * @param {string} selector
+ * @param {HTMLElement} [root=document]
+ * @returns {Array<HTMLElement>}
+ */
+Panel.getAll = function (selector, root) {
+	root = root || document
+	return [].slice.call(root.querySelectorAll(selector))
+}
+
+/**
  * @param {string|HTMLElement} id
  * @param {string} [newValue] - if present, set the input value
  * @returns {string} - the input value
