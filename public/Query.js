@@ -447,6 +447,7 @@ Query.populateResultTable = function () {
 		if (typeof treeEl === 'string') {
 			path = treeEl
 			cell.rowSpan = treeDepth - depth
+			cell.classList.add('header-leaf')
 			cols = 1
 			leaf = true
 		} else {

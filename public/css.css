@@ -347,3 +347,9 @@ ol#plot-series {
 	margin-bottom: 0;
 	margin-top: 0;
 }
+
+.plot-field-target {
+	border-color: #33F;
+	background-color: #CCF;
+	cursor: pointer;
+}

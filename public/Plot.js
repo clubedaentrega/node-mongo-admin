@@ -41,6 +41,47 @@ Plot.DataSelector = function (el) {
 	this.el.appendChild(this.fieldButton)
 	this.el.appendChild(Panel.create('span', ', name: '))
 	this.el.appendChild(this.nameInput.el)
+
+	this.fieldButton.onclick = this.selectField.bind(this)
+}
+
+/**
+ * Ask the user to select one field
+ */
+Plot.DataSelector.prototype.selectField = function (originalEvent) {
+	var targets = Panel.getAll('.header-leaf'),
+		that = this
+
+	// Select the clicked field
+	var onTargetClick = function (event) {
+		var fieldName = event.currentTarget.title,
+			formattedFieldName = Panel.formatDocPath(fieldName)
+		that.fieldButton.value = fieldName
+		that.fieldButton.textContent = formattedFieldName
+		if (!that.nameInput.value) {
+			that.nameInput.value = formattedFieldName
+		}
+	}
+
+	// Finish the operation
+	var dismiss = function (event) {
+		if (event === originalEvent) {
+			// Ignore the original click event
+			return
+		}
+		targets.forEach(function (target) {
+			target.classList.remove('plot-field-target')
+			target.removeEventListener('click', onTargetClick)
+		})
+		document.body.removeEventListener('click', dismiss)
+	}
+
+	// Set events
+	document.body.addEventListener('click', dismiss)
+	targets.forEach(function (target) {
+		target.classList.add('plot-field-target')
+		target.addEventListener('click', onTargetClick)
+	})
 }
 
 /**
