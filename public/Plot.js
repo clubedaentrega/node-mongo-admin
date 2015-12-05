@@ -1,7 +1,40 @@
 /*globals Panel, Input, google, Query, DataSelector*/
 'use strict'
 
-var Plot = {}
+var Plot = {
+	types: {
+		area: {
+			className: 'AreaChart',
+			allowStacked: true,
+			focusTarget: 'category'
+		},
+		bar: {
+			className: 'BarChart',
+			allowStacked: true,
+			focusTarget: 'category'
+		},
+		column: {
+			className: 'ColumnChart',
+			allowStacked: true,
+			focusTarget: 'category'
+		},
+		line: {
+			className: 'LineChart',
+			allowStacked: false,
+			focusTarget: 'category'
+		},
+		histogram: {
+			className: 'Histogram',
+			allowStacked: true,
+			focusTarget: undefined
+		}
+	},
+	/**
+	 * Whether google charts has loaded
+	 * @property {boolean}
+	 */
+	ready: false
+}
 
 /**
  * @typedef {Object} Plot~Series
@@ -17,10 +50,7 @@ var Plot = {}
 Plot.init = function () {
 	Panel.get('plot').onclick = Plot.start
 	Panel.get('plot-clear').onclick = Plot.stop
-	Panel.get('plot-type').onchange = function () {
-		Panel.get('plot-stacked').style.display = Panel.value('plot-type') === 'line' ? 'none' : ''
-		Plot.update()
-	}
+	Panel.get('plot-type').onchange = Plot.update
 	Panel.get('plot-stacked').onchange = Plot.update
 	Plot.titleInput = new Input('plot-title')
 	Plot.titleInput.oninput = Plot.update
@@ -96,6 +126,8 @@ Plot.addSeries = function (pos) {
 		Plot.series.splice(pos, 0, series)
 	}
 
+	Plot.update()
+
 	return series
 }
 
@@ -113,12 +145,36 @@ Plot.deleteSeries = function (series) {
 }
 
 /**
- * Update the current plot
+ * Update the current plot and the options interface
  */
 Plot.update = function () {
+	var type = Panel.value('plot-type'),
+		plotType = Plot.types[type],
+		numSeries = Plot.series.filter(function (series) {
+			return series.dataSelector.getField()
+		}).length
+	Panel.get('plot-stacked').style.display = plotType.allowStacked ? '' : 'none'
+
+	if (type === 'histogram' && numSeries === 1) {
+		Panel.get('plot-x-axis-label').textContent = 'Data name'
+		Plot.xAxis.setInputDisabled(true)
+	} else {
+		Panel.get('plot-x-axis-label').textContent = 'X axis'
+		Plot.xAxis.setInputDisabled(false)
+	}
+
+	Plot.updatePlot()
+}
+
+/**
+ * Update the current plot
+ */
+Plot.updatePlot = function () {
 	// Load current plot options
 	var xField = Plot.xAxis.getField().split('.').filter(Boolean),
 		xName = Plot.xAxis.getName(),
+		type = Panel.value('plot-type'),
+		plotType = Plot.types[type],
 		series = Plot.series.map(function (series) {
 			return {
 				field: series.dataSelector.getField().split('.').filter(Boolean),
@@ -152,13 +208,11 @@ Plot.update = function () {
 
 		// X value
 		xValue = readField(doc, xField)
-		if (xValue === undefined || xValue === null) {
-			xValue = '(empty)'
-		} else if (typeof xValue !== 'string' &&
+		if (typeof xValue !== 'string' &&
 			typeof xValue !== 'number' &&
 			!(xValue instanceof Date)) {
 			// Only strings, numbers and dates are allowed in the x axis
-			continue
+			xValue = String(xValue)
 		}
 		row[0] = xValue
 
@@ -201,43 +255,26 @@ Plot.update = function () {
 
 	// Draw plot
 	var dataTable = google.visualization.arrayToDataTable(table),
-		PlotClass, isStacked
-	switch (Panel.value('plot-type')) {
-		case 'area':
-			PlotClass = google.visualization.AreaChart
-			break
-		case 'bar':
-			PlotClass = google.visualization.BarChart
-			break
-		case 'column':
-			PlotClass = google.visualization.ColumnChart
-			break
-		case 'line':
-			PlotClass = google.visualization.LineChart
-			break
+		PlotClass = google.visualization[plotType.className],
+		hAxisTitle = xName,
+		legend, isStacked
+
+	if (type === 'histogram' && series.length === 1) {
+		legend = {
+			position: 'none'
+		}
+		hAxisTitle = series[0].name
 	}
-	switch (Panel.value('plot-stacked')) {
-		case 'no':
-			isStacked = false
-			break
-		case 'yes':
-			isStacked = true
-			break
-		case 'percent':
-			isStacked = 'percent'
-			break
-	}
+
 	var chart = new PlotClass(Panel.get('plot-canvas'))
 	chart.draw(dataTable, {
 		title: Plot.titleInput.value,
-		focusTarget: 'category',
-		animation: {
-			duration: 1e3
-		},
+		focusTarget: plotType.focusTarget,
 		hAxis: {
-			title: xName
+			title: hAxisTitle
 		},
-		isStacked: isStacked
+		isStacked: isStacked,
+		legend: legend
 	})
 
 	/**
