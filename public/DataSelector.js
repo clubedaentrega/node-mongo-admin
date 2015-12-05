@@ -33,10 +33,13 @@ function DataSelector(el) {
 
 /**
  * Ask the user to select one field
+ * @param {Event} [originalEvent]
  */
 DataSelector.prototype.selectField = function (originalEvent) {
 	var targets = Panel.getAll('.header-leaf'),
 		that = this
+
+	this._fieldButton.focus()
 
 	// Select the clicked field
 	var onTargetClick = function (event) {
@@ -54,10 +57,6 @@ DataSelector.prototype.selectField = function (originalEvent) {
 	// Finish the operation
 	var dismiss = function (event) {
 		if (event === originalEvent) {
-			targets.forEach(function (target) {
-				target.classList.add('plot-field-target')
-				target.addEventListener('click', onTargetClick)
-			})
 			return
 		}
 		targets.forEach(function (target) {
@@ -69,6 +68,12 @@ DataSelector.prototype.selectField = function (originalEvent) {
 
 	// Set events
 	document.body.addEventListener('click', dismiss)
+	setTimeout(function () {
+		targets.forEach(function (target) {
+			target.classList.add('plot-field-target')
+			target.addEventListener('click', onTargetClick)
+		})
+	}, 0)
 }
 
 /**

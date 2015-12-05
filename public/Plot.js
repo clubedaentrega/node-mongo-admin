@@ -25,7 +25,7 @@ var Plot = {
 		},
 		histogram: {
 			className: 'Histogram',
-			allowStacked: true,
+			allowStacked: false,
 			focusTarget: undefined
 		}
 	},
@@ -60,7 +60,7 @@ Plot.init = function () {
 	Panel.get('plot-add-series').onclick = function () {
 		Plot.addSeries(0)
 	}
-	Plot.addSeries()
+	Plot.addSeries(0, true)
 
 	// Load google charts
 	google.charts.load('current', {
@@ -92,9 +92,10 @@ Plot.stop = function () {
 /**
  * Add a new series at the given position
  * @param {number} [pos=-1] - default: at the end (0=first)
+ * @param {boolean} [skipSelection] - if true, does not start field selection
  * @returns {Plot~Series}
  */
-Plot.addSeries = function (pos) {
+Plot.addSeries = function (pos, skipSelection) {
 	var series = {
 		dataSelector: new DataSelector(Panel.create('span')),
 		addEl: Panel.create('span.add'),
@@ -127,6 +128,11 @@ Plot.addSeries = function (pos) {
 	}
 
 	Plot.update()
+	if (!skipSelection) {
+		setTimeout(function () {
+			series.dataSelector.selectField()
+		}, 0)
+	}
 
 	return series
 }
