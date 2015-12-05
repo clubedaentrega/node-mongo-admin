@@ -342,3 +342,8 @@ tr.selected > td {
 .custom-input > span:hover {
 	background-color: rgba(103, 32, 163, 0.25);
 }
+
+ol#plot-series {
+	margin-bottom: 0;
+	margin-top: 0;
+}

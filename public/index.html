@@ -21,6 +21,7 @@
 	<script type="text/javascript" src="Count.js"></script>
 	<script type="text/javascript" src="Aggregate.js"></script>
 	<script type="text/javascript" src="Export.js"></script>
+	<script type="text/javascript" src="Plot.js"></script>
 	<script type="text/javascript" src="header.js"></script>
 </head>
 
@@ -44,9 +45,34 @@
 		<p>
 			<input type="submit" value="Execute" id="query-execute">
 			<input type="button" value="Export data" id="export" style="display:none">
+			<input type="button" value="Plot data" id="plot">
 			<span id="query-loading" style="display: none">loading</span>
 		</p>
 	</form>
+	<div id="plot-options" style="display:none">
+		<h2 class="plot-options-title">Plot options</h2>
+		<div>
+			Chart title: <span id="plot-title"></span>
+		</div>
+		<div>
+			Chart type:
+			<select id="plot-type">
+				<option value="area">Area</option>
+				<option value="bar">Bar</option>
+				<option value="column">Column</option>
+				<option value="line">Line</option>
+			</select>
+		</div>
+		<div>
+			X axis: <span id="plot-x-axis"></span>
+		</div>
+		<div>
+			Series: <span class="add" id="plot-add-series"></span>
+			<ol id="plot-series">
+			</ol>
+		</div>
+		<button id="plot-clear">Close chart</button>
+	</div>
 	<p id="query-controls">
 		<span id="query-prev" class="prev-off"></span>
 		<span id="query-page"></span>
