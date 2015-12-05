@@ -162,6 +162,7 @@ Plot.update = function () {
 		Panel.get('plot-x-axis-label').textContent = 'X axis'
 		Plot.xAxis.setInputDisabled(false)
 	}
+	Plot.xAxis.setFieldDisabled(type === 'histogram' && numSeries > 1)
 
 	Plot.updatePlot()
 }
@@ -183,42 +184,55 @@ Plot.updatePlot = function () {
 		}).filter(function (series) {
 			// Ignore empty ones
 			return series.field.length
-		})
+		}),
+		hasX = type !== 'histogram' || series.length < 2,
+		xOffset = hasX ? 1 : 0
 
-	if (!xField.length || !series.length || !Plot.ready || !Query.result || !Query.result.length) {
+	if ((hasX && !xField.length) ||
+		!series.length ||
+		!Plot.ready ||
+		!Query.result ||
+		!Query.result.length) {
 		// Not enough data
 		return
 	}
 
 	// Create data table header
-	var nCols = series.length + 1,
+	var nCols = xOffset + series.length,
 		nRows = Query.result.length + 1,
 		header = new Array(nCols)
-	header[0] = xName
+	if (hasX) {
+		header[0] = xName
+	}
 	series.forEach(function (each, i) {
-		header[i + 1] = each.name
+		header[i + xOffset] = each.name
 	})
 
 	// Load table data
 	var body = new Array(nRows - 1),
 		i, row, doc, xValue, j, yValue
 	for (i = 1; i < nRows; i++) {
-		row = new Array(series.length + 1)
+		row = new Array(nCols)
 		doc = Query.result[i - 1]
 
 		// X value
-		xValue = readField(doc, xField)
-		if (typeof xValue !== 'string' &&
-			typeof xValue !== 'number' &&
-			!(xValue instanceof Date)) {
-			// Only strings, numbers and dates are allowed in the x axis
-			xValue = String(xValue)
+		if (hasX) {
+			xValue = readField(doc, xField)
+			if (typeof xValue !== 'string' &&
+				typeof xValue !== 'number' &&
+				!(xValue instanceof Date)) {
+				// Only strings, numbers and dates are allowed in the x axis
+				xValue = String(xValue)
+			} else if (type === 'histogram') {
+				// For one-series histogram, x must be a string
+				xValue = String(xValue)
+			}
+			row[0] = xValue
 		}
-		row[0] = xValue
 
 		// Series
-		for (j = 1; j < nCols; j++) {
-			yValue = readField(doc, series[j - 1].field)
+		for (j = xOffset; j < nCols; j++) {
+			yValue = readField(doc, series[j - xOffset].field)
 			if (typeof yValue !== 'number') {
 				// Only numbers are allowed as series data
 				yValue = null
@@ -230,20 +244,22 @@ Plot.updatePlot = function () {
 	}
 
 	// Sort by x value
-	if (typeof body[0][0] === 'string') {
-		// String comparison
-		body.sort(function (a, b) {
-			var a0 = a[0],
-				b0 = b[0]
-			return a0 === b0 ? 0 : (a0 > b0 ? 1 : -1)
-		})
-	} else {
-		// Numeric comparison
-		body.sort(function (a, b) {
-			var a0 = +a[0],
-				b0 = +b[0]
-			return a0 - b0
-		})
+	if (hasX) {
+		if (typeof body[0][0] === 'string') {
+			// String comparison
+			body.sort(function (a, b) {
+				var a0 = a[0],
+					b0 = b[0]
+				return a0 === b0 ? 0 : (a0 > b0 ? 1 : -1)
+			})
+		} else {
+			// Numeric comparison
+			body.sort(function (a, b) {
+				var a0 = +a[0],
+					b0 = +b[0]
+				return a0 - b0
+			})
+		}
 	}
 
 	// Create final table

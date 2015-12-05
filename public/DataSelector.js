@@ -91,6 +91,14 @@ DataSelector.prototype.getName = function () {
  * Disable/Enable field selection button
  * @param {boolean} disabled
  */
+DataSelector.prototype.setFieldDisabled = function (disabled) {
+	this._fieldButton.disabled = disabled
+}
+
+/**
+ * Disable/Enable name input
+ * @param {boolean} disabled
+ */
 DataSelector.prototype.setInputDisabled = function (disabled) {
 	this._nameInput.setDisabled(disabled)
 }
