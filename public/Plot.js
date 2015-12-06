@@ -25,8 +25,12 @@ var Plot = {
 		},
 		histogram: {
 			className: 'Histogram',
-			allowStacked: false,
+			allowStacked: true,
 			focusTarget: undefined
+		},
+		pie: {
+			className: 'PieChart',
+			allowStacked: false
 		}
 	},
 	/**
@@ -293,26 +297,42 @@ Plot.updatePlot = function () {
 	// Draw plot
 	var dataTable = google.visualization.arrayToDataTable(table),
 		PlotClass = google.visualization[plotType.className],
-		hAxisTitle = xName,
-		legend, isStacked
+		options = {
+			title: Plot.titleInput.value,
+			focusTarget: plotType.focusTarget,
+			hAxis: {
+				title: xName
+			}
+		}
 
 	if (type === 'histogram' && series.length === 1) {
-		legend = {
+		options.legend = {
 			position: 'none'
 		}
-		hAxisTitle = series[0].name
+		options.hAxis.title = series[0].name
+	}
+
+	if (type === 'pie') {
+		// Group small slices into 'Other'
+		options.sliceVisibilityThreshold = 0.01
+	}
+
+	if (plotType.allowStacked) {
+		switch (Panel.value('plot-stacked')) {
+			case 'no':
+				options.isStacked = false
+				break
+			case 'yes':
+				options.isStacked = true
+				break
+			case 'percent':
+				options.isStacked = 'percent'
+				break
+		}
 	}
 
 	Plot.chart = new PlotClass(Panel.get('plot-canvas'))
-	Plot.chart.draw(dataTable, {
-		title: Plot.titleInput.value,
-		focusTarget: plotType.focusTarget,
-		hAxis: {
-			title: hAxisTitle
-		},
-		isStacked: isStacked,
-		legend: legend
-	})
+	Plot.chart.draw(dataTable, options)
 
 	/**
 	 * Extract a field from the document
