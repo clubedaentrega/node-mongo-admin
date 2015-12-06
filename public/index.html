@@ -52,7 +52,13 @@
 		</p>
 	</form>
 	<div id="plot-options" style="display:none">
-		<div id="plot-canvas" class="plot-canvas"></div>
+		<div id="plot-wrapper" class="plot-wrapper" style="width: 480px; height: 360px">
+			<div id="plot-canvas" class="plot-canvas"></div>
+			<div class="plot-actions">
+				<button id="plot-export">Export image</button>
+				<button id="plot-set-size">Set size</button>
+			</div>
+		</div>
 		<h2 class="plot-options-title">Plot options</h2>
 		<div>
 			Chart title: <span id="plot-title"></span>

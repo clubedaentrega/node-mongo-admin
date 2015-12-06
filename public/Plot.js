@@ -33,7 +33,8 @@ var Plot = {
 	 * Whether google charts has loaded
 	 * @property {boolean}
 	 */
-	ready: false
+	ready: false,
+	chart: null
 }
 
 /**
@@ -61,6 +62,29 @@ Plot.init = function () {
 		Plot.addSeries(0)
 	}
 	Plot.addSeries(0, true)
+	Panel.get('plot-export').onclick = function () {
+		if (!Plot.chart) {
+			return
+		}
+
+		window.open(Plot.chart.getImageURI())
+	}
+	Panel.get('plot-set-size').onclick = function () {
+		var plotStyle = Panel.get('plot-wrapper').style,
+			current = parseInt(plotStyle.width) + ' x ' + parseInt(plotStyle.height),
+			newSize = prompt('Set size in pixels (width x height)', current),
+			pos, newWidth, newHeight
+
+		if (newSize && (pos = newSize.indexOf('x')) !== -1) {
+			newWidth = parseInt(newSize.substr(0, pos), 10)
+			newHeight = parseInt(newSize.substr(pos + 1), 10)
+			if (newWidth && newHeight) {
+				plotStyle.width = parseInt(newWidth, 10) + 'px'
+				plotStyle.height = parseInt(newHeight, 10) + 'px'
+				Plot.updatePlot()
+			}
+		}
+	}
 
 	// Load google charts
 	google.charts.load('current', {
@@ -279,8 +303,8 @@ Plot.updatePlot = function () {
 		hAxisTitle = series[0].name
 	}
 
-	var chart = new PlotClass(Panel.get('plot-canvas'))
-	chart.draw(dataTable, {
+	Plot.chart = new PlotClass(Panel.get('plot-canvas'))
+	Plot.chart.draw(dataTable, {
 		title: Plot.titleInput.value,
 		focusTarget: plotType.focusTarget,
 		hAxis: {

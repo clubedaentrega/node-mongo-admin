@@ -354,12 +354,22 @@ ol#plot-series {
 	cursor: pointer;
 }
 
-.plot-canvas {
+.plot-wrapper {
 	position: fixed;
 	bottom: 0;
 	right: 0;
-	width: 480px;
-	height: 360px;
 	border: thin black solid;
 	background-color: white;
+	box-sizing: content-box;
+}
+
+.plot-canvas {
+	width: 100%;
+	height: 100%;
+}
+
+.plot-actions {
+	position: absolute;
+	top: 5px;
+	left: 5px;
 }
