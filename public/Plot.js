@@ -249,23 +249,14 @@ Plot.updatePlot = function () {
 		body[i - 1] = row
 	}
 
-	// Sort by x value
-	if (hasX) {
-		if (typeof body[0][0] === 'string') {
-			// String comparison
-			body.sort(function (a, b) {
-				var a0 = a[0],
-					b0 = b[0]
-				return a0 === b0 ? 0 : (a0 > b0 ? 1 : -1)
-			})
-		} else {
-			// Numeric comparison
-			body.sort(function (a, b) {
-				var a0 = +a[0],
-					b0 = +b[0]
-				return a0 - b0
-			})
-		}
+	if (hasX && typeof body[0][0] !== 'string') {
+		// Sort by x numeric value
+		// This avoid google charts visual glitches with non-monotonic x values
+		body.sort(function (a, b) {
+			var a0 = +a[0],
+				b0 = +b[0]
+			return a0 - b0
+		})
 	}
 
 	// Create final table
