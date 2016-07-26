@@ -66,7 +66,8 @@ Aggregate.operators = {
 	sort: 'object',
 	unwind: 'field',
 	sample: 'sample',
-	indexStats: 'indexStats'
+	indexStats: 'indexStats',
+	lookup: 'object'
 }
 
 /**
