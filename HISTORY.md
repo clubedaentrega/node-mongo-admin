@@ -1,3 +1,7 @@
+# 3.1.0
+* Fixed: context menu sometimes not showing
+* Added: support for mongodb 3.2 new aggregation stages
+
 # 3.0.0
 
 ## Breaking changes

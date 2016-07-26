@@ -1,6 +1,6 @@
 {
 	"name": "node-mongo-admin",
-	"version": "3.0.0",
+	"version": "3.1.0",
 	"author": "Sitegui <sitegui@sitegui.com.br>",
 	"description": "A simple web application to visualize mongo data inspired by PHPMyAdmin",
 	"main": "./index.js",
