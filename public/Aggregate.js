@@ -65,6 +65,7 @@ Aggregate.operators = {
 	skip: 'uint',
 	sort: 'object',
 	unwind: 'field',
+	'unwind (object)': 'object',
 	sample: 'sample',
 	indexStats: 'indexStats',
 	lookup: 'object'
@@ -174,7 +175,8 @@ Aggregate.init = function () {
  */
 Aggregate.execute = function () {
 	var stages = Aggregate.stages.map(function (stage) {
-		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
+		var op = stage.opSelect.value,
+			type = Aggregate.operatorTypes[Aggregate.operators[op]],
 			value = stage.valueInput.value
 
 		if (!value && !type.mayBeEmpty) {
@@ -183,7 +185,7 @@ Aggregate.execute = function () {
 		value = type.getValue(stage.valueInput)
 
 		return {
-			operator: '$' + stage.opSelect.value,
+			operator: '$' + (op === 'unwind (object)' ? 'unwind' : op),
 			operand: value
 		}
 	}).filter(Boolean)
