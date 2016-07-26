@@ -39,6 +39,14 @@ Aggregate.operatorTypes = {
 				size: Number(input.value)
 			}
 		}
+	},
+	indexStats: {
+		prefix: '{',
+		posfix: '}',
+		mayBeEmpty: true,
+		getValue: function (input) {
+			return Aggregate.operatorTypes.object.getValue(input) || {}
+		}
 	}
 }
 
@@ -57,7 +65,8 @@ Aggregate.operators = {
 	skip: 'uint',
 	sort: 'object',
 	unwind: 'field',
-	sample: 'sample'
+	sample: 'sample',
+	indexStats: 'indexStats'
 }
 
 /**
@@ -167,7 +176,7 @@ Aggregate.execute = function () {
 		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
 			value = stage.valueInput.value
 
-		if (!value) {
+		if (!value && !type.mayBeEmpty) {
 			return
 		}
 		value = type.getValue(stage.valueInput)
@@ -198,7 +207,9 @@ Aggregate.execute = function () {
 Aggregate.toSearchParts = function () {
 	var parts = []
 	Aggregate.stages.forEach(function (stage) {
-		if (stage.valueInput.value) {
+		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
+			value = stage.valueInput.value
+		if (value || type.mayBeEmpty) {
 			parts.push(stage.opSelect.value)
 			parts.push(stage.valueInput.value)
 		}
