@@ -8,8 +8,43 @@ Aggregate.name = 'aggregate'
 Query.registerMode(Aggregate)
 
 /**
+ * Valid operation types
+ * @property {Object<Object>}
+ */
+Aggregate.operatorTypes = {
+	object: {
+		prefix: '{',
+		posfix: '}',
+		getValue: function (input) {
+			return Panel.processJSInEl(input, false, true)
+		}
+	},
+	uint: {
+		getValue: function (input) {
+			return Number(input.value)
+		}
+	},
+	field: {
+		prefix: '\'$',
+		posfix: '\'',
+		getValue: function (input) {
+			return '$' + input.value
+		}
+	},
+	sample: {
+		prefix: '{size: ',
+		posfix: '}',
+		getValue: function (input) {
+			return {
+				size: Number(input.value)
+			}
+		}
+	}
+}
+
+/**
  * Valid operations
- * A map from operation name to operator type (object, uint or field)
+ * A map from operation name to operator type
  * @property {Object<string>}
  */
 Aggregate.operators = {
@@ -21,7 +56,8 @@ Aggregate.operators = {
 	redact: 'object',
 	skip: 'uint',
 	sort: 'object',
-	unwind: 'field'
+	unwind: 'field',
+	sample: 'sample'
 }
 
 /**
@@ -55,9 +91,9 @@ Aggregate.addStage = function (pos) {
 		'\t{$',
 		stage.opSelect.el,
 		': ',
-		stage.preEl = Panel.create('span', '{'),
+		stage.preEl = Panel.create('span'),
 		stage.valueInput.el,
-		stage.posEl = Panel.create('span', '}'),
+		stage.posEl = Panel.create('span'),
 		'}, ',
 		stage.addEl = Panel.create('span.add'),
 		' ',
@@ -82,6 +118,8 @@ Aggregate.addStage = function (pos) {
 		Aggregate.stages.splice(pos, 0, stage)
 	}
 
+	Aggregate.updateLayout()
+
 	return stage
 }
 
@@ -102,9 +140,9 @@ Aggregate.deleteStage = function (stage) {
  */
 Aggregate.updateLayout = function () {
 	Aggregate.stages.forEach(function (stage) {
-		var type = Aggregate.operators[stage.opSelect.value]
-		stage.preEl.textContent = type === 'object' ? '{' : (type === 'field' ? '\'$' : '')
-		stage.posEl.textContent = type === 'object' ? '}' : (type === 'field' ? '\'' : '')
+		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]]
+		stage.preEl.textContent = type.prefix || ''
+		stage.posEl.textContent = type.posfix || ''
 	})
 }
 
@@ -126,18 +164,13 @@ Aggregate.init = function () {
  */
 Aggregate.execute = function () {
 	var stages = Aggregate.stages.map(function (stage) {
-		var type = Aggregate.operators[stage.opSelect.value],
+		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
 			value = stage.valueInput.value
 
 		if (!value) {
 			return
-		} else if (type === 'object') {
-			value = Panel.processJSInEl(stage.valueInput, false, true)
-		} else if (type === 'uint') {
-			value = Number(value)
-		} else if (type === 'field') {
-			value = '$' + value
 		}
+		value = type.getValue(stage.valueInput)
 
 		return {
 			operator: '$' + stage.opSelect.value,

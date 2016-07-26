@@ -4,7 +4,7 @@ module.exports.fields = {
 	connection: String,
 	collection: String,
 	stages: [{
-		operator: 'in($geoNear, $group, $limit, $match, $project, $redact, $skip, $sort, $unwind)',
+		operator: 'in($geoNear, $group, $limit, $match, $project, $redact, $skip, $sort, $unwind, $sample)',
 		operand: '*'
 	}]
 }
