@@ -319,7 +319,15 @@ var Menu = (function () {
 				destroyCurrent = null
 			}
 
-			window.addEventListener('click', destroyCurrent)
+			// Add the click listener on "next tick", because in some
+			// browsers (Firefox on MacOS), the click event could be
+			// triggered right after the contextmenu event
+			// stopPropagation() doesn't solve it either, since the
+			// event received as parameter has type 'contextmenu', not 'click'
+			// (I know... ugly. But hey, it works!)
+			setTimeout(function () {
+				window.addEventListener('click', destroyCurrent)
+			}, 100)
 		}
 	}
 })()
