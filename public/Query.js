@@ -594,9 +594,6 @@ Query.selectRow = function (event) {
 			Query.selection.push(start)
 			start = start.nextSibling
 		} while (start && start !== end)
-
-		// Put the last clicked element at the end
-		Query.selection.push(row)
 	}
 
 	Panel.get('return-selected').disabled = Query.selection.length === 0
