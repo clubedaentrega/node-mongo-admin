@@ -1,3 +1,6 @@
+# next
+* Added: prompt mode and API
+
 # 3.1.0
 * Fixed: context menu sometimes not showing
 * Added: support for mongodb 3.2 new aggregation stages
