@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot, Simple*/
 'use strict'
 
 var Query = {}
@@ -88,6 +88,12 @@ Query.selection = []
  */
 Query.hiddenPaths = new Storage('hide')
 
+/**
+ * Prompt mode, if any. Either 'one' or 'many'
+ * @property {?string}
+ */
+Query.prompt = null
+
 window.addEventListener('load', function () {
 	Panel.request('collections', {}, function (result) {
 		Query.init(result.connections)
@@ -152,6 +158,8 @@ Query.init = function (connections) {
 	Query.collectionsSelect.onchange = Query.onChangeCollection
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 	Panel.get('export').onclick = Query.export
+
+	Panel.get('return-selected').onclick = Query.returnSelected
 
 	if (window.location.search) {
 		Query.executeFromSearch()
@@ -230,16 +238,16 @@ Query.setMode = function (mode) {
 
 /**
  * Change the connection and collection select fields value
- * @param {string} connection
- * @param {string} collection
+ * @param {?string} connection
+ * @param {?string} collection
  */
 Query.setCollection = function (connection, collection) {
-	if (Query.connectionsSelect.value !== connection) {
+	if (connection && Query.connectionsSelect.value !== connection) {
 		Query.connectionsSelect.value = connection
 		Query.onChangeConnection()
 	}
 
-	if (Query.collectionsSelect.value !== collection) {
+	if (collection && Query.collectionsSelect.value !== collection) {
 		Query.collectionsSelect.value = collection
 		Query.onChangeCollection()
 	}
@@ -317,7 +325,9 @@ Query.showResult = function (docs, page, hasMore, findPage) {
 			Panel.get('query-controls2').style.display = 'none'
 	}
 
-	Panel.get('export').style.display = docs.length ? '' : 'none'
+	Panel.get('export').style.display = docs.length && !Query.prompt ? '' : 'none'
+	Panel.get('return-selected').style.display = docs.length && Query.prompt ? '' : 'none'
+	Panel.get('return-selected').disabled = true
 
 	Query.result = docs
 	Query.populateResultTable()
@@ -542,8 +552,8 @@ Query.populateResultTable = function () {
  * @param {Event} event
  */
 Query.selectRow = function (event) {
-	var multi = event.shiftKey,
-		add = event.ctrlKey,
+	var multi = event.shiftKey && Query.prompt !== 'one',
+		add = event.ctrlKey && Query.prompt !== 'one',
 		row = event.currentTarget,
 		previous = Query.selection,
 		start, end
@@ -559,6 +569,7 @@ Query.selectRow = function (event) {
 		Query.selection = []
 		if (previous.length === 1 && previous[0] === row) {
 			// Toggle effect
+			Panel.get('return-selected').disabled = true
 			return
 		}
 	}
@@ -587,6 +598,8 @@ Query.selectRow = function (event) {
 		// Put the last clicked element at the end
 		Query.selection.push(row)
 	}
+
+	Panel.get('return-selected').disabled = Query.selection.length === 0
 }
 
 /**
@@ -799,6 +812,17 @@ Query.executeFromSearch = function () {
 		connection = parts[1],
 		collection = parts[2]
 
+	if (mode === 'promptOne' || mode === 'promptMany') {
+		// Prepare simple mode and hide unwanted controls
+		Panel.get('mode-buttons').style.display = 'none'
+		Panel.get('plot').style.display = 'none'
+		Query.prompt = mode === 'promptOne' ? 'one' : 'many'
+		Query.setMode(Simple)
+		Query.setCollection(connection, collection)
+		Simple.selectorInput.select()
+		return
+	}
+
 	for (i = 0; i < Query.modes.length; i++) {
 		if (Query.modes[i].name === mode) {
 			Query.setMode(Query.modes[i])
@@ -807,6 +831,21 @@ Query.executeFromSearch = function () {
 	}
 	Query.setCollection(connection, collection)
 	Query.mode.executeFromSearchParts.apply(Query.mode, parts.slice(3))
+}
+
+/**
+ * Post a message with the selected row ids
+ */
+Query.returnSelected = function () {
+	window.opener.postMessage({
+		type: 'return-selected',
+		connection: Query.connection,
+		collection: Query.collection,
+		ids: Query.selection.map(function (row) {
+			var idTd = row.querySelector('td[data-path=_id]')
+			return idTd && idTd.textContent
+		}).filter(Boolean)
+	}, '*')
 }
 
 window.addEventListener('popstate', function () {
