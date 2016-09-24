@@ -820,6 +820,7 @@ Query.executeFromSearch = function () {
 		Query.setMode(Simple)
 		Query.setCollection(connection, collection)
 		Simple.selectorInput.select()
+		Simple.limitInput.value = '10'
 		return
 	}
 
