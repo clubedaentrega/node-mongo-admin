@@ -837,7 +837,8 @@ Query.executeFromSearch = function () {
  * Post a message with the selected row ids
  */
 Query.returnSelected = function () {
-	window.opener.postMessage({
+	var parentWindow = window.opener || window.parent
+	parentWindow.postMessage({
 		type: 'return-selected',
 		connection: Query.connection,
 		collection: Query.collection,

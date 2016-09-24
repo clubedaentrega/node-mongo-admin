@@ -42,10 +42,10 @@ Use browser APIs (like `window.open()` or `<iframe>`) to render frame with the i
 When the user clicks that button, the child window will emit a message to the opener window with `data` in the following format:
 ```json
 {
-	type: 'return-selected',
-	connection: 'connection name',
-	collection: 'collection name',
-	ids: ['id1', 'id2', 'id3']
+	"type": "return-selected",
+	"connection": "connection name",
+	"collection": "collection name",
+	"ids": ["id1", "id2", "id3"]
 }
 ```
 
