@@ -813,11 +813,12 @@ Query.executeFromSearch = function () {
 		// Prepare simple mode and hide unwanted controls
 		Panel.get('mode-buttons').style.display = 'none'
 		Panel.get('plot').style.display = 'none'
+		Panel.get('return-selected').style.display = ''
+		Panel.get('return-selected').disabled = true
 		Query.prompt = mode === 'promptOne' ? 'one' : 'many'
 		Query.setMode(Simple)
 		Query.setCollection(connection, collection)
 		Simple.selectorInput.select()
-		Simple.limitInput.value = '10'
 		return
 	}
 
