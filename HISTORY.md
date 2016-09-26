@@ -1,4 +1,4 @@
-# next
+# 3.2.0
 * Added: prompt mode and API
 
 # 3.1.0
