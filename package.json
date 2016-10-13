@@ -14,7 +14,7 @@
 		"phpmyadmin"
 	],
 	"dependencies": {
-		"async": "^2.0.1",
+		"async": "^2.1.1",
 		"body-parser": "^1.15.2",
 		"constant-equals": "^1.2.0",
 		"express": "^4.14.0",

@@ -10,6 +10,23 @@ module.exports.fields = {
 }
 
 module.exports.handler = function (dbs, body, success, error) {
+	console.log(JSON.stringify({
+		op: 'aggregate',
+		connection: body.connection,
+		collection: body.collection,
+		stages: body.stages.map(function (stage) {
+			var obj = {}
+
+			if (stage.operand && typeof stage.operand === 'object' && stage.operand.__raw) {
+				obj[stage.operator] = stage.operand.__raw
+				delete stage.operand.__raw
+			} else {
+				obj[stage.operator] = stage.operand
+			}
+			return obj
+		})
+	}))
+
 	var db = dbs[body.connection],
 		stages
 

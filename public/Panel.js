@@ -209,6 +209,10 @@ Panel.processJSInEl = function (id, soft, implicitObject) {
 			}
 			throw err
 		}
+
+		if (value && typeof value === 'object') {
+			value.__raw = Panel.value(id)
+		}
 	}
 	return value
 }
