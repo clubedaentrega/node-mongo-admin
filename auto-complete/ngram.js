@@ -3,7 +3,12 @@
 let N = 3
 
 /**
- * @typedef {Array<{value: string, tf: number}>} NGramList
+ * @typedef {Object} Value
+ * @property {Array<string>} terms
+ */
+
+/**
+ * @typedef {Array<{value: Value, tf: number}>} NGramList
  * @property {number} idf
  */
 
@@ -14,14 +19,14 @@ let N = 3
 
 /**
  * Index the given document for future search
- * @param {Array<string>} values
+ * @param {Array<Value>} values
  * @returns {NGramMap}
  */
 module.exports.index = function (values) {
 	// Map from n-gram to values
 	let nGramsMap = {}
 	for (let value of values) {
-		let nGrams = countNGrams(value)
+		let nGrams = countNGrams(value.terms)
 
 		for (let nGram in nGrams) {
 			let arr = nGramsMap[nGram] || (nGramsMap[nGram] = [])
@@ -45,14 +50,13 @@ module.exports.index = function (values) {
 
 /**
  * Execute the search in the given index.
- * Return 5 most relevant results
  * @param {NGramMap} nGramsMap
- * @param {string} search
+ * @param {Array<string>} terms
  * @param {number} [cutOff=1/2] - minimum quality
- * @returns {Array<string>}
+ * @returns {Array<{score: number, value: Value}>}
  */
-module.exports.search = function (nGramsMap, str, cutOff) {
-	let nGrams = countNGrams(str),
+module.exports.search = function (nGramsMap, terms, cutOff) {
+	let nGrams = countNGrams(terms),
 		scoreByValue = new Map
 
 	// The score is defined by the sum of term frequency–inverse document frequency
@@ -87,23 +91,23 @@ module.exports.search = function (nGramsMap, str, cutOff) {
 	cutOff = goodMatch * (cutOff || 1 / 2)
 	return Array.from(scoreByValue)
 		.filter(result => result[1] > cutOff)
-		.sort((a, b) => b[1] - a[1])
-		.map(e => e[0])
+		.map(e => ({
+			value: e[0],
+			score: e[1]
+		}))
 }
 
 /**
- * Map ngrams in the string to their frequency.
- * The string is lower-cased and broken in words
- * @param {string} str
+ * Map ngrams in the strings to their frequency.
+ * @param {Array<string>} terms
  * @returns {Object<number>}
  */
-function countNGrams(str) {
-	let nGrams = {},
-		words = str.toLowerCase().split('.')
+function countNGrams(terms) {
+	let nGrams = {}
 
-	for (let word of words) {
-		for (let i = 0; i <= word.length - N; i++) {
-			let ngram = word.substr(i, N)
+	for (let term of terms) {
+		for (let i = 0; i <= term.length - N; i++) {
+			let ngram = term.substr(i, N)
 			nGrams[ngram] = (nGrams[ngram] || 0) + 1
 		}
 	}
