@@ -38,6 +38,8 @@ module.exports.handler = function (dbs, body, success, error) {
 	let db = dbs[body.connection],
 		schema = {},
 		flatSchema = Object.create(null),
+		num = 0,
+		answered = false,
 		timer
 
 	if (!db) {
@@ -50,22 +52,35 @@ module.exports.handler = function (dbs, body, success, error) {
 
 	// Sample 1000 docs from the collection and process them
 	// as they come
-	db.collection(body.collection).aggregate([{
+	let cursor = db.collection(body.collection).aggregate([{
 		$sample: {
 			size: 1e3
 		}
-	}]).each((err, doc) => {
-		if (err || !doc) {
+	}])
+	cursor.each((err, doc) => {
+		if (answered) {
+			return
+		} else if (err || !doc) {
 			return answer()
 		}
 
+		num += 1
 		processObj(doc, schema, '', flatSchema)
 	})
 
 	function answer() {
+		if (answered) {
+			return
+		}
+		answered = true
+
 		delete flatSchema['']
 		clearTimeout(timer)
-		success(flatSchema)
+		success({
+			num: num,
+			schema: flatSchema
+		})
+		cursor.close()
 	}
 }
 
