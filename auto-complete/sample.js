@@ -1,7 +1,11 @@
 'use strict'
 
 /**
- * @typedef {Object} SchemaNode
+ * @typedef {Object<SchemaField>} Schema
+ */
+
+/**
+ * @typedef {Object} SchemaField
  * @property {?boolean|Array<number>} double - up to 10 values
  * @property {?boolean|Array<string>} string - up to 10 values
  * @property {?boolean} object
@@ -16,6 +20,10 @@
  * @property {?boolean} long
  * @property {?boolean} minKey
  * @property {?boolean} maxKey
+ */
+
+/**
+ * @typedef {Object<SchemaNode>} SchemaNode
  * @property {?Object<SchemaNode>} children - children by field name
  */
 
@@ -23,10 +31,13 @@ let mongodb = require('mongodb')
 
 /**
  * @param {mongodb:Collection} collection
- * @param {function(?Error, SchemaNode)} callback
+ * @param {function(?Error, Schema)} callback
  */
 module.exports = function (collection, callback) {
-	let schema = {}
+	let schema = {},
+		flatSchema = Object.create(null)
+
+	flatSchema[''] = {}
 
 	collection.aggregate([{
 		$sample: {
@@ -36,10 +47,10 @@ module.exports = function (collection, callback) {
 		if (err) {
 			return callback(err)
 		} else if (!doc) {
-			return callback(null, schema)
+			return callback(null, flatSchema)
 		}
 
-		processObj(doc, schema)
+		processObj(doc, schema, '', flatSchema)
 	})
 }
 
@@ -47,10 +58,13 @@ module.exports = function (collection, callback) {
  * Process a type 'object' value
  * @param {Object} doc
  * @param {SchemaNode} schema
+ * @param {string} field
+ * @param {Schema} flatSchema
  */
-function processObj(obj, schema) {
-	let hadChildren = true
-	schema.object = true
+function processObj(obj, schema, field, flatSchema) {
+	let hadChildren = true,
+		fieldSchema = flatSchema[field]
+	fieldSchema.object = true
 
 	// Look for missing fields
 	if (!schema.children) {
@@ -59,22 +73,24 @@ function processObj(obj, schema) {
 	} else {
 		for (let key in schema.children) {
 			if (!(key in obj)) {
-				schema.children[key].null = true
+				let childField = field ? field + '.' + key : key
+				flatSchema[childField].null = true
 			}
 		}
 	}
 
 	// Walk fields
 	for (let key in obj) {
-		let childSchema = schema.children[key]
+		let childSchema = schema.children[key],
+			childField = field ? field + '.' + key : key,
+			childFieldSchema = flatSchema[childField] || (flatSchema[childField] = {})
 
 		if (!childSchema) {
-			childSchema = schema.children[key] = !hadChildren ? {} : {
-				null: true
-			}
+			childSchema = schema.children[key] = {}
+			childFieldSchema.null = !hadChildren ? childFieldSchema.null : true
 		}
 
-		processValue(obj[key], childSchema)
+		processValue(obj[key], childSchema, childField, flatSchema)
 	}
 }
 
@@ -82,99 +98,95 @@ function processObj(obj, schema) {
  * Process a type 'array' value
  * @param {Array<*>} arr
  * @param {SchemaNode} schema
+ * @param {string} field
+ * @param {Schema} flatSchema
  */
-function processArray(arr, schema) {
-	let hadChildren = true
-	schema.array = true
+function processArray(arr, schema, field, flatSchema) {
+	let fieldSchema = flatSchema[field]
+	fieldSchema.array = true
 
 	// Look for missing fields
 	if (!schema.children) {
 		schema.children = Object.create(null)
-		hadChildren = false
 	} else {
 		for (let key in schema.children) {
-			if (key !== '$') {
-				schema.children[key].null = true
-			}
-		}
-	}
-
-	let childSchema = schema.children.$
-
-	if (!childSchema) {
-		childSchema = schema.children.$ = !hadChildren ? {} : {
-			null: true
+			let childField = field ? field + '.' + key : key
+			flatSchema[childField].null = true
 		}
 	}
 
 	// Walk values
 	arr.forEach(element => {
-		processValue(element, childSchema)
+		processValue(element, schema, field, flatSchema)
 	})
 }
 
 /**
  * @param {*} value
  * @param {SchemaNode} schema
+ * @param {string} field
+ * @param {Schema} flatSchema
  */
-function processValue(value, schema) {
+function processValue(value, schema, field, flatSchema) {
+	let fieldSchema = flatSchema[field]
+
 	if (typeof value === 'number') {
-		addToEnum(schema, 'double', value)
+		addToEnum(fieldSchema, 'double', value)
 	} else if (typeof value === 'string') {
-		addToEnum(schema, 'string', value)
+		addToEnum(fieldSchema, 'string', value)
 	} else if (value === null) {
-		schema.null = true
+		fieldSchema.null = true
 	} else if (value instanceof Date) {
-		schema.date = true
+		fieldSchema.date = true
 	} else if (value instanceof RegExp) {
-		schema.regex = true
+		fieldSchema.regex = true
 	} else if (typeof value === 'boolean') {
-		schema.bool = true
+		fieldSchema.bool = true
 	} else if (value instanceof mongodb.ObjectId) {
-		schema.objectId = true
+		fieldSchema.objectId = true
 	} else if (value instanceof mongodb.Binary) {
-		schema.binData = true
+		fieldSchema.binData = true
 	} else if (value instanceof mongodb.Timestamp) {
-		schema.timestamp = true
+		fieldSchema.timestamp = true
 	} else if (value instanceof mongodb.Long) {
-		schema.long = true
+		fieldSchema.long = true
 	} else if (value instanceof mongodb.MinKey) {
-		schema.minKey = true
+		fieldSchema.minKey = true
 	} else if (value instanceof mongodb.MaxKey) {
-		schema.maxKey = true
+		fieldSchema.maxKey = true
 	} else if (Array.isArray(value)) {
-		processArray(value, schema)
+		processArray(value, schema, field, flatSchema)
 	} else if (typeof value === 'object' &&
 		Object.getPrototypeOf(value) === Object.prototype) {
-		processObj(value, schema)
+		processObj(value, schema, field, flatSchema)
 	}
 }
 
 /**
  * Handle value enumerations (up to 10)
- * @param {SchemaNode} schema - modified in-place
+ * @param {SchemaField} fieldSchema - modified in-place
  * @param {string} typeName
  * @param {number|string} value
  */
-function addToEnum(schema, typeName, value) {
-	let type = schema[typeName]
+function addToEnum(fieldSchema, typeName, value) {
+	let type = fieldSchema[typeName]
 
 	if (type === true) {
 		// No longer an enum
 		return
 	} else if (typeof value === 'string' && value.length > 50) {
 		// Too large
-		schema[typeName] = true
+		fieldSchema[typeName] = true
 		return
 	} else if (!type) {
-		type = schema[typeName] = []
+		type = fieldSchema[typeName] = []
 	}
 
 	if (type.indexOf(value) === -1) {
 		type.push(value)
 		if (type.length > 10) {
 			// Too many values
-			schema[typeName] = true
+			fieldSchema[typeName] = true
 		}
 	}
 }
