@@ -9,6 +9,9 @@ let ngram = require('./ngram')
  * @returns {Array<string>}
  */
 module.exports = function (parsed, schema) {
+	if (parsed.type !== 'object') {
+		return []
+	}
 	return processCursorInFind(parsed, schema, '')
 }
 
@@ -161,8 +164,17 @@ function suggestFields(search, schema, prefix) {
 		(lastDot === -1 ? '' : search.slice(0, lastDot + 1)),
 		field = lastDot === -1 ? search : search.slice(lastDot + 1),
 		fieldLC = field.toLowerCase(),
-		/** @var {Array<{text: string, depth: number}>} */
-		searchSpace = []
+		/** @var {Array<{text: string, terms: Array<string>}>} */
+		searchSpace = [{
+			text: '$or',
+			terms: ['$or']
+		}, {
+			text: '$and',
+			terms: ['$and']
+		}, {
+			text: '$nor',
+			terms: ['$nor']
+		}]
 
 	// Collect fields in the same and following levels
 	for (let path in schema) {
@@ -183,8 +195,9 @@ function suggestFields(search, schema, prefix) {
 				return part.startsWith(fieldLC)
 			})
 		}).sort((a, b) => {
-			// Depth ASC
-			return a.terms.length - b.terms.length
+			// Depth ASC, text ASC
+			return a.terms.length - b.terms.length ||
+				(a.text > b.text ? 1 : (a.text === b.text ? 0 : -1))
 		})
 	} else {
 		// Make a case-insensitive ngram match
@@ -201,16 +214,99 @@ function suggestFields(search, schema, prefix) {
 /**
  * @param {string} search
  * @param {Schema} schema
+ * @param {string} prefix
  * @returns {Array<string>}
  */
-function suggestOperators(search, schema) {
-	return ['operators', search]
+function suggestOperators(search, schema, prefix) {
+	let operators = [
+			// Basic operators
+			'$eq', '$ne', '$gt', '$gte', '$lt', '$lte',
+			'$in', '$nin', '$not', '$type'
+		],
+		fieldSchema = schema[prefix]
+
+	// Additional type-dependent operators
+	if (fieldSchema) {
+		if (fieldSchema.null) {
+			operators.push('$exists')
+		}
+		if (fieldSchema.double) {
+			operators.push('$mod')
+		}
+		if (fieldSchema.array && fieldSchema.object) {
+			operators.push('$elemMatch')
+		}
+		if (fieldSchema.array) {
+			operators.push('$size', '$all')
+		}
+	}
+
+	if (search[0] !== '$') {
+		search = '$' + search
+	}
+
+	return operators.filter(op => {
+		return op.startsWith(search)
+	}).sort().slice(0, 5)
 }
 /**
  * @param {string} search
  * @param {Schema} schema
+ * @param {string} prefix
  * @returns {Array<string>}
  */
-function suggestValues(search, schema) {
-	return ['values', search]
+function suggestValues(search, schema, prefix) {
+	let fieldSchema = schema[prefix]
+
+	if (!fieldSchema) {
+		// Nothing useful to provide
+		return []
+	}
+
+	search = search.trim()
+	let values = [],
+		quote = search[0] === '"' ? '"' : '\''
+	if (Array.isArray(fieldSchema.double)) {
+		values = values.concat(fieldSchema.double.map(e => String(e)))
+	}
+	if (Array.isArray(fieldSchema.string)) {
+		values = values.concat(fieldSchema.string.map(e => quote + escape(e) + quote))
+	}
+	values = values.filter(value => {
+		return value.startsWith(search)
+	}).sort().slice(0, 5)
+
+	let types = [
+		'double',
+		'string',
+		'object',
+		'array',
+		'binData',
+		'objectId',
+		'bool',
+		'date',
+		'null',
+		'regex',
+		'timestamp',
+		'long',
+		'minKey',
+		'maxKey'
+	]
+
+	types.forEach(type => {
+		if (fieldSchema[type]) {
+			values.push('(' + type + ')')
+		}
+	})
+
+	return values
+}
+
+/**
+ * Escape a string to put between quotes
+ * @param {string} str
+ * @returns {string}
+ */
+function escape(str) {
+	return str.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/"/g, '\\"')
 }

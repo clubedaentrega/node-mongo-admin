@@ -47,6 +47,7 @@ module.exports = function (collection, callback) {
 		if (err) {
 			return callback(err)
 		} else if (!doc) {
+			delete flatSchema['']
 			return callback(null, flatSchema)
 		}
 
