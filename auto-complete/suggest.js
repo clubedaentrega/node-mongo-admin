@@ -4,7 +4,7 @@ let ngram = require('./ngram')
 
 /**
  * @param {ParsedObject} parsed
- * @param {SchemaNode} schema
+ * @param {Schema} schema
  * @returns {Array<string>}
  */
 module.exports = function (parsed, schema) {
@@ -23,62 +23,50 @@ module.exports = function (parsed, schema) {
 		return []
 	}
 
-	return suggestFields(property.key.slice(0, property.keyCursor), [schema])
+	return suggestFields(property.key.slice(0, property.keyCursor), schema)
 }
 
 /**
  * @param {string} search
- * @param {Array<SchemaNode>} schemas - schemas to consider. They all must have 'children' set
+ * @param {Schema} schema
  */
-function suggestFields(search, schemas) {
-	// Split field in parts
-	let parts = search.split('.'),
-		lastPart = parts.pop()
+function suggestFields(search, schema) {
+	// 'ab.cd.e' -> prefix='ab.cd.', field='e'
+	let lastDot = search.lastIndexOf('.'),
+		pathPrefix = lastDot === -1 ? '' : search.slice(0, lastDot + 1),
+		field = lastDot === -1 ? search : search.slice(lastDot + 1),
+		fieldLC = field.toLowerCase(),
+		/** @var {Array<{text: string, depth: number}>} */
+		searchSpace = []
 
-	// Assume all prefix parts are correct and
-	// collect relevant subschemas
-	let subSchemas = schemas
-	for (let part of parts) {
-		let newSubSchemas = []
-
-		// Collect new sub schemas for every sub schema already being considered
-		for (let j = 0; j < subSchemas.length; j++) {
-			let newSubSchema = subSchemas[j].children[part]
-
-			if (newSubSchema && newSubSchema.children) {
-				newSubSchemas.push(newSubSchema)
-
-				// Also collect any sub schema of array elements
-				while (newSubSchema.children.$ && newSubSchema.children.$.children) {
-					newSubSchema = newSubSchema.children.$
-					newSubSchemas.push(newSubSchema)
-				}
-			}
-		}
-
-		subSchemas = newSubSchemas
-	}
-
-	// Collect all level fields
-	let levelFieldSet = new Set
-	for (let subSchema of subSchemas) {
-		for (let field in subSchema.children) {
-			if (field !== '$') {
-				levelFieldSet.add(field)
-			}
+	// Collect fields in the same and following levels
+	for (let path in schema) {
+		if (path.startsWith(pathPrefix)) {
+			let text = path.slice(pathPrefix.length)
+			searchSpace.push({
+				text: text,
+				terms: text.toLowerCase().split('.')
+			})
 		}
 	}
-	let levelFields = Array.from(levelFieldSet)
 
-	// Make a case-insensitive prefix match
 	let matches
-	if (lastPart.length <= 3) {
-		matches = levelFields.filter(field => {
-			return field.toLowerCase().startsWith(lastPart.toLowerCase())
+	if (field.length <= 3) {
+		// Make a case-insensitive prefix match
+		matches = searchSpace.filter(item => {
+			return item.terms.some(part => {
+				return part.startsWith(fieldLC)
+			})
+		}).sort((a, b) => {
+			// Depth ASC
+			return a.terms.length - b.terms.length
 		})
-		matches.sort()
 	} else {
-		matches = ngram.search(ngram.index(levelFields), lastPart)
+		// Make a case-insensitive ngram match
+		matches = ngram.search(ngram.index(searchSpace), [fieldLC]).sort((a, b) => {
+			// Depth ASC, score DESC
+			return a.value.terms.length - b.value.terms.length || b.score - a.score
+		}).map(e => e.value)
 	}
 
 	if (matches.length > 10) {
@@ -87,52 +75,5 @@ function suggestFields(search, schemas) {
 	}
 
 	// Pick 5
-	if (matches.length >= 5) {
-		return matches.slice(0, 5)
-	}
-
-	// Collect all descending fields
-	let allFieldSet = new Set
-	for (let subSchema of subSchemas) {
-		for (let field in subSchema.children) {
-			if (field !== '$') {
-				recurseCollect(subSchema.children[field], field + '.')
-			}
-		}
-	}
-	let allFields = Array.from(allFieldSet)
-
-	// Make a case-insensitive prefix match
-	let newMatches
-	if (lastPart.length <= 3) {
-		newMatches = allFields.filter(field => {
-			return field.toLowerCase().split('.').some(part => {
-				return part.startsWith(lastPart.toLowerCase())
-			})
-		})
-		newMatches.sort()
-	} else {
-		newMatches = ngram.search(ngram.index(allFields), lastPart)
-	}
-
-	return matches.concat(newMatches).slice(0, 5)
-
-	/**
-	 * @param {SchemaNode} schema
-	 * @param {string} prefix
-	 */
-	function recurseCollect(schema, prefix) {
-		if (!schema.children) {
-			return
-		}
-
-		for (let field in schema.children) {
-			if (field !== '$') {
-				allFieldSet.add(prefix + field)
-				recurseCollect(schema.children[field], prefix + field + '.')
-			} else {
-				recurseCollect(schema.children.$, prefix)
-			}
-		}
-	}
+	return matches.slice(0, 5).map(e => e.text)
 }
