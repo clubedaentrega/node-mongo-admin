@@ -99,7 +99,7 @@ module.exports.search = function (nGramsMap, str, cutOff) {
  */
 function countNGrams(str) {
 	let nGrams = {},
-		words = str.toLowerCase().split(/\W+/)
+		words = str.toLowerCase().split('.')
 
 	for (let word of words) {
 		for (let i = 0; i <= word.length - N; i++) {

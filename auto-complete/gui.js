@@ -101,5 +101,7 @@ function getSuggestions() {
 	if (!schema) {
 		return ''
 	}
-	return suggest(parse('{' + raw + '}', cursor + 1), schema).join('\n')
+	let then = Date.now()
+	let suggestions = suggest(parse('{' + raw + '}', cursor + 1), schema).join('\n')
+	return suggestions + '\nTook ' + (Date.now() - then) + 'ms'
 }

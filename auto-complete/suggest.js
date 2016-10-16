@@ -87,5 +87,52 @@ function suggestFields(search, schemas) {
 	}
 
 	// Pick 5
-	return matches.slice(0, 5)
+	if (matches.length >= 5) {
+		return matches.slice(0, 5)
+	}
+
+	// Collect all descending fields
+	let allFieldSet = new Set
+	for (let subSchema of subSchemas) {
+		for (let field in subSchema.children) {
+			if (field !== '$') {
+				recurseCollect(subSchema.children[field], field + '.')
+			}
+		}
+	}
+	let allFields = Array.from(allFieldSet)
+
+	// Make a case-insensitive prefix match
+	let newMatches
+	if (lastPart.length <= 3) {
+		newMatches = allFields.filter(field => {
+			return field.toLowerCase().split('.').some(part => {
+				return part.startsWith(lastPart.toLowerCase())
+			})
+		})
+		newMatches.sort()
+	} else {
+		newMatches = ngram.search(ngram.index(allFields), lastPart)
+	}
+
+	return matches.concat(newMatches).slice(0, 5)
+
+	/**
+	 * @param {SchemaNode} schema
+	 * @param {string} prefix
+	 */
+	function recurseCollect(schema, prefix) {
+		if (!schema.children) {
+			return
+		}
+
+		for (let field in schema.children) {
+			if (field !== '$') {
+				allFieldSet.add(prefix + field)
+				recurseCollect(schema.children[field], prefix + field + '.')
+			} else {
+				recurseCollect(schema.children.$, prefix)
+			}
+		}
+	}
 }
