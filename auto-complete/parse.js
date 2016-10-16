@@ -96,6 +96,7 @@ function readValue(source) {
 
 	// Slice source
 	let valueSource = {
+		type: 'source',
 		raw: source.raw.slice(0, i + 1),
 		cursor: sliceCursor(source.cursor, 0, i + 1)
 	}

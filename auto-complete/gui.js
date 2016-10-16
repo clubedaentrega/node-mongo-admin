@@ -62,8 +62,8 @@ process.stdin.on('data', data => {
  */
 function display(str) {
 	process.stdout.write('\x1b[H\x1b[J')
-	process.stdout.write('Find: ' + raw)
-	process.stdout.write('\x1b[' + (raw.length - cursor) + 'D')
+	process.stdout.write('Find: {' + raw + '}')
+	process.stdout.write('\x1b[' + (raw.length - cursor + 1) + 'D')
 	process.stdout.write('\x1b[s')
 	process.stdout.write('\n\n')
 
