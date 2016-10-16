@@ -31,12 +31,25 @@
  */
 
 /**
+ * @param {string} str
+ * @param {number} cursor
+ * @returns {Parsed}
+ */
+module.exports = function (str, cursor) {
+	return readValue({
+		type: 'source',
+		raw: str,
+		cursor: cursor
+	})
+}
+
+/**
  * Extract a JS expression from the beginning of the string.
  * It uses delimiter couting to know where the expression ends.
  * It is not an error to leave delimiter unclosed, like in "{a: 2".
  * Unmatched closing delimiters are ignore, like ')' in "{a: )}"
  * @param {ParsedSource} source - will be modified
- * @returns {ParsedSource}
+ * @returns {Parsed}
  */
 function readValue(source) {
 	// Stack of open delimiters: {, [, (, `, ', "

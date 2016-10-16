@@ -1,10 +1,5 @@
 'use strict'
 
-if (process.argv.length < 4) {
-	console.log('Usage: node sample <connection> <collection>')
-	process.exit()
-}
-
 /**
  * @typedef {Object} SchemaNode
  * @property {?boolean|Array<number>} double - up to 10 values
@@ -24,37 +19,29 @@ if (process.argv.length < 4) {
  * @property {?Object<SchemaNode>} children - children by field name
  */
 
-/** @var {SchemaNode} */
-let schema = {},
-	mongodb = require('mongodb')
+let mongodb = require('mongodb')
 
-require('../dbs')((err, dbs) => {
-	if (err) {
-		throw err
-	}
+/**
+ * @param {mongodb:Collection} collection
+ * @param {function(?Error, SchemaNode)} callback
+ */
+module.exports = function (collection, callback) {
+	let schema = {}
 
-	let db = dbs[process.argv[2]]
-
-	if (!db) {
-		throw new Error('Invalid db')
-	}
-
-	console.log('Sample collection')
-	db.collection(process.argv[3]).aggregate([{
+	collection.aggregate([{
 		$sample: {
 			size: 100
 		}
 	}]).each((err, doc) => {
 		if (err) {
-			throw err
+			return callback(err)
 		} else if (!doc) {
-			console.log(JSON.stringify(schema, null, '\t'))
-			process.exit()
+			return callback(null, schema)
 		}
 
 		processObj(doc, schema)
 	})
-})
+}
 
 /**
  * Process a type 'object' value
