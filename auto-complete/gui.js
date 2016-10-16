@@ -22,6 +22,7 @@ process.stdin.on('data', data => {
 
 	if (str === '\x03' || str === '\x04') {
 		// Ctrl+C or Ctrl+D
+		process.stdout.write('\x1b[H\x1b[J')
 		process.exit()
 	} else if (str === '\x08') {
 		// Backspace
@@ -34,7 +35,7 @@ process.stdin.on('data', data => {
 		raw = raw.slice(0, cursor) + raw.slice(cursor + 1)
 	} else if (str === '\x1b[C') {
 		// Right
-		if (cursor < str.length) {
+		if (cursor < raw.length) {
 			cursor += 1
 		}
 	} else if (str === '\x1b[D') {
@@ -97,5 +98,8 @@ require('../dbs')((err, dbs) => {
  * @return {string}
  */
 function getSuggestions() {
-	return JSON.stringify(parse(raw, cursor), null, '\t')
+	if (!schema) {
+		return ''
+	}
+	return suggest(parse('{' + raw + '}', cursor + 1), schema).join('\n')
 }
