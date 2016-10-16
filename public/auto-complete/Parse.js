@@ -1,42 +1,44 @@
 'use strict'
 
+let Parse = {}
+
 /**
- * @typedef {Object} Parsed
+ * @typedef {Object} Parse~Base
  * @property {string} type
  * @property {string} raw - raw source string
  */
 
 /**
- * @typedef {Parsed} ParsedObject
- * @property {Array<ParsedKeyValue>} properties
+ * @typedef {Parse~Base} Parse~Object
+ * @property {Array<Parse~KeyValue>} properties
  * @property {number} cursor - property index the cursor is at
  */
 
 /**
- * @typedef {Parsed} ParsedKeyValue
+ * @typedef {Parse~Base} Parse~KeyValue
  * @property {string} key
- * @property {Parsed} value
+ * @property {Parse~Base} value
  * @property {number} keyCursor - cursor position in key text
  */
 
 /**
- * @typedef {Parsed} ParsedArray
- * @property {Array<Parsed>} values
+ * @typedef {Parse~Base} Parse~Array
+ * @property {Array<Parse~Base>} values
  * @property {number} cursor - value index the cursor is at
  */
 
 /**
- * @typedef {Parsed} ParsedSource
+ * @typedef {Parse~Base} Parse~Source
  * @property {number} cursor - cursor position in raw text
  */
 
 /**
  * @param {string} str
  * @param {number} cursor
- * @returns {Parsed}
+ * @returns {Parse~Base}
  */
-module.exports = function (str, cursor) {
-	return readValue({
+Parse.parse = function (str, cursor) {
+	return Parse._readValue({
 		type: 'source',
 		raw: str,
 		cursor: cursor
@@ -48,11 +50,12 @@ module.exports = function (str, cursor) {
  * It uses delimiter couting to know where the expression ends.
  * It is not an error to leave delimiter unclosed, like in "{a: 2".
  * Unmatched closing delimiters are ignored, like ')' in "{a: )}"
- * @param {ParsedSource} source - will be modified
+ * @param {Parse~Source} source - will be modified
  * @param {boolean} [useStopChars=false] - whether to stop parsing on a stop-char (like '}')
- * @returns {Parsed}
+ * @returns {Parse~Base}
+ * @private
  */
-function readValue(source, useStopChars) {
+Parse._readValue = function (source, useStopChars) {
 	// Stack of open delimiters: {, [, (, ', "
 	let stack = [],
 		// Last stack level
@@ -113,23 +116,23 @@ function readValue(source, useStopChars) {
 		// Not properly closed, like in:
 		// {a: ['|], b: 2}
 		// We'll assume the any unmatched }, ], ), ', " marks the end
-		return readValue(source, true)
+		return Parse._readValue(source, true)
 	}
 
 	// Slice source
 	let valueSource = {
 		type: 'source',
 		raw: source.raw.slice(0, i + 1),
-		cursor: sliceCursor(source.cursor, 0, i + 1)
+		cursor: Parse._sliceCursor(source.cursor, 0, i + 1)
 	}
-	source.cursor = sliceCursor(source.cursor, i + 1, source.raw.length)
+	source.cursor = Parse._sliceCursor(source.cursor, i + 1, source.raw.length)
 	source.raw = source.raw.slice(i + 1)
 
 	// Promote pure types
 	if (seemsPure && first === '{') {
-		return promoteObject(valueSource, mode === 'root')
+		return Parse._promoteObject(valueSource, mode === 'root')
 	} else if (seemsPure && first === '[') {
-		return promoteArray(valueSource, mode === 'root')
+		return Parse._promoteArray(valueSource, mode === 'root')
 	}
 
 	// Fallback to raw source
@@ -138,11 +141,12 @@ function readValue(source, useStopChars) {
 
 /**
  * Parse an object source
- * @param {ParsedSource} source
+ * @param {Parse~Source} source
  * @param {boolean} gentleEnd - whether the object body was ended correctly
- * @returns {ParsedObject}
+ * @returns {Parse~Object}
+ * @private
  */
-function promoteObject(source, gentleEnd) {
+Parse._promoteObject = function (source, gentleEnd) {
 	// Extract object body string
 	// The raw string is garanteed to start with spaces and a '{'
 	// Depending on gentleEnd it may end with or without '}' spaces and ','
@@ -152,7 +156,7 @@ function promoteObject(source, gentleEnd) {
 		subSource = {
 			type: 'source',
 			raw: body,
-			cursor: sliceCursor(source.cursor, before.length, before.length + body.length)
+			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length)
 		}
 
 	// Read properties
@@ -161,10 +165,10 @@ function promoteObject(source, gentleEnd) {
 		key
 	while (/\S/.test(subSource.raw)) {
 		let hadCursor = subSource.cursor !== -1
-		key = readKey(subSource)
+		key = Parse._readKey(subSource)
 		properties.push({
 			key: key.name,
-			value: readValue(subSource),
+			value: Parse._readValue(subSource),
 			keyCursor: key.cursor
 		})
 		if (hadCursor && subSource.cursor === -1) {
@@ -188,11 +192,12 @@ function promoteObject(source, gentleEnd) {
 
 /**
  * Parse an array source
- * @param {ParsedSource} source
+ * @param {Parse~Source} source
  * @param {boolean} gentleEnd - whether the array body was ended correctly
- * @returns {ParsedArray}
+ * @returns {Parse~Array}
+ * @private
  */
-function promoteArray(source, gentleEnd) {
+Parse._promoteArray = function (source, gentleEnd) {
 	// Extract array body string
 	// The raw string is garanteed to start with spaces and a '['
 	// Depending on gentleEnd it may end with or without ']' spaces and ','
@@ -202,7 +207,7 @@ function promoteArray(source, gentleEnd) {
 		subSource = {
 			type: 'source',
 			raw: body,
-			cursor: sliceCursor(source.cursor, before.length, before.length + body.length)
+			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length)
 		}
 
 	// Read values
@@ -210,7 +215,7 @@ function promoteArray(source, gentleEnd) {
 		cursor = -1
 	while (/\S/.test(subSource.raw)) {
 		let hadCursor = subSource.cursor !== -1
-		values.push(readValue(subSource))
+		values.push(Parse._readValue(subSource))
 		if (hadCursor && subSource.cursor === -1) {
 			// Cursor is trapped in the property
 			cursor = values.length - 1
@@ -234,10 +239,11 @@ function promoteArray(source, gentleEnd) {
  * Extract an object key from the beginning of the string.
  * It is not an error to not use quotes when needed, like: "a.b: 2".
  * Invalid characters between close quotes and ':' are ignore, like 'x' in '"a"x: 2'
- * @param {ParsedSource} source - will be modified
+ * @param {Parse~Source} source - will be modified
  * @returns {?{name: string, cursor: number}}
+ * @private
  */
-function readKey(source) {
+Parse._readKey = function (source) {
 	let mode = 'start',
 		// First char in the key
 		startIndex = -1,
@@ -295,9 +301,9 @@ function readKey(source) {
 
 	let key = {
 		name: source.raw.slice(startIndex, endIndex),
-		cursor: sliceCursor(source.cursor, startIndex, endIndex)
+		cursor: Parse._sliceCursor(source.cursor, startIndex, endIndex)
 	}
-	source.cursor = sliceCursor(source.cursor, i + 1, source.raw.length)
+	source.cursor = Parse._sliceCursor(source.cursor, i + 1, source.raw.length)
 	source.raw = source.raw.slice(i + 1)
 	return key
 }
@@ -307,8 +313,9 @@ function readKey(source) {
  * @param {number} cursor
  * @param {number} start
  * @param {number} end
+ * @private
  */
-function sliceCursor(cursor, start, end) {
+Parse._sliceCursor = function (cursor, start, end) {
 	if (cursor === -1) {
 		// Already out of bounds
 		return -1

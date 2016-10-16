@@ -3,11 +3,11 @@
 let mongodb = require('mongodb')
 
 /**
- * @typedef {Object<SchemaField>} Schema
+ * @typedef {Object<Sample~SchemaField>} Sample~Schema
  */
 
 /**
- * @typedef {Object} SchemaField
+ * @typedef {Object} Sample~SchemaField
  * @property {?boolean|Array<number>} double - up to 10 values
  * @property {?boolean|Array<string>} string - up to 10 values
  * @property {?boolean} object
@@ -25,8 +25,8 @@ let mongodb = require('mongodb')
  */
 
 /**
- * @typedef {Object<SchemaNode>} SchemaNode
- * @property {?Object<SchemaNode>} children - children by field name
+ * @typedef {Object<Sample~SchemaNode>} Sample~SchemaNode
+ * @property {?Object<Sample~SchemaNode>} children - children by field name
  */
 
 module.exports.fields = {
@@ -87,9 +87,9 @@ module.exports.handler = function (dbs, body, success, error) {
 /**
  * Process a type 'object' value
  * @param {Object} doc
- * @param {SchemaNode} schema
+ * @param {Sample~SchemaNode} schema
  * @param {string} field
- * @param {Schema} flatSchema
+ * @param {Sample~Schema} flatSchema
  */
 function processObj(obj, schema, field, flatSchema) {
 	let hadChildren = true,
@@ -127,9 +127,9 @@ function processObj(obj, schema, field, flatSchema) {
 /**
  * Process a type 'array' value
  * @param {Array<*>} arr
- * @param {SchemaNode} schema
+ * @param {Sample~SchemaNode} schema
  * @param {string} field
- * @param {Schema} flatSchema
+ * @param {Sample~Schema} flatSchema
  */
 function processArray(arr, schema, field, flatSchema) {
 	let fieldSchema = flatSchema[field]
@@ -153,9 +153,9 @@ function processArray(arr, schema, field, flatSchema) {
 
 /**
  * @param {*} value
- * @param {SchemaNode} schema
+ * @param {Sample~SchemaNode} schema
  * @param {string} field
- * @param {Schema} flatSchema
+ * @param {Sample~Schema} flatSchema
  */
 function processValue(value, schema, field, flatSchema) {
 	let fieldSchema = flatSchema[field]
@@ -194,7 +194,7 @@ function processValue(value, schema, field, flatSchema) {
 
 /**
  * Handle value enumerations (up to 10)
- * @param {SchemaField} fieldSchema - modified in-place
+ * @param {Sample~SchemaField} fieldSchema - modified in-place
  * @param {string} typeName
  * @param {number|string} value
  */
