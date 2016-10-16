@@ -1,5 +1,7 @@
 'use strict'
 
+let mongodb = require('mongodb')
+
 /**
  * @typedef {Object<SchemaField>} Schema
  */
@@ -27,32 +29,44 @@
  * @property {?Object<SchemaNode>} children - children by field name
  */
 
-let mongodb = require('mongodb')
+module.exports.fields = {
+	connection: String,
+	collection: String
+}
 
-/**
- * @param {mongodb:Collection} collection
- * @param {function(?Error, Schema)} callback
- */
-module.exports = function (collection, callback) {
-	let schema = {},
-		flatSchema = Object.create(null)
+module.exports.handler = function (dbs, body, success, error) {
+	let db = dbs[body.connection],
+		schema = {},
+		flatSchema = Object.create(null),
+		timer
 
+	if (!db) {
+		return error(200, 'Invalid connection name')
+	}
 	flatSchema[''] = {}
 
-	collection.aggregate([{
+	// Use up to 5s to analyze all data
+	timer = setTimeout(answer, 5e3)
+
+	// Sample 1000 docs from the collection and process them
+	// as they come
+	db.collection(body.collection).aggregate([{
 		$sample: {
-			size: 100
+			size: 1e3
 		}
 	}]).each((err, doc) => {
-		if (err) {
-			return callback(err)
-		} else if (!doc) {
-			delete flatSchema['']
-			return callback(null, flatSchema)
+		if (err || !doc) {
+			return answer()
 		}
 
 		processObj(doc, schema, '', flatSchema)
 	})
+
+	function answer() {
+		delete flatSchema['']
+		clearTimeout(timer)
+		success(flatSchema)
+	}
 }
 
 /**
