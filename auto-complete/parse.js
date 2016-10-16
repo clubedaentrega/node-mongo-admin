@@ -47,12 +47,13 @@ module.exports = function (str, cursor) {
  * Extract a JS expression from the beginning of the string.
  * It uses delimiter couting to know where the expression ends.
  * It is not an error to leave delimiter unclosed, like in "{a: 2".
- * Unmatched closing delimiters are ignore, like ')' in "{a: )}"
+ * Unmatched closing delimiters are ignored, like ')' in "{a: )}"
  * @param {ParsedSource} source - will be modified
+ * @param {boolean} [useStopChars=false] - whether to stop parsing on a stop-char (like '}')
  * @returns {Parsed}
  */
-function readValue(source) {
-	// Stack of open delimiters: {, [, (, `, ', "
+function readValue(source, useStopChars) {
+	// Stack of open delimiters: {, [, (, ', "
 	let stack = [],
 		// Last stack level
 		mode = 'root',
@@ -68,13 +69,30 @@ function readValue(source) {
 		if ((mode === '{' && c === '}') ||
 			(mode === '[' && c === ']') ||
 			(mode === '(' && c === ')') ||
-			(mode === '`' && c === '`') ||
 			(mode === '\'' && c === '\'') ||
 			(mode === '"' && c === '"')) {
 			// Close delimiter
 			mode = stack.pop()
+		} else if (useStopChars && i >= source.cursor && mode !== 'root' &&
+			(c === '}' || c === ']' || c === ')')) {
+			// Unmatched close delimiter after cursor
+			// Assume it should close some corresponding open delimiter
+			let targetMode = c === '}' ? '{' : (c === ']' ? '[' : ')')
+			do {
+				mode = stack.pop()
+			} while (mode !== 'root' && mode !== targetMode)
+
+			if (mode !== 'root') {
+				// Pop the c level
+				mode = stack.pop()
+			}
+		} else if (mode === '\'' || mode === '"') {
+			if (c === '\\') {
+				// Escape next char
+				i += 1
+			}
 		} else if (c === '{' || c === '[' || c === '(' ||
-			c === '`' || c === '\'' || c === '"') {
+			c === '\'' || c === '"') {
 			// Open delimiter
 			stack.push(mode)
 			mode = c
@@ -82,9 +100,6 @@ function readValue(source) {
 			if (!first) {
 				first = c
 			}
-		} else if ((mode === '`' || mode === '\'' || mode === '"') && c === '\\') {
-			// Escape next char
-			i += 1
 		} else if (mode === 'root' && c === ',') {
 			// End of expression
 			break
@@ -92,6 +107,13 @@ function readValue(source) {
 			// Pure objects/arrays can't have any non-whitespace char at root
 			seemsPure = false
 		}
+	}
+
+	if (!useStopChars && mode !== 'root' && source.cursor !== -1) {
+		// Not properly closed, like in:
+		// {a: ['|], b: 2}
+		// We'll assume the any unmatched }, ], ), ', " marks the end
+		return readValue(source, true)
 	}
 
 	// Slice source
