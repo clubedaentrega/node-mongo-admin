@@ -9,7 +9,7 @@ let ngram = require('./ngram')
  * @returns {Array<string>}
  */
 module.exports = function (parsed, schema) {
-	return processCursorInFind(parsed, schema)
+	return processCursorInFind(parsed, schema, '')
 }
 
 /*
@@ -30,21 +30,23 @@ module.exports = function (parsed, schema) {
  * Process cursor in a find construction
  * @param {ParsedObject} parsed
  * @param {Schema} schema
+ * @param {string} prefix
  * @returns {Array<string>}
  */
-function processCursorInFind(parsed, schema) {
+function processCursorInFind(parsed, schema, prefix) {
 	if (parsed.cursor === -1) {
 		// Nothing is focused
 		return []
 	} else if (parsed.cursor === parsed.properties.length) {
 		// Empty property focused
-		return suggestFields('', schema)
+		return suggestFields('', schema, prefix)
 	}
 
-	let property = parsed.properties[parsed.cursor]
+	let property = parsed.properties[parsed.cursor],
+		subPrefix = prefix ? prefix + '.' + property.key : property.key
 	if (property.keyCursor !== -1) {
 		// Key has focus
-		return suggestFields(property.key.slice(0, property.keyCursor), schema)
+		return suggestFields(property.key.slice(0, property.keyCursor), schema, prefix)
 	} else if (property.key === '$or' || property.key === '$and' || property.key === '$nor') {
 		// Multiple sub-finds
 		if (property.value.type !== 'array') {
@@ -56,12 +58,12 @@ function processCursorInFind(parsed, schema) {
 			return []
 		}
 
-		return processCursorInFind(element, schema)
+		return processCursorInFind(element, schema, prefix)
 	} else if (property.value.type === 'array' || property.value.type === 'source') {
 		// Focus in field value
-		return suggestValues(property.value.raw, schema)
+		return suggestValues(property.value.raw, schema, subPrefix)
 	} else if (property.value.type === 'object') {
-		return processCursorInFieldExp(property.key, property.value, schema)
+		return processCursorInFieldExp(property.value, schema, subPrefix)
 	} else {
 		// Unknown
 		return []
@@ -69,16 +71,16 @@ function processCursorInFind(parsed, schema) {
 }
 
 /**
- * @param {string} field
  * @param {ParsedObject} parsed
  * @param {Schema} schema
+ * @param {string} prefix
  * @returns {Array<string>}
  */
-function processCursorInFieldExp(field, parsed, schema) {
+function processCursorInFieldExp(parsed, schema, prefix) {
 	if (parsed.properties.some(property => property.key[0] !== '$')) {
 		// Not actually a field expression, like in '{a: {b: 2}}',
 		// '{b: 2}' is not a field expression
-		return suggestValues(parsed.raw, schema)
+		return suggestValues(parsed.raw, schema, prefix)
 	}
 
 	if (parsed.cursor === -1) {
@@ -86,19 +88,19 @@ function processCursorInFieldExp(field, parsed, schema) {
 		return []
 	} else if (parsed.cursor === parsed.properties.length) {
 		// Empty property focused
-		return suggestOperators('', schema)
+		return suggestOperators('', schema, prefix)
 	}
 
 	let property = parsed.properties[parsed.cursor],
 		key = property.key
 	if (property.keyCursor !== -1) {
 		// Key has focus
-		return suggestOperators(property.key.slice(0, property.keyCursor), schema)
+		return suggestOperators(property.key.slice(0, property.keyCursor), schema, prefix)
 	} else if (key === '$eq' || key === '$ne' ||
 		key === '$gt' || key === '$gte' ||
 		key === '$lt' || key === '$lte') {
 		// COMP VALUE
-		return suggestValues(property.value.raw, schema)
+		return suggestValues(property.value.raw, schema, prefix)
 	} else if (key === '$in' || key === '$nin' || key === '$all') {
 		// COMP [VALUE]
 		if (property.value.type !== 'array') {
@@ -110,14 +112,14 @@ function processCursorInFieldExp(field, parsed, schema) {
 			return []
 		}
 
-		return suggestValues(element.raw, schema)
+		return suggestValues(element.raw, schema, prefix)
 	} else if (key === '$not') {
 		// $not FIELD-EXP
 		if (property.value.type !== 'object') {
 			return []
 		}
 
-		return processCursorInFieldExp(field, property.value, schema)
+		return processCursorInFieldExp(property.value, schema, prefix)
 	} else if (key === '$exists') {
 		// $exists BOOL
 		return ['true', 'false']
@@ -133,7 +135,7 @@ function processCursorInFieldExp(field, parsed, schema) {
 			return []
 		}
 
-		return processCursorInFind(property.value, schema)
+		return processCursorInFind(property.value, schema, prefix)
 	} else if (key === '$size') {
 		// $size NUM
 		return ['num']
@@ -146,14 +148,17 @@ function processCursorInFieldExp(field, parsed, schema) {
 /**
  * @param {string} search
  * @param {Schema} schema
+ * @param {string} prefix
  * @returns {Array<string>}
  */
-function suggestFields(search, schema) {
-	return ['fields', search]
-
-	// 'ab.cd.e' -> prefix='ab.cd.', field='e'
+function suggestFields(search, schema, prefix) {
+	// search='a', prefix='' -> prefix='', field='a'
+	// search='a.b', prefix='' -> prefix='a.', field='b'
+	// search='a', prefix='x' -> prefix='x.', field='a'
+	// search='ab.cd.e', prefix='x' -> prefix='x.ab.cd.', field='e'
 	let lastDot = search.lastIndexOf('.'),
-		pathPrefix = lastDot === -1 ? '' : search.slice(0, lastDot + 1),
+		pathPrefix = (prefix ? prefix + '.' : '') +
+		(lastDot === -1 ? '' : search.slice(0, lastDot + 1)),
 		field = lastDot === -1 ? search : search.slice(lastDot + 1),
 		fieldLC = field.toLowerCase(),
 		/** @var {Array<{text: string, depth: number}>} */
@@ -187,11 +192,6 @@ function suggestFields(search, schema) {
 			// Depth ASC, score DESC
 			return a.value.terms.length - b.value.terms.length || b.score - a.score
 		}).map(e => e.value)
-	}
-
-	if (matches.length > 10) {
-		// Too many matches
-		return []
 	}
 
 	// Pick 5
