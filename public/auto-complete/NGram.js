@@ -1,32 +1,34 @@
 'use strict'
 
-let N = 3
+let NGram = {
+	n: 3
+}
 
 /**
- * @typedef {Object} Value
+ * @typedef {Object} NGram~Value
  * @property {Array<string>} terms
  */
 
 /**
- * @typedef {Array<{value: Value, tf: number}>} NGramList
+ * @typedef {Array<{value: NGram~Value, tf: number}>} NGram~List
  * @property {number} idf
  */
 
 /**
- * @typedef {Object<NGramList>} NGramMap
+ * @typedef {Object<NGram~List>} NGram~Map
  * @property {number} maxIdf
  */
 
 /**
  * Index the given document for future search
  * @param {Array<Value>} values
- * @returns {NGramMap}
+ * @returns {NGram~Map}
  */
-module.exports.index = function (values) {
+NGram.index = function (values) {
 	// Map from n-gram to values
 	let nGramsMap = {}
 	for (let value of values) {
-		let nGrams = countNGrams(value.terms)
+		let nGrams = NGram._count(value.terms)
 
 		for (let nGram in nGrams) {
 			let arr = nGramsMap[nGram] || (nGramsMap[nGram] = [])
@@ -50,13 +52,13 @@ module.exports.index = function (values) {
 
 /**
  * Execute the search in the given index.
- * @param {NGramMap} nGramsMap
+ * @param {NGram~Map} nGramsMap
  * @param {Array<string>} terms
  * @param {number} [cutOff=1/2] - minimum quality
- * @returns {Array<{score: number, value: Value}>}
+ * @returns {Array<{score: number, value: NGram~Value}>}
  */
-module.exports.search = function (nGramsMap, terms, cutOff) {
-	let nGrams = countNGrams(terms),
+NGram.search = function (nGramsMap, terms, cutOff) {
+	let nGrams = NGram._count(terms),
 		scoreByValue = new Map
 
 	// The score is defined by the sum of term frequency–inverse document frequency
@@ -101,13 +103,14 @@ module.exports.search = function (nGramsMap, terms, cutOff) {
  * Map ngrams in the strings to their frequency.
  * @param {Array<string>} terms
  * @returns {Object<number>}
+ * @private
  */
-function countNGrams(terms) {
+NGram._count = function (terms) {
 	let nGrams = {}
 
 	for (let term of terms) {
-		for (let i = 0; i <= term.length - N; i++) {
-			let ngram = term.substr(i, N)
+		for (let i = 0; i <= term.length - NGram.n; i++) {
+			let ngram = term.substr(i, NGram.n)
 			nGrams[ngram] = (nGrams[ngram] || 0) + 1
 		}
 	}
