@@ -165,7 +165,7 @@ Suggest._suggestFields = function (search, schema, prefix) {
 		field = lastDot === -1 ? search : search.slice(lastDot + 1),
 		fieldLC = field.toLowerCase(),
 		/** @var {Array<{text: string, terms: Array<string>}>} */
-		searchSpace = [{
+		searchSpace = lastDot === -1 ? [{
 			text: '$or',
 			terms: ['$or']
 		}, {
@@ -174,7 +174,7 @@ Suggest._suggestFields = function (search, schema, prefix) {
 		}, {
 			text: '$nor',
 			terms: ['$nor']
-		}]
+		}] : []
 
 	// Collect fields in the same and following levels
 	for (let path in schema) {

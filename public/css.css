@@ -373,3 +373,23 @@ ol#plot-series {
 	top: 5px;
 	left: 5px;
 }
+
+.auto-complete-results {
+	position: fixed;
+	border: thin #6720a3 solid;
+	box-shadow: 3px 3px 3px 0 rgba(0, 0, 0, .5);
+	background-color: white;
+	z-index: 1000;
+}
+
+.auto-complete-result {
+	border-bottom: thin gray solid;
+	padding: 3px;
+	cursor: pointer;
+	white-space: pre;
+	padding-right: 1.5em;
+}
+
+.auto-complete-result.active {
+	background-color: #DBF;
+}

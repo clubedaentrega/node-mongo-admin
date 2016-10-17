@@ -10,11 +10,15 @@ function AutoComplete(el) {
 	this._el = el
 	this._open = false
 	this._selectedIndex = 0
+	this._listEl = Panel.create('div.auto-complete-results')
+	this._listEl.style.display = 'none'
+	this._el.parentElement.appendChild(this._listEl)
+	this._suggestions = []
+	this._lastValue = ''
+	this._lastCursor = -1
+	this._timer = null
 
-	el.addEventListener('input', () => {
-		this._suggest()
-	})
-
+	el.addEventListener('input', () => this._suggest())
 	el.addEventListener('keydown', event => {
 		if (!this._open) {
 			return
@@ -35,7 +39,15 @@ function AutoComplete(el) {
 		}
 	})
 
+	el.addEventListener('focus', () => {
+		// Use pooling interval since there is no event to tell
+		// us the cursor has changed position.
+		// Another way would be to listen to 'click', 'mousemove', etc
+		clearInterval(this._timer)
+		this._timer = setInterval(() => this._suggest(), 500)
+	})
 	el.addEventListener('blur', () => {
+		clearInterval(this._timer)
 		this._close()
 	})
 }
@@ -90,14 +102,88 @@ AutoComplete.prototype._suggest = function () {
 		return
 	}
 
-	let parsed = Parse.parse('{' + this._el.value + '}', (this._el.selectionStart || 0) + 1),
-		suggestions = Suggest.getSuggestions(parsed, schema)
+	// Load suggestions
+	let value = this._el.value,
+		cursor = this._el.selectionStart || 0,
+		cursorEnd = this._el.selectionEnd || 0
 
-	console.log(suggestions)
+	if (cursor !== cursorEnd) {
+		return this._close()
+	} else if (this._open && value === this._lastValue && cursor === this._lastCursor) {
+		// Nothing has changed
+		console.log('NOP')
+		return
+	}
+
+	console.log(value)
+	let parsed = Parse.parse('{' + value + '}', cursor + 1),
+		suggestions = Suggest.getSuggestions(parsed, schema)
+	this._lastValue = value
+	this._lastCursor = cursor
+
+	// Display in the screen
+	let rect = this._el.getBoundingClientRect()
+	this._listEl.innerHTML = ''
+	this._listEl.style.display = ''
+	this._listEl.style.left = 'calc(' + rect.left + 'px + ' + cursor + 'ch)'
+
+	this._suggestions = suggestions
+
+	if (!suggestions.length) {
+		return this._close()
+	}
+
+	this._open = true
+	suggestions.forEach((each, i) => {
+		let itemEl = Panel.create('div.auto-complete-result', each)
+
+		itemEl.onmouseover = () => {
+			this._select(i)
+		}
+		itemEl.onclick = () => {
+			this._select(i)
+			this._accept()
+		}
+
+		this._listEl.appendChild(itemEl)
+	})
+
+	this._select(0)
 }
 
-AutoComplete.prototype._close = function () {}
+/**
+ * @private
+ */
+AutoComplete.prototype._close = function () {
+	this._open = false
+	this._listEl.style.display = 'none'
+}
 
-AutoComplete.prototype._accept = function () {}
+/**
+ * @private
+ */
+AutoComplete.prototype._accept = function () {
+	console.log(this._suggestions[this._selectedIndex])
+	this._close()
+}
 
-AutoComplete.prototype._select = function () {}
+/**
+ * Select the given index (wraps between 0 and MAX)
+ * @param {number} index
+ * @private
+ */
+AutoComplete.prototype._select = function (index) {
+	// Unselect
+	let prev = this._listEl.children[this._selectedIndex]
+	if (prev) {
+		prev.classList.remove('active')
+	}
+
+	// Wrap index
+	let len = this._suggestions.length
+	index = ((index % len) + len) % len
+
+	// Select
+	this._listEl.children[index].classList.add('active')
+	this._selectedIndex = index
+}
