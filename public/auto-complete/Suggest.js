@@ -114,11 +114,7 @@ Suggest._processCursorInFieldExp = function (parsed, schema, prefix) {
 		}
 
 		let element = property.value.values[property.value.cursor]
-		if (!element) {
-			return []
-		}
-
-		return Suggest._suggestValues(element.raw, schema, prefix)
+		return Suggest._suggestValues(element ? element.raw : '', schema, prefix)
 	} else if (key === '$not') {
 		// $not FIELD-EXP
 		if (property.value.type !== 'object') {

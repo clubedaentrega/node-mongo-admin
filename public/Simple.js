@@ -20,7 +20,7 @@ Query.registerMode(Simple)
  * Called after the page is loaded
  */
 Simple.init = function () {
-	Simple.selectorInput = new Input('simple-selector')
+	Simple.selectorInput = new Input('simple-selector', true)
 	Simple.sortInput = new Input('simple-sort')
 	Simple.limitInput = new Input('simple-limit')
 	Simple.selectorInput.oninput = function () {

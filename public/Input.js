@@ -1,4 +1,4 @@
-/*globals Panel*/
+/*globals Panel, AutoComplete*/
 'use strict'
 
 /**
@@ -6,9 +6,10 @@
  * The main reason we need this is to allow the user copy the resulting
  * query as text
  * @param {HTMLElement} el
+ * @param {boolean} [enableAutoComplete=false]
  * @class
  */
-function Input(el) {
+function Input(el, enableAutoComplete) {
 	var that = this
 
 	/** @member {HTMLElement} */
@@ -40,10 +41,14 @@ function Input(el) {
 	this.el.classList.add('custom-input')
 	this.el.appendChild(this._inputEl)
 	this._inputEl.oninput = function () {
-		that._inputEl.style.width = (that._inputEl.value.length + 1) + 'ch'
+		that._inputEl.style.width = (that._inputEl.value.length + 2) + 'ch'
 		if (that.oninput) {
 			that.oninput.call(that)
 		}
+	}
+
+	if (enableAutoComplete) {
+		this._autoComplete = new AutoComplete(this._inputEl)
 	}
 }
 
