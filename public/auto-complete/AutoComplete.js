@@ -49,6 +49,7 @@ function AutoComplete(el) {
 	el.addEventListener('blur', () => {
 		clearInterval(this._timer)
 		this._close()
+		this._lastValue = ''
 	})
 }
 
@@ -85,7 +86,6 @@ AutoComplete._loadSchema = function () {
 			delete AutoComplete._schemaCache[cacheKey]
 		}
 
-		console.log('loaded')
 		AutoComplete._schemaCache[cacheKey] = out.schema
 	})
 }
@@ -109,13 +109,11 @@ AutoComplete.prototype._suggest = function () {
 
 	if (cursor !== cursorEnd) {
 		return this._close()
-	} else if (this._open && value === this._lastValue && cursor === this._lastCursor) {
+	} else if (value === this._lastValue && cursor === this._lastCursor) {
 		// Nothing has changed
-		console.log('NOP')
 		return
 	}
 
-	console.log(value)
 	let parsed = Parse.parse('{' + value + '}', cursor + 1),
 		suggestions = Suggest.getSuggestions(parsed, schema)
 	this._lastValue = value
@@ -135,7 +133,7 @@ AutoComplete.prototype._suggest = function () {
 
 	this._open = true
 	suggestions.forEach((each, i) => {
-		let itemEl = Panel.create('div.auto-complete-result', each)
+		let itemEl = Panel.create('div.auto-complete-result', each.text)
 
 		itemEl.onmouseover = () => {
 			this._select(i)
@@ -163,7 +161,6 @@ AutoComplete.prototype._close = function () {
  * @private
  */
 AutoComplete.prototype._accept = function () {
-	console.log(this._suggestions[this._selectedIndex])
 	this._close()
 }
 
