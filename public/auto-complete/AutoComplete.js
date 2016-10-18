@@ -181,7 +181,7 @@ AutoComplete.prototype._accept = function () {
 	}
 
 	this._el.value = replaced.text.slice(1, -1)
-	this._el.selectionStart = this._el.selectionEnd = replaced.cursor
+	this._el.selectionStart = this._el.selectionEnd = replaced.cursor - 1
 	this._el.dispatchEvent(new window.InputEvent('input'))
 
 	// Open new suggestion (if any)
