@@ -23,14 +23,38 @@ Replacer.replace = function (base, replacement, type, context) {
 			// New property
 			console.log('TODO')
 		} else if (property.key.cursor !== -1) {
-			// Replace key
-			let namePos = property.key.raw.indexOf(property.key.name),
+			/*
+			 * Replace key. In the examples bellow, _ means a blank space and | means cursor.
+			 * ___"ab.c|d.ef"xyz:
+			 * ^^^^^^^       ^^^^
+			 * |||||||       +++++- key suffix
+			 * ||||+++- name suffix
+			 * ++++- key prefix
+			 * 
+			 * raw = ___"ab.c|d.ef"xyz:
+			 * name = ab.cd.ef
+			 * nameStartPos = 4
+			 * keyPrefix = ___"
+			 * keySuffix = "xyz:
+			 * nameFullPrefix = ab.c
+			 * lastDot = 2
+			 * namePrefix = ab.
+			 * quote = "
+			 */
+
+			let raw = property.key.raw,
+				name = property.key.name,
+				nameStartPos = raw.indexOf(name),
 				// Matches /^\s['"]?$/
-				keyPrefix = property.key.raw.slice(0, namePos),
+				keyPrefix = raw.slice(0, nameStartPos),
 				// Matches /^((['"].*)?:)?$/
-				keySuffix = property.key.raw.slice(namePos + property.key.name.length),
-				quote = keyPrefix.trim()[0],
-				needQuote = !/^[a-z_$][a-z0-9_$]*$/i.test(replacement)
+				keySuffix = raw.slice(nameStartPos + name.length),
+				nameFullPrefix = name.slice(0, property.key.cursor),
+				lastDot = nameFullPrefix.lastIndexOf('.'),
+				namePrefix = lastDot === -1 ? '' : nameFullPrefix.slice(0, lastDot + 1),
+				quote = keyPrefix.trim()[0]
+			replacement = namePrefix + replacement
+			let needQuote = !/^[a-z_$][a-z0-9_$]*$/i.test(replacement)
 
 			// Build new raw code for the key
 			let newRaw
@@ -53,7 +77,7 @@ Replacer.replace = function (base, replacement, type, context) {
 			return {
 				text: base.slice(0, property.key.start) +
 					newRaw +
-					base.slice(property.key.start + property.key.raw.length),
+					base.slice(property.key.start + raw.length),
 				cursor: property.key.start + newRaw.length
 			}
 		}
