@@ -1,4 +1,4 @@
-/*global Panel, Parse, Suggest, Query*/
+/*global Panel, Parse, Suggest, Query, Replacer*/
 'use strict'
 
 /**
@@ -32,7 +32,7 @@ function AutoComplete(el) {
 		} else if (event.key === 'ArrowUp') {
 			this._select(this._selectedIndex - 1)
 			event.preventDefault()
-		} else if (event.key === 'Enter') {
+		} else if (event.key === 'Tab') {
 			this._accept()
 			event.preventDefault()
 		} else if (event.key === 'Escape') {
@@ -160,10 +160,30 @@ AutoComplete.prototype._close = function () {
 }
 
 /**
+ * Apply the replacement
  * @private
  */
 AutoComplete.prototype._accept = function () {
-	this._close()
+	console.log(this._lastValue,
+		this._suggestions.texts[this._selectedIndex],
+		this._suggestions.type,
+		this._suggestions.context)
+	let replaced = Replacer.replace('{' + this._lastValue + '}',
+		this._suggestions.texts[this._selectedIndex],
+		this._suggestions.type,
+		this._suggestions.context)
+
+	if (!replaced) {
+		console.log('Could not replace')
+		return
+	}
+
+	this._el.value = replaced.text.slice(1, -1)
+	this._el.selectionStart = this._el.selectionEnd = replaced.cursor
+	this._el.dispatchEvent(new window.InputEvent('input'))
+
+	// Open new suggestion (if any)
+	this._suggest()
 }
 
 /**
