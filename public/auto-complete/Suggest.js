@@ -208,16 +208,18 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 		field = lastDot === -1 ? search : search.slice(lastDot + 1),
 		fieldLC = field.toLowerCase(),
 		/** @var {Array<{text: string, terms: Array<string>}>} */
-		searchSpace = lastDot === -1 ? [{
-			text: '$or',
-			terms: ['$or']
-		}, {
-			text: '$and',
-			terms: ['$and']
-		}, {
-			text: '$nor',
-			terms: ['$nor']
-		}] : []
+		searchSpace = []
+
+	if (lastDot === -1) {
+		for (let operator of['$or', '$and', '$nor']) {
+			if (blacklist.indexOf(operator) === -1) {
+				searchSpace.push({
+					text: operator,
+					terms: [operator]
+				})
+			}
+		}
+	}
 
 	// Collect fields in the same and following levels
 	for (let path in schema) {

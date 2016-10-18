@@ -21,7 +21,23 @@ Replacer.replace = function (base, replacement, type, context) {
 		let property = context.properties[context.cursor]
 		if (context.cursor === context.properties.length) {
 			// New property
-			console.log('TODO')
+			let needQuote = !/^[a-z_$][a-z0-9_$]*$/i.test(replacement)
+
+			// Build new raw code for the key
+			let newRaw
+			if (needQuote) {
+				newRaw = '\'' + Replacer._escape(replacement) + '\': '
+			} else {
+				newRaw = replacement + ': '
+			}
+
+			// Replace and return
+			return {
+				text: base.slice(0, context.start + context.raw.length - 1) +
+					newRaw +
+					base.slice(context.start + context.raw.length - 1),
+				cursor: context.start + context.raw.length - 1 + newRaw.length - 1
+			}
 		} else if (property.key.cursor !== -1) {
 			/*
 			 * Replace key. In the examples bellow, _ means a blank space and | means cursor.
