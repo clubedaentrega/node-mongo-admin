@@ -13,7 +13,9 @@ function AutoComplete(el) {
 	this._listEl = Panel.create('div.auto-complete-results')
 	this._listEl.style.display = 'none'
 	this._el.parentElement.appendChild(this._listEl)
-	this._suggestions = []
+
+	/** @member {Suggest~Result} */
+	this._suggestions = null
 	this._lastValue = ''
 	this._lastCursor = -1
 	this._timer = null
@@ -127,13 +129,13 @@ AutoComplete.prototype._suggest = function () {
 
 	this._suggestions = suggestions
 
-	if (!suggestions.length) {
+	if (!suggestions || !suggestions.texts.length) {
 		return this._close()
 	}
 
 	this._open = true
-	suggestions.forEach((each, i) => {
-		let itemEl = Panel.create('div.auto-complete-result', each.text)
+	suggestions.texts.forEach((each, i) => {
+		let itemEl = Panel.create('div.auto-complete-result', each)
 
 		itemEl.onmouseover = () => {
 			this._select(i)
@@ -170,6 +172,10 @@ AutoComplete.prototype._accept = function () {
  * @private
  */
 AutoComplete.prototype._select = function (index) {
+	if (!this._suggestions) {
+		return
+	}
+
 	// Unselect
 	let prev = this._listEl.children[this._selectedIndex]
 	if (prev) {
@@ -177,7 +183,7 @@ AutoComplete.prototype._select = function (index) {
 	}
 
 	// Wrap index
-	let len = this._suggestions.length
+	let len = this._suggestions.texts.length
 	index = ((index % len) + len) % len
 
 	// Select

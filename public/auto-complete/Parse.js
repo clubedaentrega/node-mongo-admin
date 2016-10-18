@@ -6,6 +6,7 @@ let Parse = {}
  * @typedef {Object} Parse~Base
  * @property {string} type
  * @property {string} raw - raw source string
+ * @property {number} start - global start position of the raw substring
  */
 
 /**
@@ -15,10 +16,15 @@ let Parse = {}
  */
 
 /**
- * @typedef {Parse~Base} Parse~KeyValue
- * @property {string} key
+ * @typedef {Object} Parse~KeyValue
+ * @property {Parse~Key} key
  * @property {Parse~Base} value
- * @property {number} keyCursor - cursor position in key text
+ */
+
+/**
+ * @typedef {Parse~Base} Parse~Key
+ * @property {string} name
+ * @property {number} cursor - cursor position in key name
  */
 
 /**
@@ -41,7 +47,8 @@ Parse.parse = function (str, cursor) {
 	return Parse._readValue({
 		type: 'source',
 		raw: str,
-		cursor: cursor
+		cursor: cursor,
+		start: 0
 	})
 }
 
@@ -123,10 +130,12 @@ Parse._readValue = function (source, useStopChars) {
 	let valueSource = {
 		type: 'source',
 		raw: source.raw.slice(0, i + 1),
-		cursor: Parse._sliceCursor(source.cursor, 0, i + 1)
+		cursor: Parse._sliceCursor(source.cursor, 0, i + 1),
+		start: source.start
 	}
 	source.cursor = Parse._sliceCursor(source.cursor, i + 1, source.raw.length)
 	source.raw = source.raw.slice(i + 1)
+	source.start += i + 1
 
 	// Promote pure types
 	if (seemsPure && first === '{') {
@@ -156,20 +165,18 @@ Parse._promoteObject = function (source, gentleEnd) {
 		subSource = {
 			type: 'source',
 			raw: body,
-			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length)
+			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length),
+			start: source.start + before.length
 		}
 
 	// Read properties
 	let properties = [],
-		cursor = -1,
-		key
+		cursor = -1
 	while (/\S/.test(subSource.raw)) {
 		let hadCursor = subSource.cursor !== -1
-		key = Parse._readKey(subSource)
 		properties.push({
-			key: key.name,
-			value: Parse._readValue(subSource),
-			keyCursor: key.cursor
+			key: Parse._readKey(subSource),
+			value: Parse._readValue(subSource)
 		})
 		if (hadCursor && subSource.cursor === -1) {
 			// Cursor is trapped in the property
@@ -186,7 +193,8 @@ Parse._promoteObject = function (source, gentleEnd) {
 		type: 'object',
 		raw: source.raw,
 		properties: properties,
-		cursor: cursor
+		cursor: cursor,
+		start: source.start
 	}
 }
 
@@ -207,7 +215,8 @@ Parse._promoteArray = function (source, gentleEnd) {
 		subSource = {
 			type: 'source',
 			raw: body,
-			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length)
+			cursor: Parse._sliceCursor(source.cursor, before.length, before.length + body.length),
+			start: source.start + before.length
 		}
 
 	// Read values
@@ -231,7 +240,8 @@ Parse._promoteArray = function (source, gentleEnd) {
 		type: 'array',
 		raw: source.raw,
 		values: values,
-		cursor: cursor
+		cursor: cursor,
+		start: source.start
 	}
 }
 
@@ -240,14 +250,14 @@ Parse._promoteArray = function (source, gentleEnd) {
  * It is not an error to not use quotes when needed, like: "a.b: 2".
  * Invalid characters between close quotes and ':' are ignore, like 'x' in '"a"x: 2'
  * @param {Parse~Source} source - will be modified
- * @returns {?{name: string, cursor: number}}
+ * @returns {?Parse~Key}
  * @private
  */
 Parse._readKey = function (source) {
 	let mode = 'start',
-		// First char in the key
+		// First char in the key name
 		startIndex = -1,
-		// First char not in the key
+		// First char not in the key name
 		endIndex = -1,
 		i
 
@@ -300,11 +310,15 @@ Parse._readKey = function (source) {
 	}
 
 	let key = {
+		type: 'key',
+		raw: source.raw.slice(0, i + 1),
+		start: source.start,
 		name: source.raw.slice(startIndex, endIndex),
 		cursor: Parse._sliceCursor(source.cursor, startIndex, endIndex)
 	}
 	source.cursor = Parse._sliceCursor(source.cursor, i + 1, source.raw.length)
 	source.raw = source.raw.slice(i + 1)
+	source.start += i + 1
 	return key
 }
 
