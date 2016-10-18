@@ -111,7 +111,7 @@ Replacer._replaceProperty = function (base, replacement, context) {
 			text: base.slice(0, property.key.start) +
 				newRaw +
 				base.slice(property.key.start + raw.length),
-			cursor: property.key.start + newRaw.length - 1
+			cursor: property.key.start + newRaw.length
 		}
 	}
 }
@@ -129,7 +129,7 @@ Replacer._replaceValue = function (base, replacement, context) {
 		cutEnd = cutStart + context.raw.length + (needComma ? -1 : 0),
 		spaces = context.raw.match(/^(\s*).*?(\s*)$/),
 		spacesPrefix = spaces[1],
-		spacesSuffix = spaces[1]
+		spacesSuffix = spaces[2]
 
 	let replacementMap = {
 		'(double)': '|',
