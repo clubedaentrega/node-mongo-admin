@@ -50,8 +50,8 @@ function AutoComplete(el) {
 	})
 	el.addEventListener('blur', () => {
 		clearInterval(this._timer)
-		this._close()
 		this._lastValue = ''
+		setInterval(() => this._close(), 100)
 	})
 }
 

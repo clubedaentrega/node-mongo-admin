@@ -223,7 +223,7 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 	for (let path in schema) {
 		if (path.startsWith(pathPrefix)) {
 			let text = path.slice(pathPrefix.length),
-				key = path.slice(keyPrefix.length)
+				key = path.slice((prefix ? prefix + '.' : '').length)
 
 			if (blacklist.indexOf(key) !== -1) {
 				continue
