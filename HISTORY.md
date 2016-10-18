@@ -1,3 +1,6 @@
+# 3.3.0
+* Added: auto completion \o/
+
 # 3.2.0
 * Added: prompt mode and API
 

@@ -166,17 +166,12 @@ AutoComplete.prototype._close = function () {
  * @private
  */
 AutoComplete.prototype._accept = function () {
-	console.log(this._lastValue,
-		this._suggestions.texts[this._selectedIndex],
-		this._suggestions.type,
-		this._suggestions.context)
 	let replaced = Replacer.replace('{' + this._lastValue + '}',
 		this._suggestions.texts[this._selectedIndex],
 		this._suggestions.type,
 		this._suggestions.context)
 
 	if (!replaced) {
-		console.log('Could not replace')
 		return
 	}
 
