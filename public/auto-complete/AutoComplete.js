@@ -38,6 +38,8 @@ function AutoComplete(el) {
 		} else if (event.key === 'Escape') {
 			this._close()
 			event.preventDefault()
+		} else if (event.key === 'Enter') {
+			this._close()
 		}
 	})
 
