@@ -1,6 +1,8 @@
 'use strict'
 
-let mongodb = require('mongodb')
+let mongodb = require('mongodb'),
+	/** @var {Object<{date: new Date, num: number, schema: Object}>} */
+	cache = {}
 
 /**
  * @typedef {Object<Sample~SchemaField>} Sample~Schema
@@ -45,10 +47,20 @@ module.exports.handler = function (dbs, body, success, error) {
 	if (!db) {
 		return error(200, 'Invalid connection name')
 	}
-	flatSchema[''] = {}
+
+	let cacheKey = body.connection + '.' + body.collection,
+		cached = cache[cacheKey]
+	if (cached && cached.date.getTime() > Date.now() - 3600e3) {
+		// Cache still fresh
+		return success({
+			num: cached.num,
+			schema: cached.schema
+		})
+	}
 
 	// Use up to 5s to analyze all data
 	timer = setTimeout(answer, 5e3)
+	flatSchema[''] = {}
 
 	// Sample 1000 docs from the collection and process them
 	// as they come
@@ -81,6 +93,11 @@ module.exports.handler = function (dbs, body, success, error) {
 			schema: flatSchema
 		})
 		cursor.close()
+		cache[cacheKey] = {
+			date: new Date,
+			num: num,
+			schema: flatSchema
+		}
 	}
 }
 
