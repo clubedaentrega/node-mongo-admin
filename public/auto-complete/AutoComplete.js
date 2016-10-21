@@ -127,7 +127,7 @@ AutoComplete.prototype._suggest = function () {
 	let rect = this._el.getBoundingClientRect()
 	this._listEl.innerHTML = ''
 	this._listEl.style.display = ''
-	this._listEl.style.left = 'calc(' + rect.left + 'px + ' + cursor + 'ch)'
+	this._listEl.style.left = 'calc(' + (rect.left + window.scrollX) + 'px + ' + cursor + 'ch)'
 
 	this._suggestions = suggestions
 
@@ -177,7 +177,9 @@ AutoComplete.prototype._accept = function () {
 
 	this._el.value = replaced.text.slice(1, -1)
 	this._el.selectionStart = this._el.selectionEnd = replaced.cursor - 1
-	this._el.dispatchEvent(new window.InputEvent('input'))
+	if (this._el.oninput) {
+		this._el.oninput()
+	}
 
 	// Open new suggestion (if any)
 	this._suggest()

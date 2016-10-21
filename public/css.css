@@ -375,7 +375,7 @@ ol#plot-series {
 }
 
 .auto-complete-results {
-	position: fixed;
+	position: absolute;
 	border: thin #6720a3 solid;
 	box-shadow: 3px 3px 3px 0 rgba(0, 0, 0, .5);
 	background-color: white;
