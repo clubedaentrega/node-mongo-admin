@@ -14,12 +14,12 @@
 		"phpmyadmin"
 	],
 	"dependencies": {
-		"async": "^2.1.2",
-		"body-parser": "^1.15.2",
+		"async": "^2.1.4",
+		"body-parser": "^1.16.0",
 		"constant-equals": "^1.2.0",
-		"express": "^4.14.0",
-		"mongodb": "^2.2.10",
-		"validate-fields": "^3.6.1"
+		"express": "^4.14.1",
+		"mongodb": "^2.2.22",
+		"validate-fields": "^3.7.1"
 	},
 	"license": "MIT",
 	"engines": {
