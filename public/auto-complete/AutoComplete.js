@@ -71,6 +71,11 @@ AutoComplete._schemaCache = {}
  * @private
  */
 AutoComplete._loadSchema = function () {
+	if (!Query.connection || !Query.collection) {
+		// No collection selected yet
+		return
+	}
+
 	let cacheKey = Query.connection + '.' + Query.collection,
 		cached = AutoComplete._schemaCache[cacheKey]
 
