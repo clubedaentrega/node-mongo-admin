@@ -563,7 +563,7 @@ Query.populateResultTable = function () {
  */
 Query.selectRow = function (event) {
 	var multi = event.shiftKey && Query.prompt !== 'one',
-		add = event.ctrlKey && Query.prompt !== 'one',
+		add = (event.ctrlKey || event.metaKey) && Query.prompt !== 'one',
 		row = event.currentTarget,
 		previous = Query.selection,
 		start, end
