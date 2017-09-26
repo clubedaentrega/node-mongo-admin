@@ -222,7 +222,6 @@ Query.export = function () {
 		Panel.formatDocPath(Query.connection + '.' + Query.collection)
 	url = Export.export(Query.result, title)
 	window.open(url)
-	window.URL.revokeObjectURL(url)
 }
 
 /**
