@@ -516,13 +516,24 @@ Query.populateResultTable = function () {
 	// Build the table
 	docs.forEach(function (doc, i) {
 		var rowEl = tableEl.insertRow(-1),
-			eye = Panel.create('span.eye')
-		rowEl.insertCell(-1).appendChild(eye)
+			eye = Panel.create('span.eye'),
+			map = Panel.create('span.map'),
+			firstCell = rowEl.insertCell(-1)
+		firstCell.appendChild(eye)
 		eye.onclick = function (event) {
 			explore(doc)
 			event.stopPropagation()
 		}
 		eye.title = 'Show raw document'
+		if (hasSomeGeoJSON(doc)) {
+			firstCell.appendChild(document.createTextNode(' '))
+			firstCell.appendChild(map)
+			map.onclick = function (event) {
+				showAllGeoJSON(doc)
+				event.stopPropagation()
+			}
+			map.title = 'Show GeoJSON data'
+		}
 		pathNames.forEach(function (path) {
 			var cell = rowEl.insertCell(-1),
 				value = paths[path][i]
@@ -894,4 +905,68 @@ function isGeoJSON(value) {
 		return true
 	}
 	return false
+}
+
+/**
+ * Checks if a given document has any field containing GeoJSON data
+ * @param {Object} doc
+ * @returns {boolean}
+ */
+function hasSomeGeoJSON(doc) {
+	if (!doc || typeof doc !== 'object' || doc.constructor !== Object) {
+		return false
+	}
+
+	for (var key in doc) {
+		var value = doc[key]
+
+		if (isGeoJSON(value) ||
+			(Array.isArray(value) && value.some(hasSomeGeoJSON)) ||
+			hasSomeGeoJSON(value)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+/**
+ * Open a map with all GeoJSON features in the document
+ * @param {Object} doc 
+ */
+function showAllGeoJSON(doc) {
+	var features = []
+	collectGeoJSON(doc, '')
+
+	open('http://geojson.io/#data=data:application/json,' +
+		encodeURIComponent(JSON.stringify({
+			type: 'FeatureCollection',
+			features: features
+		})))
+
+	function collectGeoJSON(doc, path) {
+		if (!doc || typeof doc !== 'object' || doc.constructor !== Object) {
+			return
+		}
+
+		for (var key in doc) {
+			var value = doc[key]
+
+			if (isGeoJSON(value)) {
+				features.push({
+					type: 'Feature',
+					properties: {
+						title: path + key
+					},
+					geometry: value
+				})
+			} else if (Array.isArray(value)) {
+				for (var i = 0; i < value.length; i++) {
+					collectGeoJSON(value[i], path + i + '.')
+				}
+			} else {
+				collectGeoJSON(value, path + key + '.')
+			}
+		}
+	}
 }

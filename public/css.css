@@ -30,7 +30,7 @@ header {
 	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
-header > h1 {
+header>h1 {
 	margin: 15px 30px;
 	text-align: left;
 	color: #FAFAFA;
@@ -67,6 +67,7 @@ canvas {
 .next-on,
 .next-off,
 .eye,
+.map,
 .add,
 .delete,
 .toggle {
@@ -78,6 +79,7 @@ canvas {
 .prev-on,
 .next-on,
 .eye,
+.map,
 .add,
 .delete,
 .toggle {
@@ -102,6 +104,10 @@ canvas {
 
 .eye {
 	background-image: url(img/eye.png);
+}
+
+.map {
+	background-image: url(img/map.png);
 }
 
 .add {
@@ -150,12 +156,12 @@ th {
 	border-right: thin darkred dashed;
 }
 
-tr:hover > td,
+tr:hover>td,
 th:hover {
 	background-color: #DDD;
 }
 
-tr.selected > td {
+tr.selected>td {
 	background-color: #CCF;
 }
 
@@ -242,7 +248,7 @@ tr.selected > td {
 	overflow: auto;
 }
 
-.window-content >:last-child {
+.window-content>:last-child {
 	margin-bottom: 15px;
 	margin-right: 15px;
 }
@@ -312,13 +318,13 @@ tr.selected > td {
 	right: 5px;
 }
 
-.menu.menu-rtl > .menu-submenu::after {
+.menu.menu-rtl>.menu-submenu::after {
 	content: '\25c0';
 	left: 5px;
 }
 
-.menu.menu-rtl > .menu-item,
-.menu.menu-rtl > .menu-submenu {
+.menu.menu-rtl>.menu-item,
+.menu.menu-rtl>.menu-submenu {
 	padding-left: 1.5em;
 	padding-right: 3px;
 }
@@ -326,20 +332,20 @@ tr.selected > td {
 
 /* Custom select and input */
 
-.custom-select > select,
-.custom-input > input {
+.custom-select>select,
+.custom-input>input {
 	font-family: monospace;
 }
 
-.custom-select > span,
-.custom-input > span {
+.custom-select>span,
+.custom-input>span {
 	cursor: pointer;
 	border-bottom: thin gray dashed;
 	display: inline-block;
 }
 
-.custom-select > span:hover,
-.custom-input > span:hover {
+.custom-select>span:hover,
+.custom-input>span:hover {
 	background-color: rgba(103, 32, 163, 0.25);
 }
 
