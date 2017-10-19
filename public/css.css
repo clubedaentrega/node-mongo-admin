@@ -38,6 +38,26 @@ header>h1 {
 
 }
 
+.border-btn{
+	height: 30px;
+	border-radius: 5px;
+	background-color: transparent;
+	border: solid 1px #4488CC;
+	color: #4488CC;
+	font-size: 12px;
+	padding: 0 20px;
+}
+
+.execute-btn{
+	height: 30px;
+	border-radius: 5px;
+	background-color: #2E7D32;
+	border: none;
+	color: white;
+	font-size: 12px;
+	padding: 0 20px;
+}
+
 .query-buttons {
 		margin: 0;
 }
