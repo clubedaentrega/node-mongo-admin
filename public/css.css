@@ -6,7 +6,7 @@
 
 body {
 	padding: 50px 10px 10px 10px;
-	font: Verdana sans-serif;
+	font-family: sans-serif;
 	color: #333333;
 	background: #FAFAFA;
 	min-width: 100%;
