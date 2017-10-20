@@ -42,13 +42,15 @@
 	<form id="query-form">
 		<p id="mode-buttons" class="query-buttons">
 		</p>
-		<span class="query-structure-text"></span><pre>use <span id="query-connections"></span></pre>
+		<span class="query-structure-text"></span>
+		<pre>use <span id="query-connections"></span></pre>
 		<pre>db.<span id="query-collections"></span><span
 		id="query-simple">.<span id="simple-find">find</span>({<span id="simple-selector" ></span>}).sort({<span id="simple-sort"></span>}).limit(<span id="simple-limit"></span>)</span><span
 		id="query-distinct">.distinct('<span id="distinct-field"></span>', {<span id="distinct-selector"></span>})</span><span
 		id="query-aggregate">.aggregate([ <span class="add" id="aggregate-add"></span>
 <span id="aggregate-stages"></span>])</span><span
-		id="query-count">.count({<span id="count-selector"></span>})</span></pre></span>
+		id="query-count">.count({<span id="count-selector"></span>})</span></pre>
+		</span>
 
 		<p class="query-buttons">
 			<input type="submit" value="Execute" class="execute-btn" id="query-execute">
