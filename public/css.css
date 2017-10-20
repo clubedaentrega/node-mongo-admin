@@ -83,9 +83,6 @@ header>h1 {
 #query-form {
 	background-color: #eee;
 	padding: 10px 20px;
-}
-
-.query-structure-text {
 	color: #757575;
 }
 
@@ -93,6 +90,17 @@ header>h1 {
 	position: absolute;
 	background-color: #FAFAFA;
 	display: none;
+}
+
+.pagination {
+	margin: 0;
+	padding: 0 20px;
+	font-size: 12px;
+	border-top: solid 1px #4488CC;
+	border-bottom: solid 1px #4488CC;
+	height: 30px;
+	line-height: 30px;
+	color: #4488cc;
 }
 
 .details {
