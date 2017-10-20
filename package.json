@@ -17,8 +17,8 @@
 		"async": "^2.5.0",
 		"body-parser": "^1.18.2",
 		"constant-equals": "^1.2.0",
-		"express": "^4.15.5",
-		"mongodb": "^2.2.31",
+		"express": "^4.16.2",
+		"mongodb": "^2.2.33",
 		"validate-fields": "^3.7.1"
 	},
 	"license": "MIT",
