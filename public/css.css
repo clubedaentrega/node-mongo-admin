@@ -94,6 +94,7 @@ header>h1 {
 
 .pagination {
 	margin: 0;
+<<<<<<< HEAD
 	padding: 10px 20px;
 	height: 50px;
 }
@@ -102,6 +103,15 @@ header>h1 {
 	line-height: 30px;
 	color: #4488cc;
 	font-size: 12px;
+=======
+	padding: 0 20px;
+	font-size: 12px;
+	border-top: solid 1px #4488CC;
+	border-bottom: solid 1px #4488CC;
+	height: 30px;
+	line-height: 30px;
+	color: #4488cc;
+>>>>>>> 77a76dc61bc0c63770aa9b907108013cc9602c5c
 }
 
 .details {
