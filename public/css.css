@@ -29,12 +29,17 @@ header {
 	z-index: 1;
 }
 
-header>h1 {
+.header-content {
+	display: inline-block;
+}
+
+header h1 {
 	margin: 0 20px;
 	text-align: left;
 	color: #FAFAFA;
 	font-size: 20px;
 	line-height: 60px;
+	display: inline-block;
 }
 
 .border-btn {
@@ -55,6 +60,33 @@ header>h1 {
 .border-btn:active {
 	background-color: #fafafa;
 	cursor: pointer;
+}
+
+.header-btn {
+	height: 30px;
+	border-radius: 5px;
+	background-color: transparent;
+	border: solid 1px #ffffff;
+	color: #ffffff;
+	font-size: 12px;
+	padding: 0 20px;
+	margin-right: 5px;
+}
+
+.header-btn:hover {
+	background-color: #dddddd22;
+	cursor: pointer;
+}
+
+.header-btn:active {
+	background-color: #fafafa22;
+	cursor: pointer;
+}
+
+.header-btn:disabled {
+	background-color: #4488CC;
+	cursor: default;
+	border: solid 1px #4488CC;
 }
 
 .execute-btn {
@@ -78,6 +110,7 @@ header>h1 {
 
 .query-buttons {
 	margin: 0;
+	display: inline-block;
 }
 
 #query-form {

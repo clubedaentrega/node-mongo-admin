@@ -125,6 +125,7 @@ Query.init = function (connections) {
 		var btEl = Panel.create('input[type=button]')
 		btEl.value = Panel.formatDocPath(mode.name)
 		btEl.id = 'bt-' + mode.name
+		btEl.className = 'header-btn'
 		btEl.onclick = Query.setMode.bind(Query, mode)
 		Panel.get('mode-buttons').appendChild(btEl)
 		if (mode.default) {
