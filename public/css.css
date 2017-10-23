@@ -234,10 +234,17 @@ table.loading * {
 
 td,
 th {
-	border-bottom: thin gray solid;
-	border-right: thin gray solid;
+	border-bottom: thin #ccc solid;
+	border-right: thin #ccc solid;
 	padding: 5px;
 	text-align: center;
+	margin: 0;
+}
+
+th {
+	border-top: thin #ccc solid;
+	background-color: rgba(68, 136, 204, 0.1);
+	color: rgb(37, 97, 158);
 }
 
 .populated {
