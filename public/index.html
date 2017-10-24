@@ -36,14 +36,16 @@
 <body>
 	<table id="sticky-table-header"></table>
 	<header>
-		<h1>Node Mongo Admin</h1>
+		<div class="header-contet">
+			<h1>Node Mongo Admin</h1>
+			<p id="mode-buttons" class="query-buttons">
+			</p>
+		</div>
 	</header>
 
 	<form id="query-form">
-		<p id="mode-buttons" class="query-buttons">
-		</p>
 		<span class="query-structure-text"></span>
-		<pre>use <span id="query-connections"></span></pre>
+		<pre style="margin:0">use <span id="query-connections"></span></pre>
 		<pre>db.<span id="query-collections"></span><span
 		id="query-simple">.<span id="simple-find">find</span>({<span id="simple-selector" ></span>}).sort({<span id="simple-sort"></span>}).limit(<span id="simple-limit"></span>)</span><span
 		id="query-distinct">.distinct('<span id="distinct-field"></span>', {<span id="distinct-selector"></span>})</span><span
@@ -60,7 +62,7 @@
 			<span id="query-loading" style="display: none">loading</span>
 		</p>
 	</form>
-	<div id="plot-options" style="display:none">
+	<div id="plot-options" style="display:none; padding:0 20px;">
 		<div id="plot-wrapper" class="plot-wrapper" style="width: 480px; height: 360px">
 			<div id="plot-canvas" class="plot-canvas"></div>
 			<div class="plot-actions">
@@ -96,11 +98,11 @@
 			<ol id="plot-series">
 			</ol>
 		</div>
-		<button id="plot-clear">Close chart</button>
+		<button id="plot-clear" class="border-btn">Close chart</button>
 	</div>
-	<p id="query-controls">
+	<p id="query-controls" class="pagination">
 		<span id="query-prev" class="prev-off"></span>
-		<span id="query-page"></span>
+		<span id="query-page" class="pagination-text"></span>
 		<span id="query-next" class="next-off"></span>
 	</p>
 	<p id="query-unhide-p" style="display:none">
@@ -108,9 +110,9 @@
 	</p>
 	<table id="query-result"></table>
 
-	<p id="query-controls2" style="display:none">
+	<p id="query-controls2" style="display:none" class="pagination">
 		<span id="query-prev2" class="prev-off"></span>
-		<span id="query-page2"></span>
+		<span id="query-page2" class="pagination-text"></span>
 		<span id="query-next2" class="next-off"></span>
 	</p>
 	<div id="explore-window" class="window" style="display: none">

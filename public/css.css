@@ -29,12 +29,17 @@ header {
 	z-index: 1;
 }
 
-header>h1 {
+.header-content {
+	display: inline-block;
+}
+
+header h1 {
 	margin: 0 20px;
 	text-align: left;
 	color: #FAFAFA;
 	font-size: 20px;
 	line-height: 60px;
+	display: inline-block;
 }
 
 .border-btn {
@@ -47,6 +52,43 @@ header>h1 {
 	padding: 0 20px;
 }
 
+.border-btn:hover {
+	background-color: #ddd;
+	cursor: pointer;
+}
+
+.border-btn:active {
+	background-color: #fafafa;
+	cursor: pointer;
+}
+
+.header-btn {
+	height: 30px;
+	border-radius: 5px;
+	background-color: transparent;
+	border: solid 1px #ffffff;
+	color: #ffffff;
+	font-size: 12px;
+	padding: 0 20px;
+	margin-right: 5px;
+}
+
+.header-btn:hover {
+	background-color: #dddddd22;
+	cursor: pointer;
+}
+
+.header-btn:active {
+	background-color: #fafafa22;
+	cursor: pointer;
+}
+
+.header-btn:disabled {
+	background-color: #4488CC;
+	cursor: default;
+	border: solid 1px #4488CC;
+}
+
 .execute-btn {
 	height: 30px;
 	border-radius: 5px;
@@ -57,16 +99,23 @@ header>h1 {
 	padding: 0 20px;
 }
 
+.execute-btn:hover {
+	background-color: rgb(28, 87, 31);
+	cursor: pointer;
+}
+
+.execute-btn:active {
+	background-color: rgb(62, 143, 66);
+}
+
 .query-buttons {
 	margin: 0;
+	display: inline-block;
 }
 
 #query-form {
 	background-color: #eee;
 	padding: 10px 20px;
-}
-
-.query-structure-text {
 	color: #757575;
 }
 
@@ -74,6 +123,18 @@ header>h1 {
 	position: absolute;
 	background-color: #FAFAFA;
 	display: none;
+}
+
+.pagination {
+	margin: 0;
+	padding: 10px 20px;
+	height: 50px;
+}
+
+.pagination-text {
+	line-height: 30px;
+	color: #4488cc;
+	font-size: 12px;
 }
 
 .details {
