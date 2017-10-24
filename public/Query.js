@@ -939,11 +939,40 @@ function showAllGeoJSON(doc) {
 	var features = []
 	collectGeoJSON(doc, '')
 
-	open('http://geojson.io/#data=data:application/json,' +
-		encodeURIComponent(JSON.stringify({
-			type: 'FeatureCollection',
-			features: features
-		})))
+	// Generate colors for each feature, based on its title
+	try {
+		let encoder = new TextEncoder
+		Promise.all(features.map(feature => {
+			// SHA1(feature.properties.title)
+			let bytes = encoder.encode(feature.properties.title)
+			console.log(feature.properties.title)
+			return window.crypto.subtle.digest('SHA-1', bytes)
+		})).then(digests => {
+			digests.forEach((digest, i) => {
+				let feature = features[i],
+					bytes = new Uint8Array(digest),
+					r = '0' + bytes[0].toString(16),
+					g = '0' + bytes[1].toString(16),
+					b = '0' + bytes[2].toString(16),
+					color = '#' + r.slice(-2) + g.slice(-2) + b.slice(-2)
+				console.log(bytes, r, g, b)
+				feature.properties['marker-color'] = color
+			})
+			openIt()
+		})
+	} catch (e) {
+		// Fallback without using colors
+		console.error(e)
+		openIt()
+	}
+
+	function openIt() {
+		open('http://geojson.io/#data=data:application/json,' +
+			encodeURIComponent(JSON.stringify({
+				type: 'FeatureCollection',
+				features: features
+			})))
+	}
 
 	function collectGeoJSON(doc, path) {
 		if (!doc || typeof doc !== 'object' || doc.constructor !== Object) {
