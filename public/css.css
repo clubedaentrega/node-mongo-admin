@@ -332,7 +332,7 @@ tr.selected>td {
 	left: 0;
 	top: 0;
 	z-index: 2;
-	background-color: rgba(128, 128, 128, .25);
+	background-color: rgba(255, 255, 255, .5);
 }
 
 .window-content {
@@ -341,12 +341,16 @@ tr.selected>td {
 	width: 80%;
 	left: 10%;
 	top: 10%;
-	background-color: #FAFAFA;
-	border: 2px #CCCCCC solid;
+	background-color: #FFFFFF;
 	border-radius: 4px;
 	box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
 	padding: 15px;
 	overflow: auto;
+}
+
+.window-content h1 {
+	margin: 0;
+	color: #445588;
 }
 
 .window-content>:last-child {
