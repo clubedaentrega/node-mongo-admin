@@ -355,17 +355,6 @@ tr.selected>td {
 }
 
 
-/* Panels */
-
-.panel {
-	width: 33%;
-	display: inline-block;
-	float: left;
-	overflow: auto;
-	text-align: center;
-}
-
-
 /* Clear float */
 
 .clear:after {
