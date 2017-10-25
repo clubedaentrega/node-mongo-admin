@@ -275,7 +275,7 @@ tr.selected>td {
 .json {
 	font-family: monospace;
 	padding: 10px;
-	border: thin gray solid;
+	border: 1px #4488CC solid;
 	display: inline-block;
 	white-space: pre;
 	text-align: left;
@@ -344,7 +344,7 @@ tr.selected>td {
 	width: 80%;
 	left: 10%;
 	top: 10%;
-	background-color: #FFFFFF;
+	background-color: #FAFAFA;
 	border-radius: 4px;
 	box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
 	padding: 15px;
@@ -359,6 +359,8 @@ tr.selected>td {
 .window-content>:last-child {
 	margin-bottom: 15px;
 	margin-right: 15px;
+	width: 100%;
+	background-color: #FFFFFF;
 }
 
 
