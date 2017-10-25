@@ -248,8 +248,8 @@ th {
 }
 
 .populated {
-	border-bottom: thin gray dashed;
-	border-right: thin gray dashed;
+	border: 1px #4488CC dashed;
+	background-color: #CCCCCC11;
 }
 
 .populated-fail {
