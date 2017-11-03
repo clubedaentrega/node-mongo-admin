@@ -129,12 +129,15 @@ header h1 {
 	margin: 0;
 	padding: 10px 20px;
 	height: 50px;
+	display: inline-block;
 }
 
 .pagination-text {
+	margin: 0;
 	line-height: 30px;
 	color: #4488cc;
 	font-size: 12px;
+	display: inline-block;
 }
 
 .details {
@@ -234,15 +237,22 @@ table.loading * {
 
 td,
 th {
-	border-bottom: thin gray solid;
-	border-right: thin gray solid;
+	border-bottom: thin #ccc solid;
+	border-right: thin #ccc solid;
 	padding: 5px;
 	text-align: center;
+	margin: 0;
+}
+
+th {
+	border-top: thin #ccc solid;
+	background-color: rgba(68, 136, 204, 0.1);
+	color: rgb(37, 97, 158);
 }
 
 .populated {
-	border-bottom: thin gray dashed;
-	border-right: thin gray dashed;
+	border: 1px #4488CC dashed;
+	background-color: #CCCCCC11;
 }
 
 .populated-fail {
@@ -265,7 +275,7 @@ tr.selected>td {
 .json {
 	font-family: monospace;
 	padding: 10px;
-	border: thin gray solid;
+	border: 1px #4488CC solid;
 	display: inline-block;
 	white-space: pre;
 	text-align: left;
@@ -325,7 +335,7 @@ tr.selected>td {
 	left: 0;
 	top: 0;
 	z-index: 2;
-	background-color: rgba(128, 128, 128, .25);
+	background-color: rgba(255, 255, 255, .5);
 }
 
 .window-content {
@@ -335,27 +345,22 @@ tr.selected>td {
 	left: 10%;
 	top: 10%;
 	background-color: #FAFAFA;
-	border: 2px #CCCCCC solid;
 	border-radius: 4px;
 	box-shadow: 0px 2px 2px 0px rgba(50, 50, 50, 0.5);
 	padding: 15px;
 	overflow: auto;
 }
 
+.window-content h1 {
+	margin: 0;
+	color: #445588;
+}
+
 .window-content>:last-child {
 	margin-bottom: 15px;
 	margin-right: 15px;
-}
-
-
-/* Panels */
-
-.panel {
-	width: 33%;
-	display: inline-block;
-	float: left;
-	overflow: auto;
-	text-align: center;
+	width: 100%;
+	background-color: #FFFFFF;
 }
 
 

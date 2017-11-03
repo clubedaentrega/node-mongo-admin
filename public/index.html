@@ -66,8 +66,8 @@
 		<div id="plot-wrapper" class="plot-wrapper" style="width: 480px; height: 360px">
 			<div id="plot-canvas" class="plot-canvas"></div>
 			<div class="plot-actions">
-				<button id="plot-export">Export image</button>
-				<button id="plot-set-size">Set size</button>
+				<button id="plot-export" class="border-btn">Export image</button>
+				<button id="plot-set-size" class="border-btn">Set size</button>
 			</div>
 		</div>
 		<h2 class="plot-options-title">Plot options</h2>
@@ -101,25 +101,25 @@
 		<button id="plot-clear" class="border-btn">Close chart</button>
 	</div>
 	<p id="query-controls" class="pagination">
-		<span id="query-prev" class="prev-off"></span>
+		<span id="query-prev" class="prev-off" style="vertical-align: middle; display:inline-block;"></span>
 		<span id="query-page" class="pagination-text"></span>
-		<span id="query-next" class="next-off"></span>
+		<span id="query-next" class="next-off" style="vertical-align: middle; display:inline-block;"></span>
 	</p>
 	<p id="query-unhide-p" style="display:none">
-		<input type="button" value="Unhide columns" id="query-unhide">
+		<input type="button" value="Unhide columns" id="query-unhide" class="border-btn" style="margin: 0 10px;">
 	</p>
 	<table id="query-result"></table>
 
 	<p id="query-controls2" style="display:none" class="pagination">
-		<span id="query-prev2" class="prev-off"></span>
+		<span id="query-prev2" class="prev-off" style="vertical-align: middle; display:inline-block;"></span>
 		<span id="query-page2" class="pagination-text"></span>
-		<span id="query-next2" class="next-off"></span>
+		<span id="query-next2" class="next-off" style="vertical-align: middle; display:inline-block;"></span>
 	</p>
 	<div id="explore-window" class="window" style="display: none">
 		<div class="window-content">
 			<h1>Explore object</h1>
 			<p>
-				<input type="button" value="Show as JSON" id="explore-show">
+				<input type="button" value="Show as JSON" id="explore-show" class="border-btn">
 			</p>
 			<div class="json" id="explore-json"></div>
 		</div>
