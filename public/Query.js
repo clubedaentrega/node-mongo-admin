@@ -914,17 +914,17 @@ function isGeoJSON(value) {
  * @returns {boolean}
  */
 function hasSomeGeoJSON(doc) {
-	if (!doc || typeof doc !== 'object' || doc.constructor !== Object) {
-		return false
+	if (isGeoJSON(doc)) {
+		return true
 	}
 
-	for (var key in doc) {
-		var value = doc[key]
-
-		if (isGeoJSON(value) ||
-			(Array.isArray(value) && value.some(hasSomeGeoJSON)) ||
-			hasSomeGeoJSON(value)) {
-			return true
+	if (Array.isArray(doc)) {
+		return doc.some(hasSomeGeoJSON)
+	} else if (doc && typeof doc === 'object' && doc.constructor === Object) {
+		for (var key in doc) {
+			if (hasSomeGeoJSON(doc[key])) {
+				return true
+			}
 		}
 	}
 
@@ -945,7 +945,6 @@ function showAllGeoJSON(doc) {
 		Promise.all(features.map(feature => {
 			// SHA1(feature.properties.title)
 			let bytes = encoder.encode(feature.properties.title)
-			console.log(feature.properties.title)
 			return window.crypto.subtle.digest('SHA-1', bytes)
 		})).then(digests => {
 			digests.forEach((digest, i) => {
@@ -955,14 +954,12 @@ function showAllGeoJSON(doc) {
 					g = '0' + bytes[1].toString(16),
 					b = '0' + bytes[2].toString(16),
 					color = '#' + r.slice(-2) + g.slice(-2) + b.slice(-2)
-				console.log(bytes, r, g, b)
 				feature.properties['marker-color'] = color
 			})
 			openIt()
 		})
 	} catch (e) {
 		// Fallback without using colors
-		console.error(e)
 		openIt()
 	}
 
@@ -975,27 +972,23 @@ function showAllGeoJSON(doc) {
 	}
 
 	function collectGeoJSON(doc, path) {
-		if (!doc || typeof doc !== 'object' || doc.constructor !== Object) {
-			return
+		if (isGeoJSON(doc)) {
+			return features.push({
+				type: 'Feature',
+				properties: {
+					title: path
+				},
+				geometry: doc
+			})
 		}
 
-		for (var key in doc) {
-			var value = doc[key]
-
-			if (isGeoJSON(value)) {
-				features.push({
-					type: 'Feature',
-					properties: {
-						title: path + key
-					},
-					geometry: value
-				})
-			} else if (Array.isArray(value)) {
-				for (var i = 0; i < value.length; i++) {
-					collectGeoJSON(value[i], path + i + '.')
-				}
-			} else {
-				collectGeoJSON(value, path + key + '.')
+		if (Array.isArray(doc)) {
+			for (var i = 0; i < doc.length; i++) {
+				collectGeoJSON(doc[i], path + (path ? '.' : '') + i)
+			}
+		} else if (doc && typeof doc === 'object' && doc.constructor === Object) {
+			for (var key in doc) {
+				collectGeoJSON(doc[key], path + (path ? '.' : '') + key)
 			}
 		}
 	}
