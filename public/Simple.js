@@ -11,6 +11,7 @@ Simple.name = 'simple'
 Simple.default = true
 
 Simple.selectorInput = null
+Simple.selectInput = null
 Simple.sortInput = null
 Simple.limitInput = null
 
@@ -21,6 +22,7 @@ Query.registerMode(Simple)
  */
 Simple.init = function () {
 	Simple.selectorInput = new Input('simple-selector', true)
+	Simple.selectInput = new Input('simple-select')
 	Simple.sortInput = new Input('simple-sort')
 	Simple.limitInput = new Input('simple-limit')
 	Simple.selectorInput.oninput = function () {
@@ -45,6 +47,7 @@ Simple.readId = function (str) {
 Simple.onChangeCollection = function () {
 	Simple.sortInput.value = '_id: -1'
 	Simple.selectorInput.value = ''
+	Simple.selectInput.value = ''
 	Simple.limitInput.value = '50'
 }
 
@@ -56,28 +59,31 @@ Simple.execute = function () {
 		selector = (oid ? {
 			_id: oid
 		} : Panel.processJSInEl(Simple.selectorInput, false, true)) || {},
+		select = Panel.processJSInEl(Simple.selectInput, false, true) || {},
 		sort = Panel.processJSInEl(Simple.sortInput, false, true) || {},
 		limit = Number(Simple.limitInput.value)
 
 	Panel.get('simple-find').textContent = oid ? 'findById' : 'find'
-	Simple.find(Query.connection, Query.collection, selector, sort, limit, 0, Boolean(oid))
+	Simple.find(Query.connection, Query.collection, selector, select, sort, limit, 0, Boolean(oid))
 }
 
 /**
  * @param {string} connection
  * @param {string} collection
  * @param {Object} selector
+ * @param {Object} select
  * @param {Object} sort
  * @param {number} page
  * @param {boolean} byId
  */
-Simple.find = function (connection, collection, selector, sort, limit, page, byId) {
+Simple.find = function (connection, collection, selector, select, sort, limit, page, byId) {
 	Query.setLoading(true)
 
 	Panel.request('find', {
 		connection: connection,
 		collection: collection,
 		selector: selector,
+		select: select,
 		limit: limit,
 		skip: limit * page,
 		sort: sort
@@ -87,7 +93,7 @@ Simple.find = function (connection, collection, selector, sort, limit, page, byI
 		if (!result.error) {
 			hasMore = result.docs.length === limit
 			Query.showResult(result.docs, page, hasMore, function (page) {
-				Simple.find(connection, collection, selector, sort, limit, page, byId)
+				Simple.find(connection, collection, selector, select, sort, limit, page, byId)
 			})
 			if (byId && result.docs.length === 1) {
 				explore(result.docs[0])
@@ -122,6 +128,7 @@ Simple.findById = function (connection, collection, id) {
 	Query.setCollection(connection, collection)
 	Query.setMode(Simple)
 	Simple.selectorInput.value = id
+	Simple.selectInput.value = ''
 	Simple.sortInput.value = '_id: -1'
 	Query.onFormSubmit()
 }
@@ -261,7 +268,8 @@ Simple.toSearchParts = function () {
 	return [
 		Simple.selectorInput.value,
 		Simple.sortInput.value,
-		Simple.limitInput.value
+		Simple.limitInput.value,
+		Simple.selectInput.value
 	]
 }
 
@@ -270,10 +278,12 @@ Simple.toSearchParts = function () {
  * @param {string} selector
  * @param {string} sort
  * @param {string} limit
+ * @param {?string} select
  */
-Simple.executeFromSearchParts = function (selector, sort, limit) {
+Simple.executeFromSearchParts = function (selector, sort, limit, select) {
 	Simple.selectorInput.value = selector
 	Simple.sortInput.value = sort
 	Simple.limitInput.value = limit
+	Simple.selectInput.value = select || ''
 	Query.onFormSubmit(null, true)
 }
