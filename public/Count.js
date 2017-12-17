@@ -63,3 +63,19 @@ Count.executeFromSearchParts = function (selector) {
 	Count.selectorInput.value = selector
 	Query.onFormSubmit(null, true)
 }
+
+/**
+ * Called when coping as MongoDB Shell query
+ * @param {string} prefix
+ */
+Count.toString = function (prefix) {
+	let selector = Count.selectorInput,
+		query = prefix + '.count('
+
+	if (selector) {
+		query += '{' + selector + '}'
+	}
+	query += ')'
+
+	return query
+}

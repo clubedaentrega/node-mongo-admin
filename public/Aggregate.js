@@ -1,7 +1,7 @@
 /*globals Query, Panel, Select, Input*/
 'use strict'
 
-var Aggregate = {}
+let Aggregate = {}
 
 Aggregate.name = 'aggregate'
 
@@ -93,7 +93,7 @@ Aggregate.stages = []
  * @returns {Stage}
  */
 Aggregate.addStage = function (pos) {
-	var stage = {}
+	let stage = {}
 
 	// Create stage
 	stage.opSelect = new Select(Panel.create('span'))
@@ -138,7 +138,7 @@ Aggregate.addStage = function (pos) {
  * @param {Stage} stage
  */
 Aggregate.deleteStage = function (stage) {
-	var pos = Aggregate.stages.indexOf(stage)
+	let pos = Aggregate.stages.indexOf(stage)
 	if (pos === -1) {
 		return
 	}
@@ -151,7 +151,7 @@ Aggregate.deleteStage = function (stage) {
  */
 Aggregate.updateLayout = function () {
 	Aggregate.stages.forEach(function (stage) {
-		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]]
+		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]]
 		stage.preEl.textContent = type.prefix || ''
 		stage.posEl.textContent = type.posfix || ''
 	})
@@ -174,8 +174,8 @@ Aggregate.init = function () {
  * Called when a query is submited
  */
 Aggregate.execute = function () {
-	var stages = Aggregate.stages.map(function (stage) {
-		var op = stage.opSelect.value,
+	let stages = Aggregate.stages.map(function (stage) {
+		let op = stage.opSelect.value,
 			type = Aggregate.operatorTypes[Aggregate.operators[op]],
 			value = stage.valueInput.value
 
@@ -208,9 +208,9 @@ Aggregate.execute = function () {
  * @returns {Array}
  */
 Aggregate.toSearchParts = function () {
-	var parts = []
+	let parts = []
 	Aggregate.stages.forEach(function (stage) {
-		var type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
+		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
 			value = stage.valueInput.value
 		if (value || type.mayBeEmpty) {
 			parts.push(stage.opSelect.value)
@@ -225,7 +225,7 @@ Aggregate.toSearchParts = function () {
  * @param {...string} values
  */
 Aggregate.executeFromSearchParts = function () {
-	var i, stage
+	let i, stage
 
 	// Remove all stages
 	while (Aggregate.stages.length) {
@@ -240,4 +240,36 @@ Aggregate.executeFromSearchParts = function () {
 
 	Aggregate.updateLayout()
 	Query.onFormSubmit(null, true)
+}
+
+/**
+ * Called when coping as MongoDB Shell query
+ * @param {string} prefix
+ */
+Aggregate.toString = function (prefix) {
+	let query = prefix + '.aggregate([',
+		first = true
+
+	for (let stage of Aggregate.stages) {
+		let op = stage.opSelect.value,
+			type = Aggregate.operatorTypes[Aggregate.operators[op]],
+			value = stage.valueInput.value,
+			pre = type.prefix || '',
+			pos = type.posfix || ''
+
+		if (!value && !type.mayBeEmpty) {
+			continue
+		}
+
+		if (first) {
+			first = false
+		} else {
+			query += ', '
+		}
+		query += `{$${op === 'unwind (object)' ? 'unwind' : op}: ${pre}${value}${pos}}`
+	}
+
+	query += '])'
+
+	return query
 }

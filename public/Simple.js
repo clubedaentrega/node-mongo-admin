@@ -4,7 +4,7 @@
 /*globals Panel, ObjectId, Query, json, explore, Distinct, Populated, Input*/
 'use strict'
 
-var Simple = {}
+let Simple = {}
 
 Simple.name = 'simple'
 
@@ -37,7 +37,7 @@ Simple.init = function () {
  * @returns {?ObjectId} null if not valid syntax
  */
 Simple.readId = function (str) {
-	var match = str.match(/^(["']?)([0-9a-f]{24})\1$/)
+	let match = str.match(/^(["']?)([0-9a-f]{24})\1$/)
 	return match ? new ObjectId(match[2]) : null
 }
 
@@ -55,7 +55,7 @@ Simple.onChangeCollection = function () {
  * Called when a query is submited
  */
 Simple.execute = function () {
-	var oid = Simple.readId(Simple.selectorInput.value),
+	let oid = Simple.readId(Simple.selectorInput.value),
 		selector = (oid ? {
 			_id: oid
 		} : Panel.processJSInEl(Simple.selectorInput, false, true)) || {},
@@ -88,7 +88,7 @@ Simple.find = function (connection, collection, selector, select, sort, limit, p
 		skip: limit * page,
 		sort: sort
 	}, function (result) {
-		var hasMore
+		let hasMore
 		Query.setLoading(false)
 		if (!result.error) {
 			hasMore = result.docs.length === limit
@@ -108,7 +108,7 @@ Simple.find = function (connection, collection, selector, select, sort, limit, p
  * @param {number} direction - 1 or -1
  */
 Simple.sortByPath = function (path, direction) {
-	var sort
+	let sort
 	if (path.match(/^[a-z_][a-z0-9_]*$/i)) {
 		sort = path + ': ' + direction
 	} else {
@@ -162,7 +162,7 @@ Simple.exploreById = function (connection, collection, id) {
  * @param {string} [op='$eq'] - one of '$eq', '$ne', '$gt', '$lt', '$gte', '$lte'
  */
 Simple.findByPath = function (path, value, op) {
-	var query
+	let query
 	value = value === undefined ? null : value
 	if (!/^[a-z_][a-z0-9_$]*$/.test(path)) {
 		path = '\'' + path.replace(/'/g, '\\\'') + '\''
@@ -184,7 +184,7 @@ Simple.findByPath = function (path, value, op) {
  * @param {Object} options
  */
 Simple.processGlobalCellMenu = function (value, path, cell, options) {
-	var isPopulated = value instanceof Populated,
+	let isPopulated = value instanceof Populated,
 		display = isPopulated ? value.display : value,
 		original
 
@@ -208,7 +208,7 @@ Simple.processGlobalCellMenu = function (value, path, cell, options) {
 	}
 
 	function addIdMenu(value, isOriginal) {
-		var labelFind = 'Find by ' + (isOriginal ? 'original ' : '') + 'id in',
+		let labelFind = 'Find by ' + (isOriginal ? 'original ' : '') + 'id in',
 			labelShow = 'Show ' + (isOriginal ? 'original ' : '') + 'doc from'
 		options[labelFind] = Query.getMenuForId(value, path, function (conn, coll) {
 			Simple.findById(conn, coll, value)
@@ -227,7 +227,7 @@ Simple.processGlobalCellMenu = function (value, path, cell, options) {
  * @param {Object} options
  */
 Simple.processCellMenu = function (value, path, cell, options) {
-	var isPopulated = value instanceof Populated,
+	let isPopulated = value instanceof Populated,
 		display = isPopulated ? value.display : value
 
 	if (!isPopulated) {
@@ -238,7 +238,7 @@ Simple.processCellMenu = function (value, path, cell, options) {
 			Greater: Simple.findByPath.bind(Simple, path, display, '$gt'),
 			Less: Simple.findByPath.bind(Simple, path, display, '$lt'),
 			'Equal to': function () {
-				var value = prompt(),
+				let value = prompt(),
 					el
 				if (value) {
 					el = document.createElement('input')
@@ -286,4 +286,39 @@ Simple.executeFromSearchParts = function (selector, sort, limit, select) {
 	Simple.limitInput.value = limit
 	Simple.selectInput.value = select || ''
 	Query.onFormSubmit(null, true)
+}
+
+/**
+ * Called when coping as MongoDB Shell query
+ * @param {string} prefix
+ */
+Simple.toString = function (prefix) {
+	let selector = Simple.selectorInput.value,
+		select = Simple.selectInput.value,
+		sort = Simple.sortInput.value,
+		limit = Simple.limitInput.value,
+		oid = Simple.readId(selector),
+		query = prefix
+
+	if (oid) {
+		query += '.findOne({_id: ObjectId(\'' + oid.$oid + '\')}'
+	} else {
+		query += '.find({' + selector + '}'
+	}
+
+	if (select) {
+		query += ', {' + select + '}'
+	}
+	query += ')'
+
+	if (!oid) {
+		if (sort) {
+			query += '.sort({' + sort + '})'
+		}
+		if (limit) {
+			query += '.limit(' + limit + ')'
+		}
+	}
+
+	return query
 }

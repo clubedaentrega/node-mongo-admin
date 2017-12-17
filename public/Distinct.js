@@ -1,7 +1,7 @@
 /*globals Query, Panel, Input*/
 'use strict'
 
-var Distinct = {}
+let Distinct = {}
 
 Distinct.name = 'distinct'
 
@@ -22,7 +22,7 @@ Distinct.init = function () {
  * Called when a query is submited
  */
 Distinct.execute = function () {
-	var field = Distinct.fieldInput.value,
+	let field = Distinct.fieldInput.value,
 		selector = Panel.processJSInEl(Distinct.selectorInput, false, true) || {}
 
 	Query.setLoading(true)
@@ -35,7 +35,7 @@ Distinct.execute = function () {
 		Query.setLoading(false)
 		if (!result.error) {
 			Query.showResult(result.docs.map(function (doc) {
-				var ret = {}
+				let ret = {}
 				ret[field] = doc
 				return ret
 			}))
@@ -71,4 +71,21 @@ Distinct.executeFromSearchParts = function (field, selector) {
 	Distinct.fieldInput.value = field
 	Distinct.selectorInput.value = selector
 	Query.onFormSubmit(null, true)
+}
+
+/**
+ * Called when coping as MongoDB Shell query
+ * @param {string} prefix
+ */
+Distinct.toString = function (prefix) {
+	let field = Distinct.fieldInput.value,
+		selector = Distinct.selectorInput.value,
+		query = prefix + '.distinct(\'' + field + '\''
+
+	if (selector) {
+		query += ', {' + selector + '}'
+	}
+	query += ')'
+
+	return query
 }

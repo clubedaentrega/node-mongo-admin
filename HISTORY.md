@@ -1,3 +1,8 @@
+# 3.4.0
+* Changed: design rework
+* Added: select field in find()
+* Added: copy query button
+
 # 3.3.0
 * Added: auto completion \o/
 

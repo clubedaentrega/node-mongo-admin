@@ -164,6 +164,7 @@ canvas {
 .next-on,
 .next-off,
 .eye,
+.copy,
 .map,
 .add,
 .delete,
@@ -171,11 +172,13 @@ canvas {
 	display: inline-block;
 	width: 16px;
 	height: 16px;
+	vertical-align: middle;
 }
 
 .prev-on,
 .next-on,
 .eye,
+.copy,
 .map,
 .add,
 .delete,
@@ -201,6 +204,10 @@ canvas {
 
 .eye {
 	background-image: url(img/eye.png);
+}
+
+.copy {
+	background-image: url(img/copy.png);
 }
 
 .map {

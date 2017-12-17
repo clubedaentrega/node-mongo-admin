@@ -1,7 +1,7 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot, Simple*/
+/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot, Simple, Clipboard*/
 'use strict'
 
 var Query = {}
@@ -51,15 +51,16 @@ Query.collection = ''
 /**
  * @typedef {Object} Mode
  * @property {string} name
- * @propert {function()} execute
- * @propert {function():Array} toSearchParts
- * @propert {function(...*)} executeFromSearchParts
- * @propert {function()} [init]
- * @propert {boolean} [default=false]
- * @propert {function()} [onChangeCollection]
- * @propert {function(*,string,HTMLElement,Object)} [processCellMenu]
- * @propert {function(*,string,HTMLElement,Object)} [processGlobalCellMenu]
- * @propert {function(string,Object)} [processHeadMenu]
+ * @property {function()} execute
+ * @property {function():Array} toSearchParts
+ * @property {function(...*)} executeFromSearchParts
+ * @property {function(string):string} toString
+ * @property {function()} [init]
+ * @property {boolean} [default=false]
+ * @property {function()} [onChangeCollection]
+ * @property {function(*,string,HTMLElement,Object)} [processCellMenu]
+ * @property {function(*,string,HTMLElement,Object)} [processGlobalCellMenu]
+ * @property {function(string,Object)} [processHeadMenu]
  */
 
 /**
@@ -159,6 +160,20 @@ Query.init = function (connections) {
 	Query.collectionsSelect.onchange = Query.onChangeCollection
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 	Panel.get('export').onclick = Query.export
+	Panel.get('query-copy').onclick = Query.copy
+	new Clipboard('#query-copy', { /*jshint ignore:line*/
+		text: () => {
+			let coll = Query.collection,
+				prefix = 'db.'
+
+			if (/^[a-z_][a-z0-9_]*$/i.test(coll)) {
+				prefix += coll
+			} else {
+				prefix += 'getCollection(\'' + coll.replace(/'/g, '\\\'') + '\')'
+			}
+			return Query.mode.toString(prefix)
+		}
+	})
 
 	Panel.get('return-selected').onclick = Query.returnSelected
 

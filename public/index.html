@@ -6,6 +6,7 @@
 	<title>Node Mongo Admin</title>
 	<link type="text/css" rel="stylesheet" href="css.css">
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript" src="clipboard.min.js"></script>
 	<script type="text/javascript" src="Populated.js"></script>
 	<script type="text/javascript" src="Storage.js"></script>
 	<script type="text/javascript" src="Select.js"></script>
@@ -51,8 +52,7 @@
 		id="query-distinct">.distinct('<span id="distinct-field"></span>', {<span id="distinct-selector"></span>})</span><span
 		id="query-aggregate">.aggregate([ <span class="add" id="aggregate-add"></span>
 <span id="aggregate-stages"></span>])</span><span
-		id="query-count">.count({<span id="count-selector"></span>})</span></pre>
-		</span>
+		id="query-count">.count({<span id="count-selector"></span>})</span> <span class="copy" title="Copy this query to use it on MongoDB Shell" id="query-copy"></span></pre>
 
 		<p class="query-buttons">
 			<input type="submit" value="Execute" class="execute-btn" id="query-execute">
@@ -101,9 +101,9 @@
 		<button id="plot-clear" class="border-btn">Close chart</button>
 	</div>
 	<p id="query-controls" class="pagination">
-		<span id="query-prev" class="prev-off" style="vertical-align: middle; display:inline-block;"></span>
+		<span id="query-prev" class="prev-off"></span>
 		<span id="query-page" class="pagination-text"></span>
-		<span id="query-next" class="next-off" style="vertical-align: middle; display:inline-block;"></span>
+		<span id="query-next" class="next-off"></span>
 	</p>
 	<p id="query-unhide-p" style="display:none">
 		<input type="button" value="Unhide columns" id="query-unhide" class="border-btn" style="margin: 0 10px;">
@@ -111,9 +111,9 @@
 	<table id="query-result"></table>
 
 	<p id="query-controls2" style="display:none" class="pagination">
-		<span id="query-prev2" class="prev-off" style="vertical-align: middle; display:inline-block;"></span>
+		<span id="query-prev2" class="prev-off"></span>
 		<span id="query-page2" class="pagination-text"></span>
-		<span id="query-next2" class="next-off" style="vertical-align: middle; display:inline-block;"></span>
+		<span id="query-next2" class="next-off"></span>
 	</p>
 	<div id="explore-window" class="window" style="display: none">
 		<div class="window-content">
