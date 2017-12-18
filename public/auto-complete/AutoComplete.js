@@ -144,7 +144,14 @@ AutoComplete.prototype._suggest = function () {
 
 	this._open = true
 	suggestions.texts.forEach((each, i) => {
-		let itemEl = Panel.create('div.auto-complete-result', each)
+		let itemEl = Panel.create('div.auto-complete-result')
+		itemEl.innerHTML = each.highlight.map((str, i) => {
+			str = Panel.escape(str)
+			if (i % 2) {
+				str = '<b>' + str + '</b>'
+			}
+			return str
+		}).join('')
 
 		itemEl.onmouseover = () => {
 			this._select(i)
@@ -174,7 +181,7 @@ AutoComplete.prototype._close = function () {
  */
 AutoComplete.prototype._accept = function () {
 	let replaced = Replacer.replace('{' + this._lastValue + '}',
-		this._suggestions.texts[this._selectedIndex],
+		this._suggestions.texts[this._selectedIndex].plain,
 		this._suggestions.type,
 		this._suggestions.context)
 

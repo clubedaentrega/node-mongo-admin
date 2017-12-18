@@ -1,11 +1,17 @@
-/*global NGram*/
+/*global Search*/
 'use strict'
 
 /**
  * @typedef {Object} Suggest~Result
- * @property {Array<string>} texts
+ * @property {Array<Suggest~Text}>} text
  * @property {string} type - either 'property' or 'value'
  * @property {Parse~Object|Parse~Base} context - Object for 'property' and Base for 'value'
+ */
+
+/**
+ * @typedef {Object} Suggest~Text
+ * @property {string} plain
+ * @property {Array<string>} highlight - plain split into substrings. Odd indexes are highlights
  */
 
 let Suggest = {}
@@ -206,17 +212,12 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 		keyPrefix = lastDot === -1 ? '' : search.slice(0, lastDot + 1),
 		pathPrefix = (prefix ? prefix + '.' : '') + keyPrefix,
 		field = lastDot === -1 ? search : search.slice(lastDot + 1),
-		fieldLC = field.toLowerCase(),
-		/** @var {Array<{text: string, terms: Array<string>}>} */
 		searchSpace = []
 
 	if (lastDot === -1) {
-		for (let operator of['$or', '$and', '$nor']) {
+		for (let operator of ['$or', '$and', '$nor']) {
 			if (blacklist.indexOf(operator) === -1) {
-				searchSpace.push({
-					text: operator,
-					terms: [operator]
-				})
+				searchSpace.push(operator)
 			}
 		}
 	}
@@ -231,48 +232,12 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 				continue
 			}
 
-			searchSpace.push({
-				text: text,
-				terms: text.toLowerCase().split('.')
-			})
+			searchSpace.push(text)
 		}
 	}
 
-	let matches
-	if (field.length <= 3) {
-		// Make a case-insensitive prefix match
-		matches = searchSpace.filter(item => {
-			return item.terms.some(part => {
-				return part.startsWith(fieldLC)
-			})
-		}).sort((a, b) => {
-			// Depth ASC, text ASC
-			return a.terms.length - b.terms.length ||
-				(a.text > b.text ? 1 : (a.text === b.text ? 0 : -1))
-		})
-	} else {
-		// Make a case-insensitive ngram match
-		matches = NGram.search(NGram.index(searchSpace), [fieldLC]).sort((a, b) => {
-			// Depth ASC, score DESC
-			return a.value.terms.length - b.value.terms.length || b.score - a.score
-		}).map(e => e.value)
-	}
-
-	// If there are too many items in the current depth,
-	// the result is probably not relevant
-	let countDepth1 = 0
-	for (let i = 0; i < matches.length; i++) {
-		if (matches[i].terms.length === 1) {
-			countDepth1 += 1
-			if (countDepth1 > 10) {
-				return
-			}
-		}
-	}
-
-	// Pick 5
 	return {
-		texts: matches.slice(0, 5).map(e => e.text),
+		texts: Search.search(searchSpace, field),
 		type: 'property',
 		context: context
 	}
@@ -317,10 +282,13 @@ Suggest._suggestOperators = function (search, schema, prefix, blacklist, context
 
 	let matches = operators.filter(op => {
 		return blacklist.indexOf(op) === -1 && op.startsWith(search)
-	}).sort()
+	}).sort().map(each => ({
+		plain: each,
+		highlight: ['', search, each.slice(search.length)]
+	}))
 
 	return {
-		texts: matches.slice(0, 5),
+		texts: matches.slice(0, 7),
 		type: 'property',
 		context: context
 	}
@@ -352,9 +320,15 @@ Suggest._suggestValues = function (search, fieldSchema, context) {
 		values.push('true')
 		values.push('false')
 	}
-	values = values.filter(value => {
+
+	let texts = values.filter(value => {
 		return value.startsWith(search)
-	}).sort().slice(0, 5)
+	}).sort().map(each => {
+		return {
+			plain: each,
+			highlight: ['', search, each.slice(search.length)]
+		}
+	}).slice(0, 7)
 
 	let types = [
 		'double',
@@ -374,12 +348,16 @@ Suggest._suggestValues = function (search, fieldSchema, context) {
 
 	types.forEach(type => {
 		if (fieldSchema[type]) {
-			values.push('(' + type + ')')
+			let text = '(' + type + ')'
+			texts.push({
+				plain: text,
+				highlight: [text]
+			})
 		}
 	})
 
 	return {
-		texts: values,
+		texts,
 		type: 'value',
 		context: context
 	}

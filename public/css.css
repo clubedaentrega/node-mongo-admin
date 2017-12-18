@@ -502,6 +502,10 @@ ol#plot-series {
 	padding-right: 1.5em;
 }
 
+.auto-complete-result b {
+	border-bottom: thin blue solid;
+}
+
 .auto-complete-result.active {
 	background-color: #DBF;
 }
