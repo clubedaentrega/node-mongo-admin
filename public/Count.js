@@ -69,7 +69,7 @@ Count.executeFromSearchParts = function (selector) {
  * @param {string} prefix
  */
 Count.toString = function (prefix) {
-	let selector = Count.selectorInput,
+	let selector = Count.selectorInput.value,
 		query = prefix + '.count('
 
 	if (selector) {
