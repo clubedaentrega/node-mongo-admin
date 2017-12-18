@@ -59,7 +59,7 @@ module.exports.handler = function (dbs, body, success, error) {
 	}
 
 	// Use up to 5s to analyze all data
-	timer = setTimeout(answer, 5e3)
+	timer = setTimeout(answer, 10e3)
 	flatSchema[''] = {}
 
 	// Sample 1000 docs from the collection and process them
