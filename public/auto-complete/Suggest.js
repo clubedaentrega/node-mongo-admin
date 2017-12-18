@@ -225,7 +225,7 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 
 	if (lastDot === -1) {
 		for (let operator of ['$or', '$and', '$nor']) {
-			if (blacklist.indexOf(operator) === -1) {
+			if (!blacklist.includes(operator)) {
 				searchSpace.push(operator)
 			}
 		}
@@ -237,11 +237,9 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 			let text = path.slice(pathPrefix.length),
 				key = path.slice((prefix ? prefix + '.' : '').length)
 
-			if (blacklist.indexOf(key) !== -1) {
-				continue
+			if (!blacklist.includes(key)) {
+				searchSpace.push(text)
 			}
-
-			searchSpace.push(text)
 		}
 	}
 
@@ -284,6 +282,8 @@ Suggest._suggestOperators = function (search, schema, prefix, blacklist, context
 			operators.push('$size', '$all')
 		}
 	}
+
+	operators = operators.filter(op => !blacklist.includes(op))
 
 	return {
 		texts: Search.search(operators, search),
