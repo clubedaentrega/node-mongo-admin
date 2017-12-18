@@ -68,6 +68,7 @@ Suggest._processCursorInFind = function (parsed, schema, prefix) {
 	if (property.key.cursor !== -1) {
 		// Key has focus
 		let search = key.slice(0, property.key.cursor)
+		keys.splice(parsed.cursor, 1)
 		return Suggest._suggestFields(search, schema, prefix, keys, parsed)
 	} else if (key === '$or' || key === '$and' || key === '$nor') {
 		// Multiple sub-finds
@@ -121,6 +122,7 @@ Suggest._processCursorInFieldExp = function (parsed, schema, prefix) {
 	if (property.key.cursor !== -1) {
 		// Key has focus
 		let search = key.slice(0, property.key.cursor)
+		keys.splice(parsed.cursor, 1)
 		return Suggest._suggestOperators(search, schema, prefix, keys, parsed)
 	} else if (key === '$eq' || key === '$ne' ||
 		key === '$gt' || key === '$gte' ||
