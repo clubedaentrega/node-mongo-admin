@@ -3,7 +3,7 @@
 
 /**
  * @typedef {Object} Suggest~Result
- * @property {Array<Suggest~Text}>} text
+ * @property {Array<Suggest~Text}>} texts
  * @property {string} type - either 'property' or 'value'
  * @property {Parse~Object|Parse~Base} context - Object for 'property' and Base for 'value'
  */
@@ -173,9 +173,7 @@ Suggest._processCursorInFieldExp = function (parsed, schema, prefix) {
 		}, property.value)
 	} else if (key === '$mod') {
 		// $mod [NUM, NUM]
-		return [{
-			text: '[divisor, remainder]'
-		}]
+		return buildSimpleSuggestion('[divisor, remainder]', property.value)
 	} else if (key === '$elemMatch') {
 		// $elemMatch FIND
 		if (property.value.type !== 'object') {
@@ -185,12 +183,21 @@ Suggest._processCursorInFieldExp = function (parsed, schema, prefix) {
 		return Suggest._processCursorInFind(property.value, schema, prefix)
 	} else if (key === '$size') {
 		// $size NUM
-		return [{
-			text: '(number)'
-		}]
+		return buildSimpleSuggestion('(number)', property.value)
 	} else {
 		// Unknown
 		return
+	}
+
+	function buildSimpleSuggestion(text, context) {
+		return {
+			texts: [{
+				plain: text,
+				highlight: [text]
+			}],
+			type: 'value',
+			context
+		}
 	}
 }
 
@@ -276,19 +283,8 @@ Suggest._suggestOperators = function (search, schema, prefix, blacklist, context
 		}
 	}
 
-	if (search[0] !== '$') {
-		search = '$' + search
-	}
-
-	let matches = operators.filter(op => {
-		return blacklist.indexOf(op) === -1 && op.startsWith(search)
-	}).sort().map(each => ({
-		plain: each,
-		highlight: ['', search, each.slice(search.length)]
-	}))
-
 	return {
-		texts: matches.slice(0, 7),
+		texts: Search.search(operators, search),
 		type: 'property',
 		context: context
 	}
@@ -321,14 +317,7 @@ Suggest._suggestValues = function (search, fieldSchema, context) {
 		values.push('false')
 	}
 
-	let texts = values.filter(value => {
-		return value.startsWith(search)
-	}).sort().map(each => {
-		return {
-			plain: each,
-			highlight: ['', search, each.slice(search.length)]
-		}
-	}).slice(0, 7)
+	let texts = Search.search(values, search)
 
 	let types = [
 		'double',
