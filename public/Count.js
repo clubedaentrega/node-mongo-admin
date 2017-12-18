@@ -13,7 +13,7 @@ Query.registerMode(Count)
  * Called after the page is loaded
  */
 Count.init = function () {
-	Count.selectorInput = new Input('count-selector')
+	Count.selectorInput = new Input('count-selector', true)
 }
 
 /**

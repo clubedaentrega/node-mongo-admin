@@ -15,7 +15,7 @@ Query.registerMode(Distinct)
  */
 Distinct.init = function () {
 	Distinct.fieldInput = new Input('distinct-field')
-	Distinct.selectorInput = new Input('distinct-selector')
+	Distinct.selectorInput = new Input('distinct-selector', true)
 }
 
 /**
