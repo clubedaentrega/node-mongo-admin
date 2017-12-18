@@ -1,7 +1,8 @@
 /**
  * @file Explore window
  */
-/*globals Panel, json*/
+
+/*globals Panel, json, Storage*/
 'use strict'
 
 /**
@@ -9,8 +10,9 @@
  * @function
  * @param {*} [value] if not sent, show a loading message
  */
-var explore = (function () {
-	var el, content, value, button, asJSON = false
+let explore = (function () {
+	let asJSON = false,
+		el, content, value, button
 
 	// Get DOM elements
 	addEventListener('load', function () {
@@ -34,12 +36,16 @@ var explore = (function () {
 	})
 
 	function show() {
+		let localDate = Boolean(Storage.get('localDate')),
+			oidTimestamp = Boolean(Storage.get('oidTimestamp')),
+			hexBinary = Boolean(Storage.get('hexBinary'))
+
 		el.style.display = ''
 		button.value = asJSON ? 'Pretty display' : 'Show as JSON'
 		if (asJSON) {
 			content.textContent = JSON.stringify(value, null, '  ')
 		} else {
-			content.innerHTML = json.stringify(value, true, true)
+			content.innerHTML = json.stringify(value, true, true, localDate, hexBinary, oidTimestamp)
 		}
 	}
 
