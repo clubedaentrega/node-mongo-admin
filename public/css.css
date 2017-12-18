@@ -119,6 +119,10 @@ header h1 {
 	color: #757575;
 }
 
+.query-refresh {
+	vertical-align: sub;
+}
+
 #sticky-table-header {
 	position: absolute;
 	background-color: #FAFAFA;

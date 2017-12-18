@@ -59,6 +59,19 @@
 			<input type="button" value="Export data" class="border-btn" id="export" style="display:none">
 			<input type="button" value="Plot data (beta)" class="border-btn" id="plot">
 			<input type="button" value="Return selected" class="border-btn" id="return-selected" style="display:none">
+			<span class="query-refresh">
+				<label>
+					<input type="checkbox" id="query-refresh"> Auto-refresh
+					<span style="display:none" id="query-refresh-options">every
+					<select id="query-refresh-interval">
+						<option value="5">5s</option>
+						<option value="10" selected>10s</option>
+						<option value="30">30s</option>
+						<option value="60">60s</option>
+					</select>
+				</span>
+			</label>
+			</span>
 			<span id="query-loading" style="display: none">loading</span>
 		</p>
 	</form>

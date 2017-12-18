@@ -95,6 +95,11 @@ Query.hiddenPaths = new Storage('hide')
  */
 Query.prompt = null
 
+/**
+ * @property {?Timeout}
+ */
+Query.refreshInterval = null
+
 window.addEventListener('load', function () {
 	Panel.request('collections', {}, function (result) {
 		Query.init(result.connections)
@@ -161,6 +166,9 @@ Query.init = function (connections) {
 	Panel.get('query-form').onsubmit = Query.onFormSubmit
 	Panel.get('export').onclick = Query.export
 	Panel.get('query-copy').onclick = Query.copy
+	Panel.get('query-refresh').onchange = Query.onChangeRefresh
+	Panel.get('query-refresh-interval').onchange = Query.onChangeRefresh
+	Query.onChangeRefresh()
 	new Clipboard('#query-copy', { /*jshint ignore:line*/
 		text: () => {
 			let coll = Query.collection,
@@ -1006,5 +1014,16 @@ function showAllGeoJSON(doc) {
 				collectGeoJSON(doc[key], path + (path ? '.' : '') + key)
 			}
 		}
+	}
+}
+
+Query.onChangeRefresh = function () {
+	clearInterval(Query.refreshInterval)
+
+	let checked = Panel.get('query-refresh').checked
+	Panel.get('query-refresh-options').style.display = checked ? '' : 'none'
+	if (checked) {
+		let time = Number(Panel.get('query-refresh-interval').value) * 1e3
+		Query.refreshInterval = setInterval(() => Query.onFormSubmit(null, true), time)
 	}
 }
