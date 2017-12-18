@@ -3,6 +3,7 @@
 * Added: select field in find()
 * Added: copy query button
 * Changed: improved field suggestions
+* Changed: respect date, id and binary display settings on "Show content"
 
 # 3.3.0
 * Added: auto completion \o/
