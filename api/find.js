@@ -32,7 +32,8 @@ module.exports.handler = function (dbs, body, success, error) {
 	delete body.select.__raw
 	delete body.sort.__raw
 
-	db.collection(body.collection).find(body.selector, body.select, {
+	db.collection(body.collection).find(body.selector, {
+		projection: body.select,
 		limit: body.limit,
 		skip: body.skip,
 		sort: body.sort

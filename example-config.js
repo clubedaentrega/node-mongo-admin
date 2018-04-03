@@ -7,21 +7,18 @@ module.exports = {
 	port: 8000,
 	connections: {
 		local: {
-			uri: 'mongodb://localhost:27017/my-db'
+			uri: 'mongodb://localhost:27017',
+			databases: ['my-db']
 		},
 		dev: {
-			uri: 'mongodb://user:password@dev.example.com:27017/my-db'
+			uri: 'mongodb://user:password@dev.example.com:27017',
+			databases: ['my-db']
 		},
 		production: {
-			// For more info see http://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect
-			uri: 'mongodb://user:password@mongo1.example.com:27017,mongo2.example.com:27017,mongo3.example.com:27017/my-db',
+			// For more info see http://mongodb.github.io/node-mongodb-native/3.0/api/MongoClient.html#.connect
+			uri: 'mongodb://user:password@mongo1.example.com:27017,mongo2.example.com:27017,mongo3.example.com:27017?replicaSet=RS-17&readPreference=secondaryPreferred',
 			options: {
-				replset: 'RS-17',
-				db: {
-					w: 2,
-					wtimeout: 10000,
-					readPreference: 'primaryPreferred'
-				}
+				poolSize: 10
 			}
 		}
 	},

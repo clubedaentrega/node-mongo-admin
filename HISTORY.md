@@ -1,3 +1,7 @@
+# 4.0.0
+* Added: support for MongoDB 3.6
+* Changed: config file format, see new example-config.js for reference
+
 # 3.4.0
 * Changed: design rework
 * Added: select field in find()

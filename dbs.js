@@ -16,8 +16,10 @@ module.exports = function (done) {
 	let dbs = {}
 	async.each(Object.keys(config.connections), (name, done) => {
 		let connection = config.connections[name]
-		MongoClient.connect(connection.uri, connection.options || {}, (err, db) => {
-			dbs[name] = db
+		MongoClient.connect(connection.uri, connection.options || {}, (err, client) => {
+			for (let database of connection.databases) {
+				dbs[name + '.' + database] = client.db(database)
+			}
 			done(err)
 		})
 	}, err => {
