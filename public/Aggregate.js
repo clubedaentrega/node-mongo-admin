@@ -31,44 +31,55 @@ Aggregate.operatorTypes = {
 			return '$' + input.value
 		}
 	},
-	sample: {
-		prefix: '{size: ',
-		posfix: '}',
-		getValue(input) {
-			return {
-				size: Number(input.value)
-			}
-		}
-	},
-	indexStats: {
+	optionalObject: {
 		prefix: '{',
 		posfix: '}',
 		mayBeEmpty: true,
 		getValue(input) {
 			return Aggregate.operatorTypes.object.getValue(input) || {}
 		}
+	},
+	string: {
+		prefix: '\'',
+		posfix: '\'',
+		getValue(input) {
+			return input.value
+		}
 	}
 }
 
 /**
  * Valid operations
- * A map from operation name to operator type
- * @property {Object<string>}
+ * A map from operation name to operator type and default placeholder
+ * @property {Object<Array<string>>}
  */
 Aggregate.operators = {
-	geoNear: 'object',
-	group: 'object',
-	limit: 'uint',
-	match: 'object',
-	project: 'object',
-	redact: 'object',
-	skip: 'uint',
-	sort: 'object',
-	unwind: 'field',
-	'unwind (object)': 'object',
-	sample: 'sample',
-	indexStats: 'indexStats',
-	lookup: 'object'
+	addFields: ['object', '<newField>: <expression>, ...'],
+	bucket: ['object', 'groupBy: <expression>, boundaries: [<lowerBound>, ...], default: <literal>, output: {<field>: {<accumulator>: <expression>}, ...}'],
+	bucketAuto: ['object', 'groupBy: <expression>, buckets: <number>, output: {<field>: {<accumulator>: <expression>}, ...}, granularity: <string>'],
+	collStats: ['object', 'latencyStats: {histograms: <boolean>}, storageStats: {}, count: {}'],
+	count: ['string', '<outputField>'],
+	currOp: ['object', 'allUsers: <boolean>, idleConnections: <boolean>'],
+	facet: ['object', '<outputField>: [<stage>, ...], ...'],
+	geoNear: ['object', '<options>'],
+	graphLookup: ['object', 'from: <collection>, startWith: <expression>, connectFromField: <string>, connectToField: <string>, as: <string>, maxDepth: <number>, depthField: <string>, restrictSearchWithMatch: <document>'],
+	group: ['object', '_id: <expression>, <field>: {<accumulator>: <expression>}, ...'],
+	indexStats: ['optionalObject', ''],
+	limit: ['uint', ''],
+	listLocalSessions: ['optionalObject', ''],
+	listSessions: ['optionalObject', ''],
+	lookup: ['object', 'from: <collection>, localField: <string>, foreignField: <string>, as: <string>'],
+	'lookup (join)': ['object', 'from: <collection>, let: {<var>: <expression>, ...}, pipeline: [<stage>, ...], as: <string>'],
+	match: ['object', '<query>'],
+	project: ['object', '<specification(s)>'],
+	redact: ['object', '<expression>'],
+	replaceRoot: ['object', 'newRoot: <replacementDocument>'],
+	sample: ['object', 'size: <number>'],
+	skip: ['uint', ''],
+	sort: ['object', '<field>: <order>, ...'],
+	sortByCount: ['object', '<expression>'],
+	unwind: ['field', ''],
+	'unwind (object)': ['object', 'path: <path>, includeArrayIndex: <string>, preserveNullAndEmptyArrays: <boolean>']
 }
 
 /**
@@ -80,6 +91,7 @@ Aggregate.operators = {
  * @property {HTMLElement} posEl
  * @property {HTMLElement} addEl
  * @property {HTMLElement} deleteEl
+ * @property {string} oldPlaceholder
  */
 
 /**
@@ -90,14 +102,17 @@ Aggregate.stages = []
 /**
  * Add a new stage at the given position
  * @param {number} [pos=-1] - default: at the end (0=first)
+ * @param {string} [operator]
+ * @param {string} [value]
  * @returns {Stage}
  */
-Aggregate.addStage = function (pos) {
+Aggregate.addStage = function (pos, operator, value) {
 	let stage = {}
 
 	// Create stage
 	stage.opSelect = new Select(Panel.create('span'))
 	stage.valueInput = new Input(Panel.create('span'))
+	stage.oldPlaceholder = ''
 	stage.el = Panel.create('span', [
 		'\t{$',
 		stage.opSelect.el,
@@ -119,6 +134,13 @@ Aggregate.addStage = function (pos) {
 	}
 	stage.deleteEl.onclick = function () {
 		Aggregate.deleteStage(stage)
+	}
+
+	if (operator) {
+		stage.opSelect.value = operator
+		if (value !== undefined) {
+			stage.valueInput.value = value
+		}
 	}
 
 	if (pos === -1 || pos === undefined || pos === Aggregate.stages.length) {
@@ -151,9 +173,15 @@ Aggregate.deleteStage = function (stage) {
  */
 Aggregate.updateLayout = function () {
 	Aggregate.stages.forEach(stage => {
-		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]]
+		let rule = Aggregate.operators[stage.opSelect.value],
+			type = Aggregate.operatorTypes[rule[0]],
+			value = stage.valueInput.value
 		stage.preEl.textContent = type.prefix || ''
 		stage.posEl.textContent = type.posfix || ''
+		if (value === stage.oldPlaceholder && (value || !type.mayBeEmpty)) {
+			stage.valueInput.value = rule[1]
+		}
+		stage.oldPlaceholder = rule[1]
 	})
 }
 
@@ -161,9 +189,10 @@ Aggregate.updateLayout = function () {
  * Called after the page is loaded
  */
 Aggregate.init = function () {
-	Aggregate.addStage()
-	Aggregate.addStage()
-	Aggregate.addStage()
+	Aggregate.addStage(-1, 'match')
+	Aggregate.addStage(-1, 'project')
+	Aggregate.addStage(-1, 'sort', '_id: -1')
+	Aggregate.addStage(-1, 'limit', '50')
 
 	Panel.get('aggregate-add').onclick = function () {
 		Aggregate.addStage(0)
@@ -174,21 +203,19 @@ Aggregate.init = function () {
  * Called when a query is submited
  */
 Aggregate.execute = function () {
-	let stages = Aggregate.stages.map(stage => {
+	let stages = Aggregate.getStages().map(stage => {
 		let op = stage.opSelect.value,
-			type = Aggregate.operatorTypes[Aggregate.operators[op]],
+			rule = Aggregate.operators[op],
+			type = Aggregate.operatorTypes[rule[0]],
 			value = stage.valueInput.value
 
-		if (!value && !type.mayBeEmpty) {
-			return
-		}
 		value = type.getValue(stage.valueInput)
 
 		return {
-			operator: '$' + (op === 'unwind (object)' ? 'unwind' : op),
+			operator: '$' + Aggregate.toOperatorName(op),
 			operand: value
 		}
-	}).filter(Boolean)
+	})
 
 	Query.setLoading(true)
 
@@ -209,13 +236,9 @@ Aggregate.execute = function () {
  */
 Aggregate.toSearchParts = function () {
 	let parts = []
-	Aggregate.stages.forEach(stage => {
-		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
-			value = stage.valueInput.value
-		if (value || type.mayBeEmpty) {
-			parts.push(stage.opSelect.value)
-			parts.push(stage.valueInput.value)
-		}
+	Aggregate.getStages().forEach(stage => {
+		parts.push(stage.opSelect.value)
+		parts.push(stage.valueInput.value)
 	})
 	return parts
 }
@@ -225,20 +248,18 @@ Aggregate.toSearchParts = function () {
  * @param {...string} values
  */
 Aggregate.executeFromSearchParts = function (...args) {
-	let i, stage
-
 	// Remove all stages
 	while (Aggregate.stages.length) {
 		Aggregate.deleteStage(Aggregate.stages[0])
 	}
 
-	for (i = 0; i < args.length; i += 2) {
-		stage = Aggregate.addStage()
+	for (let i = 0; i < args.length; i += 2) {
+		let stage = Aggregate.addStage(-1, args[i], args[i + 1])
 		stage.opSelect.value = args[i]
-		stage.valueInput.value = args[i + 1]
 	}
 
 	Aggregate.updateLayout()
+
 	Query.onFormSubmit(null, true)
 }
 
@@ -250,26 +271,58 @@ Aggregate.toString = function (prefix) {
 	let query = prefix + '.aggregate([',
 		first = true
 
-	for (let stage of Aggregate.stages) {
+	for (let stage of Aggregate.getStages()) {
 		let op = stage.opSelect.value,
-			type = Aggregate.operatorTypes[Aggregate.operators[op]],
+			type = Aggregate.operatorTypes[Aggregate.operators[op][0]],
 			value = stage.valueInput.value,
 			pre = type.prefix || '',
 			pos = type.posfix || ''
-
-		if (!value && !type.mayBeEmpty) {
-			continue
-		}
 
 		if (first) {
 			first = false
 		} else {
 			query += ', '
 		}
-		query += `{$${op === 'unwind (object)' ? 'unwind' : op}: ${pre}${value}${pos}}`
+		query += `{$${Aggregate.toOperatorName(op)}: ${pre}${value}${pos}}`
 	}
 
 	query += '])'
 
 	return query
+}
+
+/**
+ * Remove everything after the first space:
+ * 'x' -> 'x', 'x (y)' -> 'x'
+ * @param {string} value
+ * @returns {string}
+ */
+Aggregate.toOperatorName = function (string) {
+	return string.replace(/ .*/, '')
+}
+
+/**
+ * Return active stages
+ * @returns {Array<Stage>}
+ */
+Aggregate.getStages = function () {
+	return Aggregate.stages.filter(Aggregate.isStageActive)
+}
+
+/**
+ * @param {Stage} stage
+ * @returns {boolean}
+ */
+Aggregate.isStageActive = function (stage) {
+	let op = stage.opSelect.value,
+		rule = Aggregate.operators[op],
+		type = Aggregate.operatorTypes[rule[0]],
+		value = stage.valueInput.value
+
+	if (!value) {
+		return type.mayBeEmpty
+	} else if (value === rule[1]) {
+		return false
+	}
+	return true
 }

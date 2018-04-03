@@ -4,7 +4,7 @@ module.exports.fields = {
 	connection: String,
 	collection: String,
 	stages: [{
-		operator: 'in($geoNear, $group, $limit, $match, $project, $redact, $skip, $sort, $unwind, $sample, $indexStats, $lookup)',
+		operator: 'in($addFields, $bucket, $bucketAuto, $collStats, $count, $currOp, $facet, $geoNear, $graphLookup, $group, $indexStats, $limit, $listLocalSessions, $listSessions, $lookup, $match, $project, $redact, $replaceRoot, $sample, $skip, $sort, $sortByCount, $unwind)',
 		operand: '*'
 	}]
 }
@@ -40,7 +40,7 @@ module.exports.handler = function (dbs, body, success, error) {
 		return ret
 	})
 
-	db.collection(body.collection).aggregate(stages, (err, docs) => {
+	db.collection(body.collection).aggregate(stages).toArray((err, docs) => {
 		if (err) {
 			return error(err)
 		}
