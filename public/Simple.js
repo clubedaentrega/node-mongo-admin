@@ -147,6 +147,7 @@ Simple.exploreById = function (connection, collection, id) {
 		selector: {
 			_id: id
 		},
+		select: {},
 		limit: 1,
 		skip: 0,
 		sort: {}
