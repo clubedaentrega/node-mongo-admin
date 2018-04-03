@@ -2,7 +2,7 @@
  * @file Explore window
  */
 
-/*globals Panel, json, Storage*/
+/* globals Panel, json, Storage*/
 'use strict'
 
 /**
@@ -10,12 +10,12 @@
  * @function
  * @param {*} [value] if not sent, show a loading message
  */
-let explore = (function () {
+let explore = (function () { // eslint-disable-line no-unused-vars
 	let asJSON = false,
 		el, content, value, button
 
 	// Get DOM elements
-	addEventListener('load', function () {
+	addEventListener('load', () => {
 		el = Panel.get('explore-window')
 		content = Panel.get('explore-json')
 		el.onclick = function (event) {
@@ -29,7 +29,7 @@ let explore = (function () {
 			show()
 		}
 	})
-	addEventListener('keyup', function (event) {
+	addEventListener('keyup', event => {
 		if (event.keyCode === 27 && !event.ctrlKey && !event.shiftKey && !event.altKey) {
 			hide()
 		}
@@ -59,4 +59,4 @@ let explore = (function () {
 		asJSON = false
 		show()
 	}
-})()
+}())

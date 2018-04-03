@@ -14,8 +14,8 @@ module.exports.handler = function (dbs, body, success, error) {
 		op: 'aggregate',
 		connection: body.connection,
 		collection: body.collection,
-		stages: body.stages.map(function (stage) {
-			var obj = {}
+		stages: body.stages.map(stage => {
+			let obj = {}
 
 			if (stage.operand && typeof stage.operand === 'object' && stage.operand.__raw) {
 				obj[stage.operator] = stage.operand.__raw
@@ -27,25 +27,25 @@ module.exports.handler = function (dbs, body, success, error) {
 		})
 	}))
 
-	var db = dbs[body.connection],
+	let db = dbs[body.connection],
 		stages
 
 	if (!db) {
 		return error(200, 'Invalid connection name')
 	}
 
-	stages = body.stages.map(function (stage) {
-		var ret = {}
+	stages = body.stages.map(stage => {
+		let ret = {}
 		ret[stage.operator] = stage.operand
 		return ret
 	})
 
-	db.collection(body.collection).aggregate(stages, function (err, docs) {
+	db.collection(body.collection).aggregate(stages, (err, docs) => {
 		if (err) {
 			return error(err)
 		}
 		success({
-			docs: docs
+			docs
 		})
 	})
 }

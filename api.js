@@ -23,7 +23,7 @@
  */
 'use strict'
 
-var express = require('express'),
+let express = require('express'),
 	fs = require('fs'),
 	validate = require('validate-fields')(),
 	dbs = require('./dbs'),
@@ -35,14 +35,14 @@ var express = require('express'),
  */
 module.exports = function (done) {
 	// Connect to mongo
-	dbs(function (err, dbs) {
+	dbs((err, dbs) => {
 		if (err) {
 			return done(err)
 		}
 
-		var api = new express.Router()
+		let api = new express.Router()
 
-		api.use(function (req, res, next) {
+		api.use((req, res, next) => {
 			if (!req.is('json')) {
 				return next(new APIError(101, 'Invalid Content-Type header, application/json was expected'))
 			}
@@ -55,7 +55,7 @@ module.exports = function (done) {
 		}))
 
 		// End points
-		fs.readdirSync('./api').forEach(function (item) {
+		fs.readdirSync('./api').forEach(item => {
 			if (item.substr(-3).toLowerCase() === '.js') {
 				processFile('./api/' + item, '/' + item.substr(0, item.length - 3), api, dbs)
 			}
@@ -63,8 +63,9 @@ module.exports = function (done) {
 
 		// Error handler
 		// next isn't used on purpose, because express demands a 4-arity function
-		api.use(function (err, req, res, _) {
-			var code, message
+		// eslint-disable-next-line no-unused-vars
+		api.use((err, req, res, _) => {
+			let code, message
 
 			if (err instanceof APIError) {
 				code = err.code
@@ -77,8 +78,8 @@ module.exports = function (done) {
 
 			res.json({
 				error: {
-					code: code,
-					message: message
+					code,
+					message
 				}
 			})
 		})
@@ -106,15 +107,15 @@ function APIError(code, message) {
  * @throws
  */
 function processFile(fileName, url, api, dbs) {
-	var file = require(fileName),
+	let file = require(fileName),
 		fields = validate.parse(file.fields)
-	api.post(url, function (req, res, next) {
+	api.post(url, (req, res, next) => {
 		// Fields validation
 		if (fields.validate(req.body)) {
-			next()
-		} else {
-			next(new APIError(101, fields.lastError))
+			return next()
 		}
+
+		next(new APIError(101, fields.lastError))
 	}, wrapHandler(file.handler, dbs))
 }
 
@@ -127,19 +128,19 @@ function processFile(fileName, url, api, dbs) {
 function wrapHandler(handler, dbs) {
 	return function (req, res, next) {
 		// Filter allowed dbs
-		var allowedDbs
+		let allowedDbs
 		if (!req.user.connections) {
 			allowedDbs = dbs
 		} else {
 			allowedDbs = Object.create(null)
-			req.user.connections.forEach(function (conn) {
+			req.user.connections.forEach(conn => {
 				if (conn in dbs) {
 					allowedDbs[conn] = dbs[conn]
 				}
 			})
 		}
 
-		handler(allowedDbs, req.body, function (response) {
+		handler(allowedDbs, req.body, response => {
 			response = response || {}
 			if (typeof response !== 'object') {
 				throw new Error('The response must be an object')
@@ -147,7 +148,7 @@ function wrapHandler(handler, dbs) {
 			response.error = null
 			response = json.stringify(response)
 			res.set('Content-Type', 'application/json').send(response)
-		}, function (error, msg) {
+		}, (error, msg) => {
 			next(typeof error === 'number' ? new APIError(error, msg || '') : error)
 		})
 	}

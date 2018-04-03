@@ -29,13 +29,13 @@
  * @returns {Object|Date} - a single Date instance of a query obj like {$gt:...}
  * @throws if could not understand the date string
  */
-function date(str) {
+function date(str) { // eslint-disable-line no-unused-vars
 	str = String(str)
 
 	return parseRange(str) || parseDate(str) || error(str, 'date or range')
 
 	function parseRange(str) {
-		var match
+		let match
 		if ((match = str.match(/^since (.*)$/))) {
 			return {
 				$gt: parseDate(match[1]) || error(match[1], 'date')
@@ -53,7 +53,7 @@ function date(str) {
 	}
 
 	function parseDate(str) {
-		var now = new Date,
+		let now = new Date,
 			today = new Date(now.getFullYear(), now.getMonth(), now.getDate()),
 			match, n, unit
 		if (str === 'now') {
@@ -113,7 +113,7 @@ function date(str) {
 	}
 
 	function parseUnit(str) {
-		var units = {
+		let units = {
 			__proto__: null,
 			s: 's',
 			second: 's',

@@ -88,14 +88,15 @@ module.exports.handler = function (dbs, body, success, error) {
 
 		delete flatSchema['']
 		clearTimeout(timer)
+		// eslint-disable-next-line callback-return
 		success({
-			num: num,
+			num,
 			schema: flatSchema
 		})
 		cursor.close()
 		cache[cacheKey] = {
 			date: new Date,
-			num: num,
+			num,
 			schema: flatSchema
 		}
 	}

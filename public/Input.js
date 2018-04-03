@@ -1,4 +1,4 @@
-/*globals Panel, AutoComplete*/
+/* globals Panel, AutoComplete*/
 'use strict'
 
 /**
@@ -10,7 +10,7 @@
  * @class
  */
 function Input(el, enableAutoComplete) {
-	var that = this
+	let that = this
 
 	/** @member {HTMLElement} */
 	this.el = Panel.get(el)
@@ -22,10 +22,10 @@ function Input(el, enableAutoComplete) {
 	 * @member {string} value
 	 */
 	Object.defineProperty(this, 'value', {
-		get: function () {
+		get() {
 			return this._inputEl.value
 		},
-		set: function (newValue) {
+		set(newValue) {
 			this._inputEl.value = newValue
 			this._inputEl.style.width = (this._inputEl.value.length + 2) + 'ch'
 		}
@@ -43,7 +43,7 @@ function Input(el, enableAutoComplete) {
 	this._inputEl.oninput = function () {
 		that._inputEl.style.width = (that._inputEl.value.length + 2) + 'ch'
 		if (that.oninput) {
-			that.oninput.call(that)
+			that.oninput()
 		}
 	}
 

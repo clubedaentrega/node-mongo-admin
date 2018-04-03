@@ -1,15 +1,15 @@
-/*globals Panel*/
+/* globals Panel*/
 /**
  * @file Declare some mongo special types, like ObjectId
  */
 'use strict'
 
-var json = {}
+let json = {}
 
 /**
  * @param {string} isoStr
  */
-function ISODate(isoStr) {
+function ISODate(isoStr) { // eslint-disable-line no-unused-vars
 	return new Date(isoStr)
 }
 
@@ -120,9 +120,9 @@ json.reviver = function (key, value) {
 			return value.$infinity * Infinity
 		} else if (value.$nan === 1) {
 			return NaN
-		} else {
-			return value
 		}
+		return value
+
 	}
 	return value
 }
@@ -138,43 +138,43 @@ json.reviver = function (key, value) {
  * @returns {string}
  */
 json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimestamp) {
-	var finalStr = '',
+	let finalStr = '',
 		indentLevel = 0
 
-	var hasBreak = true
-	var getNL = function () {
+	let hasBreak = true
+	let getNL = function () {
 		if (!pretty) {
 			return ''
 		}
-		var i, nl = '\n'
+		let i, nl = '\n'
 		for (i = 0; i < indentLevel; i++) {
 			nl += '  '
 		}
 		return nl
 	}
-	var escapeKey = function (key) {
+	let escapeKey = function (key) {
 		if (key.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/)) {
 			return key
-		} else {
-			key = '\'' + key.replace(/'/g, '\\\'') + '\''
-			return html ? Panel.escape(key) : key
 		}
+		key = '\'' + key.replace(/'/g, '\\\'') + '\''
+		return html ? Panel.escape(key) : key
+
 	}
-	var formatDate = function (date) {
+	let formatDate = function (date) {
 		return localDate ? date.toLocaleString() : date.toISOString()
 	}
-	var formatObjectId = function (oid) {
+	let formatObjectId = function (oid) {
 		if (!oidTimestamp) {
 			return oid.$oid
 		}
 
 		// Convert the first 4 bytes to Unix Timestamp
-		var time = parseInt(oid.$oid.substr(0, 8), 16),
+		let time = parseInt(oid.$oid.substr(0, 8), 16),
 			date = new Date(time * 1000)
 		return date.toLocaleString()
 	}
-	var formatBinary = function (base64) {
-		var hex = '',
+	let formatBinary = function (base64) {
+		let hex = '',
 			codes = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
 			i, c1, c2, h1, h2, h3
 		if (!hexBinary) {
@@ -196,7 +196,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimesta
 		}
 		return hex
 	}
-	var pushStr = function (str, breakBefore, breakAfter, className) {
+	let pushStr = function (str, breakBefore, breakAfter, className) {
 		if (!hasBreak && breakBefore) {
 			finalStr += getNL()
 		}
@@ -210,8 +210,8 @@ json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimesta
 		}
 		hasBreak = breakAfter
 	}
-	var pushJsonValue = function (value, path) {
-		var key, needComma, subpath
+	let pushJsonValue = function (value, path) {
+		let key, needComma, subpath
 		if (value === undefined) {
 			pushStr(html ? '<em>undefined</em>' : 'undefined', false, false, 'keyword')
 		} else if (value === false) {
@@ -288,7 +288,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimesta
 			indentLevel++
 			pushStr('{', false, true)
 			needComma = false
-			Object.keys(value).sort().forEach(function (key) {
+			Object.keys(value).sort().forEach(key => {
 				if (!needComma) {
 					needComma = true
 				} else {
@@ -316,7 +316,7 @@ json.stringify = function (value, html, pretty, localDate, hexBinary, oidTimesta
  * Return a treated copy of the given value
  */
 json.preParse = function preParse(value) {
-	var r, key
+	let r, key
 	if (value instanceof Date) {
 		return {
 			$date: value.getTime()
@@ -347,7 +347,7 @@ json.preParse = function preParse(value) {
 		return {
 			$nan: 1
 		}
-	} else {
-		return value
 	}
+	return value
+
 }

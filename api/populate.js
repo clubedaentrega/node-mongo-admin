@@ -1,6 +1,6 @@
 'use strict'
 
-var ObjectId = require('mongodb').ObjectID
+let ObjectId = require('mongodb').ObjectID
 
 module.exports.fields = {
 	connection: String,
@@ -10,7 +10,7 @@ module.exports.fields = {
 }
 
 module.exports.handler = function (dbs, body, success, error) {
-	var db = dbs[body.connection],
+	let db = dbs[body.connection],
 		field = {}
 
 	if (!db) {
@@ -22,20 +22,18 @@ module.exports.handler = function (dbs, body, success, error) {
 
 	db.collection(body.collection).find({
 		_id: {
-			$in: body.ids.map(function (id) {
-				return new ObjectId(id)
-			})
+			$in: body.ids.map(id => new ObjectId(id))
 		}
-	}, field, function (err, cursor) {
+	}, field, (err, cursor) => {
 		if (err) {
 			return error(err)
 		}
-		cursor.toArray(function (err, docs) {
+		cursor.toArray((err, docs) => {
 			if (err) {
 				return error(err)
 			}
 			success({
-				docs: docs
+				docs
 			})
 		})
 	})

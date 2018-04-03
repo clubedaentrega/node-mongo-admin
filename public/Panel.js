@@ -1,8 +1,8 @@
-/*global json*/
+/* global json*/
 'use strict'
 
 // Global panel manager
-var Panel = {}
+let Panel = {}
 
 /**
  * @param {string|HTMLElement} id
@@ -11,9 +11,9 @@ var Panel = {}
 Panel.get = function (id) {
 	if (typeof id === 'object') {
 		return id
-	} else {
-		return document.getElementById(id)
 	}
+	return document.getElementById(id)
+
 }
 
 /**
@@ -45,7 +45,7 @@ Panel.value = function (id, newValue) {
  * @param {(Array|string)} [content] The text content or an array of child elements
  */
 Panel.create = function (tag, content) {
-	var parts = tag.split(/(\[.*?\])|\.(.*?)/).filter(Boolean),
+	let parts = tag.split(/(\[.*?\])|\.(.*?)/).filter(Boolean),
 		el = document.createElement(parts[0]),
 		i, att, pos
 
@@ -67,7 +67,7 @@ Panel.create = function (tag, content) {
 
 	// Add content
 	if (Array.isArray(content)) {
-		content.forEach(function (each) {
+		content.forEach(each => {
 			if (typeof each === 'object') {
 				el.appendChild(each)
 			} else {
@@ -98,7 +98,7 @@ Panel.escape = function (str) {
 // N day(s) from now (same units as above)
 // YYYY-MM-dd or YYYY/MM/dd
 Panel.date = function (str) {
-	var now = Date.now(),
+	let now = Date.now(),
 		S = 1e3,
 		MIN = 60 * S,
 		H = 60 * MIN,
@@ -133,11 +133,11 @@ Panel.date = function (str) {
 			throw new Error('Unit not found: ' + unit)
 		}
 		return new Date(now + (match[3] === 'ago' ? -1 : 1) * Number(match[1]) * unit)
-	} else if ((match = str.match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})$/))) {
+	} else if ((match = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/))) {
 		return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-	} else {
-		throw new Error('Invalid format: ' + str)
 	}
+
+	throw new Error('Invalid format: ' + str)
 }
 
 // Make a request
@@ -146,12 +146,12 @@ Panel.date = function (str) {
 // callback(result) is called at the end
 // result is the value returned by the server or null in case of network error
 Panel.request = function (action, body, callback) {
-	var ajax = new XMLHttpRequest()
+	let ajax = new XMLHttpRequest()
 	ajax.open('POST', '/api/' + action)
 	ajax.setRequestHeader('Content-Type', 'application/json; charset=utf-8')
 	ajax.send(JSON.stringify(json.preParse(body)))
 	ajax.onload = function () {
-		var result = null
+		let result = null
 		if (ajax.status !== 200) {
 			return callback(null)
 		}
@@ -177,8 +177,8 @@ Panel.request = function (action, body, callback) {
 Panel.populateSelectWithArray = function (selectEl, array, valueKey, textKey) {
 	selectEl = Panel.get(selectEl)
 	selectEl.innerHTML = ''
-	array.forEach(function (each) {
-		var optionEl = document.createElement('option')
+	array.forEach(each => {
+		let optionEl = document.createElement('option')
 		if (typeof each === 'object') {
 			optionEl.value = each[valueKey || 'value']
 			optionEl.textContent = each[textKey || 'text']
@@ -198,8 +198,8 @@ Panel.populateSelectWithArray = function (selectEl, array, valueKey, textKey) {
  * @throws if invalid syntax
  */
 Panel.processJSInEl = function (id, soft, implicitObject) {
-	var value = Panel.value(id)
-	var Func = Function
+	let value = Panel.value(id)
+	let Func = Function
 	if (value) {
 		try {
 			value = new Func('return (' + (implicitObject ? '{' + value + '}' : value) + ')')()
@@ -221,9 +221,7 @@ Panel.processJSInEl = function (id, soft, implicitObject) {
 // Example: 'userName' -> 'User Name'
 // 'device.token' -> 'Device / Token'
 Panel.formatDocPath = function (path) {
-	var formattedPath = path.replace(/([a-z])([A-Z])/g, '$1 $2')
-	formattedPath = formattedPath.replace(/\.(.)/g, function (_, s) {
-		return ' / ' + s.toUpperCase()
-	})
+	let formattedPath = path.replace(/([a-z])([A-Z])/g, '$1 $2')
+	formattedPath = formattedPath.replace(/\.(.)/g, (_, s) => ' / ' + s.toUpperCase())
 	return formattedPath[0].toUpperCase() + formattedPath.substr(1)
 }

@@ -22,7 +22,7 @@ module.exports.handler = function (dbs, body, success, error) {
 		sort: body.sort.__raw
 	}))
 
-	var db = dbs[body.connection]
+	let db = dbs[body.connection]
 
 	if (!db) {
 		return error(200, 'Invalid connection name')
@@ -36,16 +36,16 @@ module.exports.handler = function (dbs, body, success, error) {
 		limit: body.limit,
 		skip: body.skip,
 		sort: body.sort
-	}, function (err, cursor) {
+	}, (err, cursor) => {
 		if (err) {
 			return error(err)
 		}
-		cursor.toArray(function (err, docs) {
+		cursor.toArray((err, docs) => {
 			if (err) {
 				return error(err)
 			}
 			success({
-				docs: docs
+				docs
 			})
 		})
 	})

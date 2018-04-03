@@ -1,7 +1,7 @@
-/*globals Panel, Input, google, Query, DataSelector*/
+/* globals Panel, Input, google, Query, DataSelector*/
 'use strict'
 
-var Plot = {
+let Plot = {
 	types: {
 		area: {
 			className: 'AreaChart',
@@ -74,8 +74,8 @@ Plot.init = function () {
 		window.open(Plot.chart.getImageURI())
 	}
 	Panel.get('plot-set-size').onclick = function () {
-		var plotStyle = Panel.get('plot-wrapper').style,
-			current = parseInt(plotStyle.width) + ' x ' + parseInt(plotStyle.height),
+		let plotStyle = Panel.get('plot-wrapper').style,
+			current = parseInt(plotStyle.width, 10) + ' x ' + parseInt(plotStyle.height, 10),
 			newSize = prompt('Set size in pixels (width x height)', current),
 			pos, newWidth, newHeight
 
@@ -94,7 +94,7 @@ Plot.init = function () {
 	google.charts.load('current', {
 		packages: ['corechart']
 	})
-	google.charts.setOnLoadCallback(function () {
+	google.charts.setOnLoadCallback(() => {
 		Plot.ready = true
 	})
 }
@@ -124,7 +124,7 @@ Plot.stop = function () {
  * @returns {Plot~Series}
  */
 Plot.addSeries = function (pos, skipSelection) {
-	var series = {
+	let series = {
 		dataSelector: new DataSelector(Panel.create('span')),
 		addEl: Panel.create('span.add'),
 		deleteEl: Panel.create('span.delete')
@@ -157,7 +157,7 @@ Plot.addSeries = function (pos, skipSelection) {
 
 	Plot.update()
 	if (!skipSelection) {
-		setTimeout(function () {
+		setTimeout(() => {
 			series.dataSelector.selectField()
 		}, 0)
 	}
@@ -169,7 +169,7 @@ Plot.addSeries = function (pos, skipSelection) {
  * @param {Plot~Series} series
  */
 Plot.deleteSeries = function (series) {
-	var pos = Plot.series.indexOf(series)
+	let pos = Plot.series.indexOf(series)
 	if (pos === -1) {
 		return
 	}
@@ -182,11 +182,9 @@ Plot.deleteSeries = function (series) {
  * Update the current plot and the options interface
  */
 Plot.update = function () {
-	var type = Panel.value('plot-type'),
+	let type = Panel.value('plot-type'),
 		plotType = Plot.types[type],
-		numSeries = Plot.series.filter(function (series) {
-			return series.dataSelector.getField()
-		}).length
+		numSeries = Plot.series.filter(series => series.dataSelector.getField()).length
 	Panel.get('plot-stacked').style.display = plotType.allowStacked ? '' : 'none'
 
 	if (type === 'histogram' && numSeries === 1) {
@@ -206,19 +204,16 @@ Plot.update = function () {
  */
 Plot.updatePlot = function () {
 	// Load current plot options
-	var xField = Plot.xAxis.getField().split('.').filter(Boolean),
+	let xField = Plot.xAxis.getField().split('.').filter(Boolean),
 		xName = Plot.xAxis.getName(),
 		type = Panel.value('plot-type'),
 		plotType = Plot.types[type],
-		series = Plot.series.map(function (series) {
-			return {
-				field: series.dataSelector.getField().split('.').filter(Boolean),
-				name: series.dataSelector.getName()
-			}
-		}).filter(function (series) {
+		series = Plot.series.map(series => ({
+			field: series.dataSelector.getField().split('.').filter(Boolean),
+			name: series.dataSelector.getName()
+		})).filter(series =>
 			// Ignore empty ones
-			return series.field.length
-		}),
+			series.field.length),
 		hasX = type !== 'histogram' || series.length < 2,
 		xOffset = hasX ? 1 : 0
 
@@ -232,18 +227,18 @@ Plot.updatePlot = function () {
 	}
 
 	// Create data table header
-	var nCols = xOffset + series.length,
+	let nCols = xOffset + series.length,
 		nRows = Query.result.length + 1,
 		header = new Array(nCols)
 	if (hasX) {
 		header[0] = xName
 	}
-	series.forEach(function (each, i) {
+	series.forEach((each, i) => {
 		header[i + xOffset] = each.name
 	})
 
 	// Load table data
-	var body = new Array(nRows - 1),
+	let body = new Array(nRows - 1),
 		i, row, doc, xValue, j, yValue
 	for (i = 1; i < nRows; i++) {
 		row = new Array(nCols)
@@ -280,22 +275,22 @@ Plot.updatePlot = function () {
 	if (hasX && typeof body[0][0] !== 'string') {
 		// Sort by x numeric value
 		// This avoid google charts visual glitches with non-monotonic x values
-		body.sort(function (a, b) {
-			var a0 = +a[0],
-				b0 = +b[0]
+		body.sort((a, b) => {
+			let a0 = Number(a[0]),
+				b0 = Number(b[0])
 			return a0 - b0
 		})
 	}
 
 	// Create final table
-	var table = new Array(nRows)
+	let table = new Array(nRows)
 	table[0] = header
 	for (i = 1; i < nRows; i++) {
 		table[i] = body[i - 1]
 	}
 
 	// Draw plot
-	var dataTable = google.visualization.arrayToDataTable(table),
+	let dataTable = google.visualization.arrayToDataTable(table),
 		PlotClass = google.visualization[plotType.className],
 		options = {
 			title: Plot.titleInput.value,
@@ -338,7 +333,7 @@ Plot.updatePlot = function () {
 	 * Extract a field from the document
 	 */
 	function readField(doc, field) {
-		var result = doc,
+		let result = doc,
 			i, len
 
 		for (i = 0, len = field.length; i < len; i++) {

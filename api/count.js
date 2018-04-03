@@ -14,7 +14,7 @@ module.exports.handler = function (dbs, body, success, error) {
 		selector: body.selector.__raw
 	}))
 
-	var db = dbs[body.connection]
+	let db = dbs[body.connection]
 
 	if (!db) {
 		return error(200, 'Invalid connection name')
@@ -22,12 +22,12 @@ module.exports.handler = function (dbs, body, success, error) {
 
 	delete body.selector.__raw
 
-	db.collection(body.collection).count(body.selector, function (err, count) {
+	db.collection(body.collection).count(body.selector, (err, count) => {
 		if (err) {
 			return error(err)
 		}
 		success({
-			count: count
+			count
 		})
 	})
 }

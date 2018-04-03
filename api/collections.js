@@ -3,7 +3,7 @@
  */
 'use strict'
 
-var async = require('async')
+let async = require('async')
 
 module.exports.fields = {}
 
@@ -18,27 +18,25 @@ Output:
 */
 
 module.exports.handler = function (dbs, body, success, error) {
-	var dbNames = Object.keys(dbs).sort()
+	let dbNames = Object.keys(dbs).sort()
 
-	async.map(dbNames, function (dbName, done) {
-		var db = dbs[dbName]
-		db.listCollections().toArray(function (err, collNames) {
+	async.map(dbNames, (dbName, done) => {
+		let db = dbs[dbName]
+		db.listCollections().toArray((err, collNames) => {
 			if (err) {
 				// Ignore errors here
 				// A failed connection should not break others
 				return done()
 			}
 
-			collNames = collNames.map(function (coll) {
-				return coll.name
-			}).sort()
+			collNames = collNames.map(coll => coll.name).sort()
 
 			done(null, {
 				name: dbName,
 				collections: collNames
 			})
 		})
-	}, function (err, connections) {
+	}, (err, connections) => {
 		if (err) {
 			return error(err)
 		}

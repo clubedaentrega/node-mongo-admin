@@ -1,4 +1,4 @@
-/*global Panel, Parse, Suggest, Query, Replacer*/
+/* global Panel, Parse, Suggest, Query, Replacer*/
 'use strict'
 
 /**
@@ -91,7 +91,7 @@ AutoComplete._loadSchema = function () {
 	Panel.request('sample', {
 		connection: Query.connection,
 		collection: Query.collection
-	}, function (out) {
+	}, out => {
 		if (!out) {
 			// Error
 			delete AutoComplete._schemaCache[cacheKey]

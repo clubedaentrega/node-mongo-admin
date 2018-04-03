@@ -1,4 +1,4 @@
-/*globals Panel*/
+/* globals Panel*/
 'use strict'
 
 /**
@@ -9,7 +9,7 @@
  * @class
  */
 function Select(el) {
-	var that = this
+	let that = this
 
 	/** @member {HTMLElement} */
 	this.el = Panel.get(el)
@@ -21,10 +21,10 @@ function Select(el) {
 	 * @member {string} value
 	 */
 	Object.defineProperty(this, 'value', {
-		get: function () {
+		get() {
 			return this._selectEl.value
 		},
-		set: function (newValue) {
+		set(newValue) {
 			this._selectEl.value = newValue
 		}
 	})
@@ -40,7 +40,7 @@ function Select(el) {
 	this.el.appendChild(this._selectEl)
 	this._selectEl.onchange = function () {
 		if (that.onchange) {
-			that.onchange.call(that)
+			that.onchange()
 		}
 	}
 }
@@ -51,7 +51,7 @@ function Select(el) {
 Select.prototype.setOptions = function (options) {
 	this._selectEl.innerHTML = ''
 	options.forEach(function (each) {
-		var optionEl = document.createElement('option')
+		let optionEl = document.createElement('option')
 		if (typeof each === 'object') {
 			optionEl.value = each.value
 			optionEl.textContent = each.text

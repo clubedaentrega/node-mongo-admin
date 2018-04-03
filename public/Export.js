@@ -1,10 +1,10 @@
 /**
  * @file Manage the export feature
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Storage*/
+/* globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, Storage*/
 'use strict'
 
-var Export = {}
+let Export = {}
 
 Export.specialTypes = [ObjectId, BinData, Long, Date, RegExp]
 
@@ -20,7 +20,7 @@ Export.export = function (docs, title, queryString) {
 	 * A map from path name to array of values
 	 * @type {Object<Array<*>>}
 	 */
-	var valuesByPath = Object.create(null),
+	let valuesByPath = Object.create(null),
 		blob
 
 	/**
@@ -30,7 +30,7 @@ Export.export = function (docs, title, queryString) {
 	 * @param {number} i
 	 */
 	function addSubDoc(subdoc, path, i) {
-		var key, value, subpath
+		let key, value, subpath
 		for (key in subdoc) {
 			subpath = path ? path + '.' + key : key
 			value = subdoc[key]
@@ -58,7 +58,7 @@ Export.export = function (docs, title, queryString) {
 		}
 	}
 
-	docs.forEach(function (doc, i) {
+	docs.forEach((doc, i) => {
 		addSubDoc(doc, '', i)
 	})
 
@@ -77,7 +77,7 @@ Export.export = function (docs, title, queryString) {
  * @returns {string}
  */
 Export.generateHTML = function (valuesByPath, length, title, paragraph) {
-	var localDate = Boolean(Storage.get('localDate')),
+	let localDate = Boolean(Storage.get('localDate')),
 		html, pathNames, i
 
 	// HTML head
@@ -101,7 +101,7 @@ Export.generateHTML = function (valuesByPath, length, title, paragraph) {
 	// Table header
 	html += '<table border="1">\n' +
 		'<tr>\n'
-	pathNames.forEach(function (path) {
+	pathNames.forEach(path => {
 		html += '<th>' + Panel.escape(Panel.formatDocPath(path)) + '</th>'
 	})
 	html += '</tr>\n'
@@ -109,7 +109,7 @@ Export.generateHTML = function (valuesByPath, length, title, paragraph) {
 	// Rows
 	function generateRow(i) {
 		html += '<tr>\n'
-		pathNames.forEach(function (path) {
+		pathNames.forEach(path => {
 			html += '<td>' +
 				Panel.escape(Export.toString(valuesByPath[path][i], localDate)) +
 				'</td>'
@@ -141,8 +141,8 @@ Export.toString = function (value, localDate) {
 		return value.$numberLong
 	} else if (value instanceof Date) {
 		return localDate ? value.toLocaleString() : value.toISOString()
-	} else {
+	}
 		// ObjectId, RegExp and others
 		return String(value)
-	}
+
 }

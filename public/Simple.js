@@ -1,7 +1,7 @@
 /**
  * @file Manage simple queries
  */
-/*globals Panel, ObjectId, Query, json, explore, Distinct, Populated, Input*/
+/* globals Panel, ObjectId, Query, json, explore, Distinct, Populated, Input*/
 'use strict'
 
 let Simple = {}
@@ -80,19 +80,19 @@ Simple.find = function (connection, collection, selector, select, sort, limit, p
 	Query.setLoading(true)
 
 	Panel.request('find', {
-		connection: connection,
-		collection: collection,
-		selector: selector,
-		select: select,
-		limit: limit,
+		connection,
+		collection,
+		selector,
+		select,
+		limit,
 		skip: limit * page,
-		sort: sort
-	}, function (result) {
+		sort
+	}, result => {
 		let hasMore
 		Query.setLoading(false)
 		if (!result.error) {
 			hasMore = result.docs.length === limit
-			Query.showResult(result.docs, page, hasMore, function (page) {
+			Query.showResult(result.docs, page, hasMore, page => {
 				Simple.find(connection, collection, selector, select, sort, limit, page, byId)
 			})
 			if (byId && result.docs.length === 1) {
@@ -142,15 +142,15 @@ Simple.findById = function (connection, collection, id) {
 Simple.exploreById = function (connection, collection, id) {
 	explore('Loading...')
 	Panel.request('find', {
-		connection: connection,
-		collection: collection,
+		connection,
+		collection,
 		selector: {
 			_id: id
 		},
 		limit: 1,
 		skip: 0,
 		sort: {}
-	}, function (result) {
+	}, result => {
 		explore(result.docs[0])
 	})
 }
@@ -210,10 +210,10 @@ Simple.processGlobalCellMenu = function (value, path, cell, options) {
 	function addIdMenu(value, isOriginal) {
 		let labelFind = 'Find by ' + (isOriginal ? 'original ' : '') + 'id in',
 			labelShow = 'Show ' + (isOriginal ? 'original ' : '') + 'doc from'
-		options[labelFind] = Query.getMenuForId(value, path, function (conn, coll) {
+		options[labelFind] = Query.getMenuForId(value, path, (conn, coll) => {
 			Simple.findById(conn, coll, value)
 		})
-		options[labelShow] = Query.getMenuForId(value, path, function (conn, coll) {
+		options[labelShow] = Query.getMenuForId(value, path, (conn, coll) => {
 			Simple.exploreById(conn, coll, value)
 		})
 	}
@@ -237,7 +237,7 @@ Simple.processCellMenu = function (value, path, cell, options) {
 			Different: Simple.findByPath.bind(Simple, path, display, '$ne'),
 			Greater: Simple.findByPath.bind(Simple, path, display, '$gt'),
 			Less: Simple.findByPath.bind(Simple, path, display, '$lt'),
-			'Equal to': function () {
+			'Equal to' () {
 				let value = prompt(),
 					el
 				if (value) {

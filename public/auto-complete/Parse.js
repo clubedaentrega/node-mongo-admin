@@ -47,7 +47,7 @@ Parse.parse = function (str, cursor) {
 	return Parse._readValue({
 		type: 'source',
 		raw: str,
-		cursor: cursor,
+		cursor,
 		start: 0
 	})
 }
@@ -192,8 +192,8 @@ Parse._promoteObject = function (source, gentleEnd) {
 	return {
 		type: 'object',
 		raw: source.raw,
-		properties: properties,
-		cursor: cursor,
+		properties,
+		cursor,
 		start: source.start
 	}
 }
@@ -239,8 +239,8 @@ Parse._promoteArray = function (source, gentleEnd) {
 	return {
 		type: 'array',
 		raw: source.raw,
-		values: values,
-		cursor: cursor,
+		values,
+		cursor,
 		start: source.start
 	}
 }
@@ -336,8 +336,8 @@ Parse._sliceCursor = function (cursor, start, end) {
 	} else if (cursor >= start && cursor <= end) {
 		// Moved
 		return cursor - start
-	} else {
+	}
 		// Will be out of bounds
 		return -1
-	}
+
 }

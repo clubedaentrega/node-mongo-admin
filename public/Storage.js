@@ -15,7 +15,7 @@ function Storage(id) {
  * @returns {Array}
  */
 Storage.prototype.getArray = function (conn, coll) {
-	var key = this.prefix + conn + '.' + coll,
+	let key = this.prefix + conn + '.' + coll,
 		arr = JSON.parse(localStorage.getItem(key) || '[]')
 
 	arr.save = function () {
@@ -33,7 +33,7 @@ Storage.prototype.getArray = function (conn, coll) {
 	}
 
 	arr.set = function (arr) {
-		this.splice.apply(this, [0, this.length].concat(arr))
+		this.splice(0, this.length, ...arr)
 		this.save()
 	}
 
@@ -48,7 +48,7 @@ Storage.cache = Object.create(null)
  * @returns {*}
  */
 Storage.get = function (name) {
-	var key = 'node-mongo-admin.' + name,
+	let key = 'node-mongo-admin.' + name,
 		result = JSON.parse(localStorage.getItem(key) || 'null')
 	Storage.cache[name] = result
 	return result
@@ -69,6 +69,6 @@ Storage.getCached = function (name) {
  * @param {*} value
  */
 Storage.set = function (name, value) {
-	var key = 'node-mongo-admin.' + name
+	let key = 'node-mongo-admin.' + name
 	localStorage.setItem(key, JSON.stringify(value))
 }

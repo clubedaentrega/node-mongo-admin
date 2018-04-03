@@ -1,4 +1,4 @@
-/*global Search*/
+/* global Search*/
 'use strict'
 
 /**
@@ -87,10 +87,10 @@ Suggest._processCursorInFind = function (parsed, schema, prefix) {
 		return Suggest._suggestValues(property.value.raw, schema[subPrefix], property.value)
 	} else if (property.value.type === 'object') {
 		return Suggest._processCursorInFieldExp(property.value, schema, subPrefix)
-	} else {
-		// Unknown
-		return
 	}
+		// Unknown
+
+
 }
 
 /**
@@ -186,10 +186,9 @@ Suggest._processCursorInFieldExp = function (parsed, schema, prefix) {
 	} else if (key === '$size') {
 		// $size NUM
 		return buildSimpleSuggestion('(number)', property.value)
-	} else {
-		// Unknown
-		return
 	}
+		// Unknown
+
 
 	function buildSimpleSuggestion(text, context) {
 		return {
@@ -246,7 +245,7 @@ Suggest._suggestFields = function (search, schema, prefix, blacklist, context) {
 	return {
 		texts: Search.search(searchSpace, field),
 		type: 'property',
-		context: context
+		context
 	}
 }
 
@@ -288,7 +287,7 @@ Suggest._suggestOperators = function (search, schema, prefix, blacklist, context
 	return {
 		texts: Search.search(operators, search),
 		type: 'property',
-		context: context
+		context
 	}
 }
 
@@ -350,7 +349,7 @@ Suggest._suggestValues = function (search, fieldSchema, context) {
 	return {
 		texts,
 		type: 'value',
-		context: context
+		context
 	}
 }
 

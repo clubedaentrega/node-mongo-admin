@@ -1,4 +1,4 @@
-/*globals Query, Panel, Input*/
+/* globals Query, Panel, Input*/
 'use strict'
 
 let Distinct = {}
@@ -29,12 +29,12 @@ Distinct.execute = function () {
 	Panel.request('distinct', {
 		connection: Query.connection,
 		collection: Query.collection,
-		field: field,
-		selector: selector
-	}, function (result) {
+		field,
+		selector
+	}, result => {
 		Query.setLoading(false)
 		if (!result.error) {
-			Query.showResult(result.docs.map(function (doc) {
+			Query.showResult(result.docs.map(doc => {
 				let ret = {}
 				ret[field] = doc
 				return ret

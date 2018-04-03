@@ -3,7 +3,7 @@
  */
 'use strict'
 
-var users = require('./config').basicAuth,
+let users = require('./config').basicAuth,
 	eq = require('constant-equals'),
 	validAuths
 
@@ -17,12 +17,10 @@ if (!users) {
 		next()
 	}
 } else {
-	validAuths = users.map(function (each) {
-		return 'Basic ' + new Buffer(each.user + ':' + each.password).toString('base64')
-	})
+	validAuths = users.map(each => 'Basic ' + Buffer.from(each.user + ':' + each.password).toString('base64'))
 
 	module.exports = function (req, res, next) {
-		var index = eq.indexOf(validAuths, req.get('Authorization'))
+		let index = eq.indexOf(validAuths, req.get('Authorization'))
 
 		if (index === -1) {
 			// Ask for authentication

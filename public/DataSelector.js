@@ -1,4 +1,4 @@
-/*globals Panel, Input*/
+/* globals Panel, Input*/
 'use strict'
 
 /**
@@ -6,7 +6,7 @@
  * @param {string|HTMLElement} el
  */
 function DataSelector(el) {
-	var that = this
+	let that = this
 
 	this.el = Panel.get(el)
 
@@ -36,14 +36,14 @@ function DataSelector(el) {
  * @param {Event} [originalEvent]
  */
 DataSelector.prototype.selectField = function (originalEvent) {
-	var targets = Panel.getAll('.header-leaf'),
+	let targets = Panel.getAll('.header-leaf'),
 		that = this
 
 	this._fieldButton.focus()
 
 	// Select the clicked field
-	var onTargetClick = function (event) {
-		var fieldName = event.currentTarget.title,
+	let onTargetClick = function (event) {
+		let fieldName = event.currentTarget.title,
 			formattedFieldName = Panel.formatDocPath(fieldName)
 		that._fieldButton.value = fieldName
 		that._fieldButton.textContent = formattedFieldName
@@ -55,11 +55,11 @@ DataSelector.prototype.selectField = function (originalEvent) {
 	}
 
 	// Finish the operation
-	var dismiss = function (event) {
+	let dismiss = function (event) {
 		if (event === originalEvent) {
 			return
 		}
-		targets.forEach(function (target) {
+		targets.forEach(target => {
 			target.classList.remove('plot-field-target')
 			target.removeEventListener('click', onTargetClick)
 		})
@@ -68,8 +68,8 @@ DataSelector.prototype.selectField = function (originalEvent) {
 
 	// Set events
 	document.body.addEventListener('click', dismiss)
-	setTimeout(function () {
-		targets.forEach(function (target) {
+	setTimeout(() => {
+		targets.forEach(target => {
 			target.classList.add('plot-field-target')
 			target.addEventListener('click', onTargetClick)
 		})

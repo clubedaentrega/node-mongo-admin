@@ -1,4 +1,4 @@
-/*globals Query, Panel, Select, Input*/
+/* globals Query, Panel, Select, Input*/
 'use strict'
 
 let Aggregate = {}
@@ -15,26 +15,26 @@ Aggregate.operatorTypes = {
 	object: {
 		prefix: '{',
 		posfix: '}',
-		getValue: function (input) {
+		getValue(input) {
 			return Panel.processJSInEl(input, false, true)
 		}
 	},
 	uint: {
-		getValue: function (input) {
+		getValue(input) {
 			return Number(input.value)
 		}
 	},
 	field: {
 		prefix: '\'$',
 		posfix: '\'',
-		getValue: function (input) {
+		getValue(input) {
 			return '$' + input.value
 		}
 	},
 	sample: {
 		prefix: '{size: ',
 		posfix: '}',
-		getValue: function (input) {
+		getValue(input) {
 			return {
 				size: Number(input.value)
 			}
@@ -44,7 +44,7 @@ Aggregate.operatorTypes = {
 		prefix: '{',
 		posfix: '}',
 		mayBeEmpty: true,
-		getValue: function (input) {
+		getValue(input) {
 			return Aggregate.operatorTypes.object.getValue(input) || {}
 		}
 	}
@@ -150,7 +150,7 @@ Aggregate.deleteStage = function (stage) {
  * Update basic stage layouts
  */
 Aggregate.updateLayout = function () {
-	Aggregate.stages.forEach(function (stage) {
+	Aggregate.stages.forEach(stage => {
 		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]]
 		stage.preEl.textContent = type.prefix || ''
 		stage.posEl.textContent = type.posfix || ''
@@ -174,7 +174,7 @@ Aggregate.init = function () {
  * Called when a query is submited
  */
 Aggregate.execute = function () {
-	let stages = Aggregate.stages.map(function (stage) {
+	let stages = Aggregate.stages.map(stage => {
 		let op = stage.opSelect.value,
 			type = Aggregate.operatorTypes[Aggregate.operators[op]],
 			value = stage.valueInput.value
@@ -195,8 +195,8 @@ Aggregate.execute = function () {
 	Panel.request('aggregate', {
 		connection: Query.connection,
 		collection: Query.collection,
-		stages: stages
-	}, function (result) {
+		stages
+	}, result => {
 		Query.setLoading(false)
 		if (!result.error) {
 			Query.showResult(result.docs)
@@ -209,7 +209,7 @@ Aggregate.execute = function () {
  */
 Aggregate.toSearchParts = function () {
 	let parts = []
-	Aggregate.stages.forEach(function (stage) {
+	Aggregate.stages.forEach(stage => {
 		let type = Aggregate.operatorTypes[Aggregate.operators[stage.opSelect.value]],
 			value = stage.valueInput.value
 		if (value || type.mayBeEmpty) {
@@ -224,7 +224,7 @@ Aggregate.toSearchParts = function () {
  * Called when parsing a search URL component
  * @param {...string} values
  */
-Aggregate.executeFromSearchParts = function () {
+Aggregate.executeFromSearchParts = function (...args) {
 	let i, stage
 
 	// Remove all stages
@@ -232,10 +232,10 @@ Aggregate.executeFromSearchParts = function () {
 		Aggregate.deleteStage(Aggregate.stages[0])
 	}
 
-	for (i = 0; i < arguments.length; i += 2) {
+	for (i = 0; i < args.length; i += 2) {
 		stage = Aggregate.addStage()
-		stage.opSelect.value = arguments[i]
-		stage.valueInput.value = arguments[i + 1]
+		stage.opSelect.value = args[i]
+		stage.valueInput.value = args[i + 1]
 	}
 
 	Aggregate.updateLayout()

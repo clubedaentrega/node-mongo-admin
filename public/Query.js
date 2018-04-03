@@ -1,10 +1,10 @@
 /**
  * @file Manage the result display
  */
-/*globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot, Simple, Clipboard*/
+/* globals Panel, ObjectId, BinData, DBRef, MinKey, MaxKey, Long, json, explore, Menu, Export, Storage, Populate, Populated, Select, Plot, Simple, Clipboard*/
 'use strict'
 
-var Query = {}
+let Query = {}
 
 /**
  * @property {Select}
@@ -100,8 +100,8 @@ Query.prompt = null
  */
 Query.refreshInterval = null
 
-window.addEventListener('load', function () {
-	Panel.request('collections', {}, function (result) {
+window.addEventListener('load', () => {
+	Panel.request('collections', {}, result => {
 		Query.init(result.connections)
 	})
 })
@@ -119,7 +119,7 @@ Query.registerMode = function (mode) {
  * @param {Array<string>} connections.$.collections
  */
 Query.init = function (connections) {
-	var connectionNames = [],
+	let connectionNames = [],
 		lastConnection = window.localStorage.getItem('node-mongo-admin-connection'),
 		initialMode
 
@@ -127,8 +127,8 @@ Query.init = function (connections) {
 	Query.collectionsSelect = new Select('query-collections')
 
 	// Setup modes
-	Query.modes.forEach(function (mode) {
-		var btEl = Panel.create('input[type=button]')
+	Query.modes.forEach(mode => {
+		let btEl = Panel.create('input[type=button]')
 		btEl.value = Panel.formatDocPath(mode.name)
 		btEl.id = 'bt-' + mode.name
 		btEl.className = 'header-btn'
@@ -141,7 +141,7 @@ Query.init = function (connections) {
 
 	Query.setMode(initialMode)
 
-	connections.forEach(function (connection) {
+	connections.forEach(connection => {
 		Query.collections[connection.name] = connection.collections
 		connectionNames.push({
 			value: connection.name,
@@ -149,7 +149,7 @@ Query.init = function (connections) {
 		})
 	})
 
-	Query.modes.forEach(function (mode) {
+	Query.modes.forEach(mode => {
 		if (mode.init) {
 			mode.init()
 		}
@@ -169,7 +169,8 @@ Query.init = function (connections) {
 	Panel.get('query-refresh').onchange = Query.onChangeRefresh
 	Panel.get('query-refresh-interval').onchange = Query.onChangeRefresh
 	Query.onChangeRefresh()
-	new Clipboard('#query-copy', { /*jshint ignore:line*/
+	// eslint-disable-next-line no-new
+	new Clipboard('#query-copy', {
 		text: () => {
 			let coll = Query.collection,
 				prefix = 'db.'
@@ -191,19 +192,17 @@ Query.init = function (connections) {
 }
 
 Query.onChangeConnection = function () {
-	var collection = Query.collectionsSelect.value,
+	let collection = Query.collectionsSelect.value,
 		collectionNames = [],
 		connection = Query.connectionsSelect.value,
 		collections = Query.collections[connection]
 
 	Query.connection = connection
 
-	collectionNames = collections.map(function (each) {
-		return {
-			value: each,
-			text: Panel.formatDocPath(each)
-		}
-	})
+	collectionNames = collections.map(each => ({
+		value: each,
+		text: Panel.formatDocPath(each)
+	}))
 
 	Query.collectionsSelect.setOptions(collectionNames)
 
@@ -239,7 +238,7 @@ Query.updateTitle = function () {
  * Export the current result set
  */
 Query.export = function () {
-	var title, url
+	let title, url
 
 	title = Panel.formatDocPath(Query.mode.name) +
 		' query on ' +
@@ -253,7 +252,7 @@ Query.export = function () {
  */
 Query.setMode = function (mode) {
 	Query.mode = mode
-	Query.modes.forEach(function (each) {
+	Query.modes.forEach(each => {
 		Panel.get('bt-' + each.name).disabled = each === mode
 		Panel.get('query-' + each.name).style.display = each === mode ? '' : 'none'
 	})
@@ -281,7 +280,9 @@ Query.setCollection = function (connection, collection) {
  * @param {boolean} [dontPushState] whether to push to browser history
  */
 Query.onFormSubmit = function (event, dontPushState) {
-	event && event.preventDefault()
+	if (event) {
+		event.preventDefault()
+	}
 
 	Query.mode.execute()
 
@@ -313,7 +314,7 @@ Query.setLoading = function (loading) {
  * @param {function(number)} [findPage=null]
  */
 Query.showResult = function (docs, page, hasMore, findPage) {
-	var prevEl = Panel.get('query-prev'),
+	let prevEl = Panel.get('query-prev'),
 		nextEl = Panel.get('query-next'),
 		pageEl = Panel.get('query-page'),
 		prevEl2 = Panel.get('query-prev2'),
@@ -364,7 +365,7 @@ Query.showResult = function (docs, page, hasMore, findPage) {
  * Paths in Query.expandedPaths are shown in the table
  */
 Query.populateResultTable = function () {
-	var paths = {},
+	let paths = {},
 		tree = [],
 		treeDepth = 1,
 		tableEl = Panel.get('query-result'),
@@ -382,8 +383,8 @@ Query.populateResultTable = function () {
 	 * @param {string[]} path
 	 * @param {number} depth
 	 */
-	var addToTree = function (tree, path, depth) {
-		var pathPart = path[depth],
+	let addToTree = function (tree, path, depth) {
+		let pathPart = path[depth],
 			i
 
 		treeDepth = Math.max(treeDepth, depth + 1)
@@ -411,8 +412,8 @@ Query.populateResultTable = function () {
 	 * @param {boolean} populated
 	 * @param {*} original - original value, before population
 	 */
-	var addSubDoc = function (subdoc, path, i, populated, original) {
-		var key, subpath, value
+	let addSubDoc = function (subdoc, path, i, populated, original) {
+		let key, subpath, value
 		for (key in subdoc) {
 			subpath = path ? path + '.' + key : key
 			value = subdoc[key]
@@ -451,12 +452,12 @@ Query.populateResultTable = function () {
 		Query.populateResultTable()
 	}
 
-	docs.forEach(function (doc, i) {
+	docs.forEach((doc, i) => {
 		addSubDoc(doc, '', i)
 	})
 
 	pathNames = Object.keys(paths).sort()
-	pathNames.forEach(function (path) {
+	pathNames.forEach(path => {
 		addToTree(tree, path.split('.'), 0)
 	})
 	tableEl.innerHTML = ''
@@ -474,8 +475,8 @@ Query.populateResultTable = function () {
 	 * @param {string} prefix
 	 * @returns {number} number of child fields
 	 */
-	var createHeader = function (treeEl, depth, prefix) {
-		var cell = Panel.create('th'),
+	let createHeader = function (treeEl, depth, prefix) {
+		let cell = Panel.create('th'),
 			cols = 0,
 			path, newPath, leaf
 		if (typeof treeEl === 'string') {
@@ -486,7 +487,7 @@ Query.populateResultTable = function () {
 			leaf = true
 		} else {
 			path = treeEl.name
-			treeEl.subpaths.forEach(function (each) {
+			treeEl.subpaths.forEach(each => {
 				cols += createHeader(each, depth + 1, prefix + path + '.')
 			})
 			cell.colSpan = cols
@@ -498,14 +499,12 @@ Query.populateResultTable = function () {
 		newPath = prefix + path
 		cell.textContent = Panel.formatDocPath(path)
 		cell.oncontextmenu = function (event) {
-			var options = {}
+			let options = {}
 
 			if (!leaf || pathsToExpand.indexOf(newPath) !== -1) {
 				options['Collapse column'] = function () {
 					// Remove this path and subpaths from expand list
-					pathsToExpand.set(pathsToExpand.filter(function (each) {
-						return each !== newPath && each.indexOf(newPath + '.') !== 0
-					}))
+					pathsToExpand.set(pathsToExpand.filter(each => each !== newPath && each.indexOf(newPath + '.') !== 0))
 					Query.populateResultTable()
 				}
 			}
@@ -520,7 +519,9 @@ Query.populateResultTable = function () {
 			}
 
 			// Add custom buttons
-			Query.mode.processHeadMenu && Query.mode.processHeadMenu(newPath, options)
+			if (Query.mode.processHeadMenu) {
+				Query.mode.processHeadMenu(newPath, options)
+			}
 
 			// Show it
 			event.preventDefault()
@@ -533,13 +534,13 @@ Query.populateResultTable = function () {
 
 		return cols
 	}
-	tree.forEach(function (each) {
+	tree.forEach(each => {
 		createHeader(each, 0, '')
 	})
 
 	// Build the table
-	docs.forEach(function (doc, i) {
-		var rowEl = tableEl.insertRow(-1),
+	docs.forEach((doc, i) => {
+		let rowEl = tableEl.insertRow(-1),
 			eye = Panel.create('span.eye'),
 			map = Panel.create('span.map'),
 			firstCell = rowEl.insertCell(-1)
@@ -558,8 +559,8 @@ Query.populateResultTable = function () {
 			}
 			map.title = 'Show GeoJSON data'
 		}
-		pathNames.forEach(function (path) {
-			var cell = rowEl.insertCell(-1),
+		pathNames.forEach(path => {
+			let cell = rowEl.insertCell(-1),
 				value = paths[path][i]
 			Query.fillResultValue(cell, value, path, pathsToExpand.indexOf(path) === -1)
 			if (Populate.isPopulated(populatedPaths, path)) {
@@ -586,7 +587,7 @@ Query.populateResultTable = function () {
  * @param {Event} event
  */
 Query.selectRow = function (event) {
-	var multi = event.shiftKey && Query.prompt !== 'one',
+	let multi = event.shiftKey && Query.prompt !== 'one',
 		add = (event.ctrlKey || event.metaKey) && Query.prompt !== 'one',
 		row = event.currentTarget,
 		previous = Query.selection,
@@ -596,7 +597,7 @@ Query.selectRow = function (event) {
 
 	if (!add) {
 		// Clear previous selection
-		Query.selection.forEach(function (el) {
+		Query.selection.forEach(el => {
 			el.classList.remove('selected')
 		})
 
@@ -641,7 +642,7 @@ Query.selectRow = function (event) {
  * @param {boolean} mayCollapse - whether the value may be expressed in short form
  */
 Query.fillResultValue = function (cell, value, path, mayCollapse) {
-	var create = Panel.create,
+	let create = Panel.create,
 		localDate = Boolean(Storage.get('localDate')),
 		oidTimestamp = Boolean(Storage.get('oidTimestamp')),
 		hexBinary = Boolean(Storage.get('hexBinary')),
@@ -696,7 +697,7 @@ Query.fillResultValue = function (cell, value, path, mayCollapse) {
  * @param {MouseEvent} event
  */
 Query.openMenu = function (value, path, cell, event) {
-	var options = {},
+	let options = {},
 		conn = Query.connection,
 		coll = Query.collection,
 		isPopulated = value instanceof Populated,
@@ -736,8 +737,8 @@ Query.openMenu = function (value, path, cell, event) {
 		}
 
 		if (path !== '_id' && !isPopulated) {
-			options['Populate with'] = Query.getMenuForId(display, path, function (conn2, coll2) {
-				var foreignPath = prompt('Path from ' + coll2 + ' to populate with')
+			options['Populate with'] = Query.getMenuForId(display, path, (conn2, coll2) => {
+				let foreignPath = prompt('Path from ' + coll2 + ' to populate with')
 				if (foreignPath !== null) {
 					Populate.create(conn, coll, path, conn2, coll2, foreignPath)
 					Query.populateResultTable()
@@ -769,10 +770,14 @@ Query.openMenu = function (value, path, cell, event) {
 	}
 
 	// Add custom buttons
-	Query.modes.forEach(function (mode) {
-		mode.processGlobalCellMenu && mode.processGlobalCellMenu(value, path, cell, options)
+	Query.modes.forEach(mode => {
+		if (mode.processGlobalCellMenu) {
+			mode.processGlobalCellMenu(value, path, cell, options)
+		}
 	})
-	Query.mode.processCellMenu && Query.mode.processCellMenu(value, path, cell, options)
+	if (Query.mode.processCellMenu) {
+		Query.mode.processCellMenu(value, path, cell, options)
+	}
 
 	// Show it
 	event.preventDefault()
@@ -787,13 +792,13 @@ Query.openMenu = function (value, path, cell, event) {
  * @returns {Object<Function>}
  */
 Query.getMenuForId = function (value, path, fn) {
-	var options = {},
+	let options = {},
 		pathParts = path.split('.')
 
-	Object.keys(Query.collections).forEach(function (conn) {
-		Query.collections[conn].forEach(function (coll) {
+	Object.keys(Query.collections).forEach(conn => {
+		Query.collections[conn].forEach(coll => {
 			// For each collection, test if match with the path
-			var match = pathParts.some(function (part) {
+			let match = pathParts.some(part => {
 					if (part.substr(-2) === 'Id' || part.substr(-2) === 'ID') {
 						part = part.substr(0, part.length - 2)
 					}
@@ -823,7 +828,7 @@ Query.getMenuForId = function (value, path, fn) {
  * Convert the current query to a URL search component
  */
 Query.toSearch = function () {
-	var parts = [Query.mode.name, Query.connection, Query.collection].concat(Query.mode.toSearchParts())
+	let parts = [Query.mode.name, Query.connection, Query.collection].concat(Query.mode.toSearchParts())
 
 	return '?' + parts.map(encodeURIComponent).join('&')
 }
@@ -832,13 +837,13 @@ Query.toSearch = function () {
  * Do a find operation based on a search URL component (generated by Query.toSearch)
  */
 Query.executeFromSearch = function () {
-	var search = window.location.search,
+	let search = window.location.search,
 		i
 	if (search[0] !== '?') {
 		return
 	}
 
-	var parts = search.substr(1).split('&').map(decodeURIComponent),
+	let parts = search.substr(1).split('&').map(decodeURIComponent),
 		mode = parts[0],
 		connection = parts[1],
 		collection = parts[2]
@@ -863,26 +868,26 @@ Query.executeFromSearch = function () {
 		}
 	}
 	Query.setCollection(connection, collection)
-	Query.mode.executeFromSearchParts.apply(Query.mode, parts.slice(3))
+	Query.mode.executeFromSearchParts(...parts.slice(3))
 }
 
 /**
  * Post a message with the selected row ids
  */
 Query.returnSelected = function () {
-	var parentWindow = window.opener || window.parent
+	let parentWindow = window.opener || window.parent
 	parentWindow.postMessage({
 		type: 'return-selected',
 		connection: Query.connection,
 		collection: Query.collection,
-		ids: Query.selection.map(function (row) {
-			var idTd = row.querySelector('td[data-path=_id]')
+		ids: Query.selection.map(row => {
+			let idTd = row.querySelector('td[data-path=_id]')
 			return idTd && idTd.textContent
 		}).filter(Boolean)
 	}, '*')
 }
 
-window.addEventListener('popstate', function () {
+window.addEventListener('popstate', () => {
 	Query.executeFromSearch()
 })
 
@@ -890,20 +895,20 @@ window.addEventListener('popstate', function () {
  * Make table header fixed after scroll limit is reached
  */
 function stickHeader() {
-	var stickyHeader = Panel.get('sticky-table-header'),
+	let stickyHeader = Panel.get('sticky-table-header'),
 		rows = Panel.getAll('#query-result tr.header')
 
 	stickyHeader.innerHTML = ''
 
-	rows.forEach(function (row) {
-		var newRow = stickyHeader.insertRow(-1),
+	rows.forEach(row => {
+		let newRow = stickyHeader.insertRow(-1),
 			cells = [].slice.call(row.children)
-		cells.forEach(function (cell) {
+		cells.forEach(cell => {
 			// Fix size
 			cell.style.width = cell.offsetWidth + 'px'
 			cell.style.height = cell.offsetHeight + 'px'
 
-			var newCell = cell.cloneNode(true)
+			let newCell = cell.cloneNode(true)
 			newCell.oncontextmenu = cell.oncontextmenu
 			newRow.appendChild(newCell)
 		})
@@ -944,7 +949,7 @@ function hasSomeGeoJSON(doc) {
 	if (Array.isArray(doc)) {
 		return doc.some(hasSomeGeoJSON)
 	} else if (doc && typeof doc === 'object' && doc.constructor === Object) {
-		for (var key in doc) {
+		for (let key in doc) {
 			if (hasSomeGeoJSON(doc[key])) {
 				return true
 			}
@@ -959,7 +964,7 @@ function hasSomeGeoJSON(doc) {
  * @param {Object} doc 
  */
 function showAllGeoJSON(doc) {
-	var features = []
+	let features = []
 	collectGeoJSON(doc, '')
 
 	// Generate colors for each feature, based on its title
@@ -990,7 +995,7 @@ function showAllGeoJSON(doc) {
 		open('http://geojson.io/#data=data:application/json,' +
 			encodeURIComponent(JSON.stringify({
 				type: 'FeatureCollection',
-				features: features
+				features
 			})))
 	}
 
@@ -1006,11 +1011,11 @@ function showAllGeoJSON(doc) {
 		}
 
 		if (Array.isArray(doc)) {
-			for (var i = 0; i < doc.length; i++) {
+			for (let i = 0; i < doc.length; i++) {
 				collectGeoJSON(doc[i], path + (path ? '.' : '') + i)
 			}
 		} else if (doc && typeof doc === 'object' && doc.constructor === Object) {
-			for (var key in doc) {
+			for (let key in doc) {
 				collectGeoJSON(doc[key], path + (path ? '.' : '') + key)
 			}
 		}

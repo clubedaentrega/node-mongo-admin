@@ -1,10 +1,10 @@
-/*globals Storage, Query, ObjectId, Panel, Populated*/
+/* globals Storage, Query, ObjectId, Panel, Populated*/
 /**
  * @file Manage populate operations
  */
 'use strict'
 
-var Populate = {}
+let Populate = {}
 
 /**
  * Registered populate operations
@@ -22,11 +22,11 @@ Populate.paths = new Storage('populate')
  * @param {string} targetPath
  */
 Populate.create = function (conn, coll, path, targetConn, targetColl, targetPath) {
-	var op = {
-		path: path,
-		targetConn: targetConn,
-		targetColl: targetColl,
-		targetPath: targetPath
+	let op = {
+		path,
+		targetConn,
+		targetColl,
+		targetPath
 	}
 	Populate.paths.getArray(conn, coll).pushAndSave(op)
 	Populate.run(op)
@@ -39,10 +39,8 @@ Populate.create = function (conn, coll, path, targetConn, targetColl, targetPath
  * @param {string} path
  */
 Populate.remove = function (conn, coll, path) {
-	var ops = Populate.paths.getArray(conn, coll)
-	ops.set(ops.filter(function (op) {
-		return op.path !== path && path.indexOf(op.path + '.') !== 0
-	}))
+	let ops = Populate.paths.getArray(conn, coll)
+	ops.set(ops.filter(op => op.path !== path && path.indexOf(op.path + '.') !== 0))
 	// TODO: find a better way of doing this (restore original data for all Populated instances)
 	window.location.reload()
 }
@@ -63,9 +61,7 @@ Populate.runAll = function (conn, coll) {
  * @returns {Array<string>}
  */
 Populate.getPaths = function (conn, coll) {
-	return Populate.paths.getArray(conn, coll).map(function (op) {
-		return op.path
-	})
+	return Populate.paths.getArray(conn, coll).map(op => op.path)
 }
 
 /**
@@ -75,9 +71,7 @@ Populate.getPaths = function (conn, coll) {
  * @returns {boolean}
  */
 Populate.isPopulated = function (paths, path) {
-	return paths.some(function (each) {
-		return each === path || path.indexOf(each + '.') === 0
-	})
+	return paths.some(each => each === path || path.indexOf(each + '.') === 0)
 }
 
 /**
@@ -85,13 +79,13 @@ Populate.isPopulated = function (paths, path) {
  * @param {Object} op
  */
 Populate.run = function (op) {
-	var replaceSites = Object.create(null),
+	let replaceSites = Object.create(null),
 		pathParts = op.path.split('.'),
 		ids
 
 	// Collect ids to replace
-	Query.result.forEach(function (doc) {
-		var i, parent
+	Query.result.forEach(doc => {
+		let i, parent
 		for (i = 0; i < pathParts.length; i++) {
 			if (!doc ||
 				typeof doc !== 'object' ||
@@ -119,14 +113,14 @@ Populate.run = function (op) {
 	Panel.request('populate', {
 		connection: op.targetConn,
 		collection: op.targetColl,
-		ids: ids,
+		ids,
 		path: op.targetPath
-	}, function (result) {
-		var parentPath = pathParts[pathParts.length - 1],
+	}, result => {
+		let parentPath = pathParts[pathParts.length - 1],
 			parts = op.targetPath.split('.')
-		result.docs.forEach(function (doc) {
-			replaceSites[doc._id].forEach(function (each) {
-				var original = each[parentPath],
+		result.docs.forEach(doc => {
+			replaceSites[doc._id].forEach(each => {
+				let original = each[parentPath],
 					display = op.targetPath ? getInPath(doc, parts) : doc
 				each[parentPath] = new Populated(original, display)
 			})
@@ -136,7 +130,7 @@ Populate.run = function (op) {
 
 	// return doc[path], but considering sub-docs
 	function getInPath(doc, parts) {
-		var i
+		let i
 		for (i = 0; i < parts.length; i++) {
 			if (!doc ||
 				typeof doc !== 'object' ||

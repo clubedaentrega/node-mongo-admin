@@ -3,7 +3,8 @@
  */
 'use strict'
 
-var Menu = (function () {
+// eslint-disable-next-line no-unused-vars
+let Menu = (function () {
 	/**
 	 * Menu constructor
 	 * @class
@@ -20,9 +21,9 @@ var Menu = (function () {
 		this.items = Object.keys(map).map(function (label) {
 			if (typeof map[label] === 'function') {
 				return new Item(label, map[label], this)
-			} else {
-				return new SubMenu(label, map[label], this)
 			}
+			return new SubMenu(label, map[label], this)
+
 		}, this)
 
 		this.items.forEach(function (item) {
@@ -49,7 +50,7 @@ var Menu = (function () {
 	 * @private
 	 */
 	Menu.prototype.setRootPosition = function (x, y) {
-		var maxWith = document.documentElement.clientWidth,
+		let maxWith = document.documentElement.clientWidth,
 			maxHeight = document.documentElement.clientHeight
 
 		if (x + this.rect.width > maxWith) {
@@ -76,7 +77,7 @@ var Menu = (function () {
 	 * @private
 	 */
 	Menu.prototype.setSubMenuPosition = function (leftX, rightX, y, ltr) {
-		var maxWith = document.documentElement.clientWidth,
+		let maxWith = document.documentElement.clientWidth,
 			maxHeight = document.documentElement.clientHeight,
 			x
 
@@ -115,7 +116,7 @@ var Menu = (function () {
 		this.el.style.left = x + 'px'
 		this.el.style.top = y + 'px'
 
-		this.items.forEach(function (item) {
+		this.items.forEach(item => {
 			if (item instanceof SubMenu) {
 				item.updatePosition()
 			}
@@ -165,7 +166,7 @@ var Menu = (function () {
 		document.body.removeChild(this.el)
 		this.el = null
 
-		this.items.forEach(function (item) {
+		this.items.forEach(item => {
 			item.destroy()
 		})
 	}
@@ -179,7 +180,7 @@ var Menu = (function () {
 	 * @param {Menu} parent
 	 */
 	function Item(label, callback, parent) {
-		var that = this
+		let that = this
 
 		/** @member {HTMLElement} */
 		this.el = createEl('div.menu-item', label)
@@ -211,7 +212,7 @@ var Menu = (function () {
 	 * @param {Menu} parent
 	 */
 	function SubMenu(label, map, parent) {
-		var that = this
+		let that = this
 
 		/** @member {Menu} */
 		this.menu = new Menu(map)
@@ -236,7 +237,7 @@ var Menu = (function () {
 	 * @private
 	 */
 	SubMenu.prototype.updatePosition = function () {
-		var rect = this.el.getBoundingClientRect()
+		let rect = this.el.getBoundingClientRect()
 
 		this.menu.setSubMenuPosition(rect.left, rect.right, rect.top, this.parent.ltr)
 		this.menu.close()
@@ -273,15 +274,15 @@ var Menu = (function () {
 	 * @private
 	 */
 	function createEl(tag, content) {
-		var parts = tag.split('.'),
+		let parts = tag.split('.'),
 			el = document.createElement(parts[0])
-		el.classList.add.apply(el.classList, parts.slice(1))
+		el.classList.add(...parts.slice(1))
 		el.textContent = content || ''
 		return el
 	}
 
 	/** @var {?Function} */
-	var destroyCurrent = null
+	let destroyCurrent = null
 
 	return {
 		/**
@@ -298,8 +299,8 @@ var Menu = (function () {
 		 * @param {MouseEvent} event
 		 * @param {Object} map
 		 */
-		show: function (event, map) {
-			var menu = new Menu(map)
+		show(event, map) {
+			let menu = new Menu(map)
 
 			if (destroyCurrent) {
 				destroyCurrent()
@@ -325,9 +326,9 @@ var Menu = (function () {
 			// stopPropagation() doesn't solve it either, since the
 			// event received as parameter has type 'contextmenu', not 'click'
 			// (I know... ugly. But hey, it works!)
-			setTimeout(function () {
+			setTimeout(() => {
 				window.addEventListener('click', destroyCurrent)
 			}, 100)
 		}
 	}
-})()
+}())

@@ -84,12 +84,10 @@ Search.search = function (texts, query, maxResults = 7, minQuality = 0.8) {
 		(a.text > b.text ? 1 : (a.text === b.text ? 0 : -1)))
 
 	lastText = ''
-	return results.slice(0, maxResults).map(each => {
-		return {
+	return results.slice(0, maxResults).map(each => ({
 			plain: each.text,
 			highlight: getHighlight(each.text)
-		}
-	})
+		}))
 
 	/**
 	 * @param {string} text

@@ -4,7 +4,7 @@
  */
 'use strict'
 
-var mongodb = require('mongodb'),
+let mongodb = require('mongodb'),
 	ObjectId = mongodb.ObjectID,
 	Binary = mongodb.Binary,
 	DBRef = mongodb.DBRef,
@@ -20,7 +20,7 @@ var mongodb = require('mongodb'),
  * @returns {string}
  */
 module.exports.stringify = function (value, replacer, space) {
-	var value2 = preParse(value)
+	let value2 = preParse(value)
 	return JSON.stringify(value2, replacer, space)
 }
 
@@ -35,7 +35,7 @@ module.exports.reviver = function (key, value) {
 		if (typeof value.$oid === 'string') {
 			return new ObjectId(value.$oid)
 		} else if (typeof value.$binary === 'string') {
-			return new Binary(new Buffer(value.$binary, 'base64'), value.$type)
+			return new Binary(Buffer.from(value.$binary, 'base64'), value.$type)
 		} else if (typeof value.$date === 'number') {
 			return new Date(value.$date)
 		} else if (typeof value.$regex === 'string') {
@@ -54,9 +54,9 @@ module.exports.reviver = function (key, value) {
 			return value.$infinity * Infinity
 		} else if (value.$nan === 1) {
 			return NaN
-		} else {
-			return value
 		}
+		return value
+
 	}
 	return value
 }
@@ -65,7 +65,7 @@ module.exports.reviver = function (key, value) {
  * Return a treated copy of the given value
  */
 function preParse(value) {
-	var r, key
+	let r, key
 	if (value instanceof ObjectId) {
 		return {
 			$oid: value.toHexString()
@@ -104,11 +104,11 @@ function preParse(value) {
 	} else if (value instanceof Long) {
 		if (value.getNumBitsAbs() < 51) {
 			return value.toNumber()
-		} else {
-			return {
-				$numberLong: value.toString()
-			}
 		}
+		return {
+			$numberLong: value.toString()
+		}
+
 	} else if (Array.isArray(value)) {
 		return value.map(preParse)
 	} else if (value && typeof value === 'object' && !value.toJSON) {
@@ -126,7 +126,7 @@ function preParse(value) {
 		return {
 			$nan: 1
 		}
-	} else {
-		return value
 	}
+	return value
+
 }

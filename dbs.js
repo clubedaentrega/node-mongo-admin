@@ -3,7 +3,7 @@
  */
 'use strict'
 
-var config = require('./config'),
+let config = require('./config'),
 	MongoClient = require('mongodb').MongoClient,
 	async = require('async')
 
@@ -13,14 +13,14 @@ var config = require('./config'),
  * @param {Function} done
  */
 module.exports = function (done) {
-	var dbs = {}
-	async.each(Object.keys(config.connections), function (name, done) {
-		var connection = config.connections[name]
-		MongoClient.connect(connection.uri, connection.options || {}, function (err, db) {
+	let dbs = {}
+	async.each(Object.keys(config.connections), (name, done) => {
+		let connection = config.connections[name]
+		MongoClient.connect(connection.uri, connection.options || {}, (err, db) => {
 			dbs[name] = db
 			done(err)
 		})
-	}, function (err) {
+	}, err => {
 		done(err, dbs)
 	})
 }

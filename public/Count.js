@@ -1,7 +1,7 @@
-/*globals Query, Panel, Input*/
+/* globals Query, Panel, Input*/
 'use strict'
 
-var Count = {}
+let Count = {}
 
 Count.name = 'count'
 
@@ -20,14 +20,14 @@ Count.init = function () {
  * Called when a query is submited
  */
 Count.execute = function () {
-	var selector = Panel.processJSInEl(Count.selectorInput, false, true) || {}
+	let selector = Panel.processJSInEl(Count.selectorInput, false, true) || {}
 
 	Query.setLoading(true)
 	Panel.request('count', {
 		connection: Query.connection,
 		collection: Query.collection,
-		selector: selector
-	}, function (result) {
+		selector
+	}, result => {
 		Query.setLoading(false)
 		if (!result.error) {
 			Query.showResult([{
