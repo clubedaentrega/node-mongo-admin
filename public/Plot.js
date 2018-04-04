@@ -26,11 +26,13 @@ let Plot = {
 		histogram: {
 			className: 'Histogram',
 			allowStacked: true,
-			focusTarget: undefined
+			focusTarget: undefined,
+			castXToString: true
 		},
 		pie: {
 			className: 'PieChart',
-			allowStacked: false
+			allowStacked: false,
+			castXToString: true
 		}
 	},
 	/**
@@ -252,7 +254,7 @@ Plot.updatePlot = function () {
 				!(xValue instanceof Date)) {
 				// Only strings, numbers and dates are allowed in the x axis
 				xValue = String(xValue)
-			} else if (type === 'histogram') {
+			} else if (Plot.types[type].castXToString) {
 				// For one-series histogram, x must be a string
 				xValue = String(xValue)
 			}
