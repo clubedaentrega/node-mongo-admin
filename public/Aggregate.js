@@ -45,6 +45,13 @@ Aggregate.operatorTypes = {
 		getValue(input) {
 			return input.value
 		}
+	},
+	expression: {
+		prefix: '',
+		posfix: '',
+		getValue(input) {
+			return Panel.processJSInEl(input, false, false)
+		}
 	}
 }
 
@@ -77,7 +84,7 @@ Aggregate.operators = {
 	sample: ['object', 'size: <number>'],
 	skip: ['uint', ''],
 	sort: ['object', '<field>: <order>, ...'],
-	sortByCount: ['object', '<expression>'],
+	sortByCount: ['expression', '<expression>'],
 	unwind: ['field', ''],
 	'unwind (object)': ['object', 'path: <path>, includeArrayIndex: <string>, preserveNullAndEmptyArrays: <boolean>']
 }
