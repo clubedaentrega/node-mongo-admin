@@ -185,7 +185,7 @@ Aggregate.updateLayout = function () {
 			value = stage.valueInput.value
 		stage.preEl.textContent = type.prefix || ''
 		stage.posEl.textContent = type.posfix || ''
-		if (value === stage.oldPlaceholder && (value || !type.mayBeEmpty)) {
+		if (value === stage.oldPlaceholder || (!value && !type.mayBeEmpty)) {
 			stage.valueInput.value = rule[1]
 		}
 		stage.oldPlaceholder = rule[1]
