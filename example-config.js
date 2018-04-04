@@ -19,8 +19,16 @@ module.exports = {
 			uri: 'mongodb://user:password@mongo1.example.com:27017,mongo2.example.com:27017,mongo3.example.com:27017?replicaSet=RS-17&readPreference=secondaryPreferred',
 			options: {
 				poolSize: 10
-			}
+			},
+			databases: ['my-db']
 		}
+	},
+	aliases: {
+		// Alias old connection names to current ones
+		// Use this to keep saved query URLs working after migration to v4
+		local: 'local.my-db',
+		dev: 'dev.my-db',
+		production: 'production.my-db'
 	},
 	// HTTP basic auth, leave null to turn off
 	// NOTE: basic HTTP auth is almost useless without https!

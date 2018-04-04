@@ -3,7 +3,8 @@
 let express = require('express'),
 	config = require('./config'),
 	http = require('http'),
-	https = require('https')
+	https = require('https'),
+	aliases = config.aliases || {}
 
 require('./api')((err, api) => {
 	if (err) {
@@ -14,6 +15,19 @@ require('./api')((err, api) => {
 	let app = express()
 	app.use(require('./auth'))
 	app.use('/api', api)
+	app.get('/', (req, res, next) => {
+		let regex = /^(\/\?.*?&)(.*?)(&.*)$/,
+			match = req.url.match(regex)
+		if (match) {
+			let connection = decodeURIComponent(match[2])
+			if (aliases.hasOwnProperty(connection)) {
+				// Redirect to aliases connection
+				return res.redirect(301, match[1] + encodeURIComponent(aliases[connection]) + match[3])
+			}
+		}
+
+		next()
+	})
 	app.use(express.static('./public'))
 
 	// Start server

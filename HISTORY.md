@@ -1,6 +1,6 @@
 # 4.0.0
 * Added: support for MongoDB 3.6
-* Changed: config file format, see new example-config.js for reference
+* Changed: config file format, see new example-config.js for reference. Use `aliases` to keep old URLs working
 
 # 3.4.0
 * Changed: design rework
