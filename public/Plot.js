@@ -183,6 +183,7 @@ Plot.update = function () {
 	Panel.get('plot-stacked').style.display = plotType.allowStacked ? '' : 'none'
 
 	if (type === 'histogram' && numSeries === 1) {
+		// Special case for histogram with only one series
 		Panel.get('plot-x-axis-label').textContent = 'Data name'
 		Plot.xAxis.setInputDisabled(true)
 	} else {
@@ -229,7 +230,10 @@ Plot.updatePlot = function () {
 		header[0] = xName
 	}
 	series.forEach((each, i) => {
-		header[i + xOffset] = each.name
+		header[i + xOffset] = {
+			label: each.name,
+			type: 'number'
+		}
 	})
 
 	// Load table data
@@ -242,15 +246,6 @@ Plot.updatePlot = function () {
 		// X value
 		if (hasX) {
 			xValue = readField(doc, xField)
-			if (typeof xValue !== 'string' &&
-				typeof xValue !== 'number' &&
-				!(xValue instanceof Date)) {
-				// Only strings, numbers and dates are allowed in the x axis
-				xValue = String(xValue)
-			} else if (Plot.types[type].castXToString) {
-				// For one-series histogram, x must be a string
-				xValue = String(xValue)
-			}
 			row[0] = xValue
 		}
 
@@ -265,6 +260,46 @@ Plot.updatePlot = function () {
 		}
 
 		body[i - 1] = row
+	}
+
+	// Convert x values
+	// 
+	if (hasX) {
+		let castXToString = Plot.types[type].castXToString
+		for (let row of body) {
+			let xValue = row[0]
+			if (castXToString) {
+				row[0] = String(xValue)
+			} else {
+				if (typeof xValue === 'number' || xValue instanceof Date) {
+					// Formats accepts natively
+					continue
+				} else if (typeof xValue !== 'string') {
+					// Only number, string and Date are valid, anything else will be casted
+					row[0] = String(xValue)
+				}
+
+				// Try to match date:
+				// [_, 1: date, Y, m, d, 5: T, 6: time, H, M, S, ms]
+				let match = xValue.match(/^((\d{4})-(\d\d)-(\d\d))?([T ])?((\d\d):(\d\d):(\d\d)(?:\.(\d+))?Z?)?$/)
+				if (match && match[1] && match[5] && match[6]) {
+					// '2018-04-30T12:34:56.789' -> 'datetime'
+					row[0] = new Date(Number(match[2]),
+						Number(match[3]) - 1,
+						Number(match[4]),
+						Number(match[7]),
+						Number(match[8]),
+						Number(match[9]),
+						Number(match[10]) || 0)
+				} else if (match && match[1] && !match[5] && !match[6]) {
+					// '2018-04-30' -> 'date'
+					row[0] = new Date(Number(match[2]), Number(match[3]) - 1, Number(match[4]))
+				} else if (match && !match[1] && !match[5] && match[6]) {
+					// '12:34:56.789' -> 'timeofday'
+					row[0] = [Number(match[7]), Number(match[8]), Number(match[9]), Number(match[10]) || 0]
+				}
+			}
+		}
 	}
 
 	if (hasX && typeof body[0][0] !== 'string') {
