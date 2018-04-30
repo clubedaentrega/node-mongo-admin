@@ -166,6 +166,7 @@ Panel.request = function (action, body, callback) {
 		callback(result)
 	}
 	ajax.onerror = function () {
+		alert('Request failed')
 		callback(null)
 	}
 }
