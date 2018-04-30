@@ -68,13 +68,6 @@ Plot.init = function () {
 		Plot.addSeries(0)
 	}
 	Plot.addSeries(0, true)
-	Panel.get('plot-export').onclick = function () {
-		if (!Plot.chart) {
-			return
-		}
-
-		window.open(Plot.chart.getImageURI())
-	}
 	Panel.get('plot-set-size').onclick = function () {
 		let plotStyle = Panel.get('plot-wrapper').style,
 			current = parseInt(plotStyle.width, 10) + ' x ' + parseInt(plotStyle.height, 10),
@@ -330,6 +323,9 @@ Plot.updatePlot = function () {
 
 	Plot.chart = new PlotClass(Panel.get('plot-canvas'))
 	Plot.chart.draw(dataTable, options)
+
+	// Set export button
+	Panel.get('plot-export').href = Plot.chart.getImageURI()
 
 	/**
 	 * Extract a field from the document

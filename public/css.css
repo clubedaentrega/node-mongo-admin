@@ -160,7 +160,6 @@ canvas {
 	float: right;
 }
 
-
 /* Icon buttons */
 
 .prev-on,
@@ -239,7 +238,6 @@ pre .delete {
 	margin-bottom: -4px;
 }
 
-
 /* Table */
 
 table.loading * {
@@ -279,7 +277,6 @@ th:hover {
 tr.selected>td {
 	background-color: #CCF;
 }
-
 
 /* JSON fields */
 
@@ -336,7 +333,6 @@ tr.selected>td {
 	border: thin #F99 solid;
 }
 
-
 /* Window */
 
 .window {
@@ -374,7 +370,6 @@ tr.selected>td {
 	background-color: #FFFFFF;
 }
 
-
 /* Clear float */
 
 .clear:after {
@@ -385,7 +380,6 @@ tr.selected>td {
 	display: block;
 	overflow: hidden;
 }
-
 
 /* Menu */
 
@@ -438,7 +432,6 @@ tr.selected>td {
 	padding-left: 1.5em;
 	padding-right: 3px;
 }
-
 
 /* Custom select and input */
 
