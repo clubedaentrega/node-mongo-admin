@@ -100,6 +100,12 @@ Query.prompt = null
  */
 Query.refreshInterval = null
 
+/**
+ * @property {number}
+ * @private
+ */
+Query.loadingId = 0
+
 window.addEventListener('load', () => {
 	Panel.request('collections', {}, result => {
 		Query.init(result.connections)
@@ -293,18 +299,27 @@ Query.onFormSubmit = function (event, dontPushState) {
 }
 
 /**
- * Set current layout for a loading state
- * @param {boolean} loading
+ * Start a loading state
+ * The callback receives a loaded() function that should be called when the loading ends
+ * Calling loaded() will return false when another more recent loading process was started
+ * This means the result should be discarded
+ * @param {function(function():boolean)} callback
  */
-Query.setLoading = function (loading) {
-	if (loading) {
-		Panel.get('query-loading').style.display = ''
-		Panel.get('query-result').classList.add('loading')
-	} else {
-		Panel.get('query-loading').style.display = 'none'
-		Panel.get('query-result').classList.remove('loading')
-		Panel.get('query-form').scrollIntoView()
-	}
+Query.setLoading = function (callback) {
+	let id = ++Query.loadingId
+
+	Panel.get('query-loading').style.display = ''
+	Panel.get('query-result').classList.add('loading')
+
+	callback(() => {
+		if (Query.loadingId === id) {
+			Panel.get('query-loading').style.display = 'none'
+			Panel.get('query-result').classList.remove('loading')
+			Panel.get('query-form').scrollIntoView()
+			return true
+		}
+		return false
+	})
 }
 
 /**

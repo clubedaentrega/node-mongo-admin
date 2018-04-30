@@ -224,17 +224,16 @@ Aggregate.execute = function () {
 		}
 	})
 
-	Query.setLoading(true)
-
-	Panel.request('aggregate', {
-		connection: Query.connection,
-		collection: Query.collection,
-		stages
-	}, result => {
-		Query.setLoading(false)
-		if (!result.error) {
-			Query.showResult(result.docs)
-		}
+	Query.setLoading(loaded => {
+		Panel.request('aggregate', {
+			connection: Query.connection,
+			collection: Query.collection,
+			stages
+		}, result => {
+			if (loaded() && !result.error) {
+				Query.showResult(result.docs)
+			}
+		})
 	})
 }
 

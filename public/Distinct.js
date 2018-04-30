@@ -25,21 +25,21 @@ Distinct.execute = function () {
 	let field = Distinct.fieldInput.value,
 		selector = Panel.processJSInEl(Distinct.selectorInput, false, true) || {}
 
-	Query.setLoading(true)
-	Panel.request('distinct', {
-		connection: Query.connection,
-		collection: Query.collection,
-		field,
-		selector
-	}, result => {
-		Query.setLoading(false)
-		if (!result.error) {
-			Query.showResult(result.docs.map(doc => {
-				let ret = {}
-				ret[field] = doc
-				return ret
-			}))
-		}
+	Query.setLoading(loaded => {
+		Panel.request('distinct', {
+			connection: Query.connection,
+			collection: Query.collection,
+			field,
+			selector
+		}, result => {
+			if (loaded() && !result.error) {
+				Query.showResult(result.docs.map(doc => {
+					let ret = {}
+					ret[field] = doc
+					return ret
+				}))
+			}
+		})
 	})
 }
 

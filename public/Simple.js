@@ -77,28 +77,26 @@ Simple.execute = function () {
  * @param {boolean} byId
  */
 Simple.find = function (connection, collection, selector, select, sort, limit, page, byId) {
-	Query.setLoading(true)
-
-	Panel.request('find', {
-		connection,
-		collection,
-		selector,
-		select,
-		limit,
-		skip: limit * page,
-		sort
-	}, result => {
-		let hasMore
-		Query.setLoading(false)
-		if (!result.error) {
-			hasMore = result.docs.length === limit
-			Query.showResult(result.docs, page, hasMore, page => {
-				Simple.find(connection, collection, selector, select, sort, limit, page, byId)
-			})
-			if (byId && result.docs.length === 1) {
-				explore(result.docs[0])
+	Query.setLoading(loaded => {
+		Panel.request('find', {
+			connection,
+			collection,
+			selector,
+			select,
+			limit,
+			skip: limit * page,
+			sort
+		}, result => {
+			if (loaded() && !result.error) {
+				let hasMore = result.docs.length === limit
+				Query.showResult(result.docs, page, hasMore, page => {
+					Simple.find(connection, collection, selector, select, sort, limit, page, byId)
+				})
+				if (byId && result.docs.length === 1) {
+					explore(result.docs[0])
+				}
 			}
-		}
+		})
 	})
 }
 

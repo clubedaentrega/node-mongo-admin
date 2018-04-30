@@ -22,18 +22,18 @@ Count.init = function () {
 Count.execute = function () {
 	let selector = Panel.processJSInEl(Count.selectorInput, false, true) || {}
 
-	Query.setLoading(true)
-	Panel.request('count', {
-		connection: Query.connection,
-		collection: Query.collection,
-		selector
-	}, result => {
-		Query.setLoading(false)
-		if (!result.error) {
-			Query.showResult([{
-				count: result.count
-			}])
-		}
+	Query.setLoading(loaded => {
+		Panel.request('count', {
+			connection: Query.connection,
+			collection: Query.collection,
+			selector
+		}, result => {
+			if (loaded() && !result.error) {
+				Query.showResult([{
+					count: result.count
+				}])
+			}
+		})
 	})
 }
 
