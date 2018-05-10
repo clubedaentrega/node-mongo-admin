@@ -263,7 +263,6 @@ Plot.updatePlot = function () {
 	}
 
 	// Convert x values
-	// 
 	if (hasX) {
 		let castXToString = Plot.types[type].castXToString
 		for (let row of body) {
@@ -277,6 +276,7 @@ Plot.updatePlot = function () {
 				} else if (typeof xValue !== 'string') {
 					// Only number, string and Date are valid, anything else will be casted
 					row[0] = String(xValue)
+					continue
 				}
 
 				// Try to match date:
