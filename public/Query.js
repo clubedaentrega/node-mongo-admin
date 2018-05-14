@@ -442,12 +442,12 @@ Query.populateResultTable = function () {
 				value = value.display
 			}
 
+			let shouldExpand = pathsToExpand.indexOf(subpath) !== -1
 			if (value &&
 				typeof value === 'object' &&
-				!Array.isArray(value) &&
 				Query.specialTypes.indexOf(value.constructor) === -1 &&
-				(Object.keys(value).length === 1 ||
-					pathsToExpand.indexOf(subpath) !== -1) &&
+				(!Array.isArray(value) || shouldExpand) &&
+				(Object.keys(value).length === 1 || shouldExpand) &&
 				!isGeoJSON(value)) {
 				addSubDoc(value, subpath, i, populated, original)
 			} else {
@@ -672,6 +672,7 @@ Query.fillResultValue = function (cell, value, path, mayCollapse) {
 			create('span.json-number', display.length),
 			']'
 		]))
+		cell.dataset.collapsed = true
 		cell.dataset.explore = true
 	} else if (typeof display === 'string') {
 		if (mayCollapse && display.length > 20) {
