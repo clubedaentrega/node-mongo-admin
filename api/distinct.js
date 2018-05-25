@@ -1,6 +1,6 @@
 'use strict'
 
-let ReadPreference = require('mongodb').ReadPreference
+let readPreference = require('../readPreference')
 
 module.exports.fields = {
 	connection: String,
@@ -27,7 +27,7 @@ module.exports.handler = function (dbs, body, success, error) {
 	delete body.selector.__raw
 
 	db.collection(body.collection).distinct(body.field, body.selector, {
-		readPreference: ReadPreference.SECONDARY_PREFERRED
+		readPreference: readPreference(body.collection)
 	}, (err, docs) => {
 		if (err) {
 			return error(err)
