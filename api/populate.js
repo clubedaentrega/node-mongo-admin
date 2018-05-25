@@ -1,6 +1,7 @@
 'use strict'
 
-let ObjectId = require('mongodb').ObjectID
+let ObjectId = require('mongodb').ObjectID,
+	ReadPreference = require('mongodb').ReadPreference
 
 module.exports.fields = {
 	connection: String,
@@ -24,7 +25,10 @@ module.exports.handler = function (dbs, body, success, error) {
 		_id: {
 			$in: body.ids.map(id => new ObjectId(id))
 		}
-	}, field, (err, cursor) => {
+	}, {
+		projection: field,
+		readPreference: ReadPreference.SECONDARY_PREFERRED
+	}, (err, cursor) => {
 		if (err) {
 			return error(err)
 		}

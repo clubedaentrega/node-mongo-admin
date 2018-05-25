@@ -1,6 +1,7 @@
 'use strict'
 
 let mongodb = require('mongodb'),
+	ReadPreference = require('mongodb').ReadPreference,
 	/** @var {Object<{date: new Date, num: number, schema: Object}>} */
 	cache = {}
 
@@ -68,7 +69,9 @@ module.exports.handler = function (dbs, body, success, error) {
 		$sample: {
 			size: 1e3
 		}
-	}])
+	}], {
+		readPreference: ReadPreference.SECONDARY_PREFERRED
+	})
 	cursor.each((err, doc) => {
 		if (answered) {
 			return

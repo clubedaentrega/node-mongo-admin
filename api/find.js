@@ -1,5 +1,7 @@
 'use strict'
 
+let ReadPreference = require('mongodb').ReadPreference
+
 module.exports.fields = {
 	connection: String,
 	collection: String,
@@ -36,7 +38,8 @@ module.exports.handler = function (dbs, body, success, error) {
 		projection: body.select,
 		limit: body.limit,
 		skip: body.skip,
-		sort: body.sort
+		sort: body.sort,
+		readPreference: ReadPreference.SECONDARY_PREFERRED
 	}, (err, cursor) => {
 		if (err) {
 			return error(err)
